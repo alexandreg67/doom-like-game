@@ -16,7 +16,7 @@ export interface DoomSector {
   ceilingHeight: number;
   floorTexture: string;
   ceilingTexture: string;
-  lightLevel: number; // 0-1 normalized for Babylon.js
+  lightLevel: number; // 0-255, DOOM-style lighting; normalize to 0-1 for Babylon.js
   vertices: DoomVertex[];
   lineDefs: DoomLineDef[];
   neighbors: DoomSector[];

@@ -57,7 +57,10 @@ export interface Sector {
   neighbors: string[]; // References to adjacent sector IDs
 }
 
-// Legacy compatibility - will be removed in future versions
+/**
+ * @deprecated Will be removed in a future version. Please migrate to LineDef.
+ * Legacy compatibility.
+ */
 export interface Line {
   id: string;
   start: { x: number; y: number };

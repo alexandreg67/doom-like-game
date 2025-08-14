@@ -263,10 +263,15 @@ export class SectorGeometry {
     return { vertices, indices, uvs };
   }
 
+  /**
+   * @todo Implement upper/lower wall generation for sectors with different heights.
+   * This will be needed when we have adjacent sectors with different floor/ceiling heights.
+   * Currently, this method is a placeholder and will throw an error if called.
+   */
   private generatePartialWalls(_lineDef: DoomLineDef): TriangulationResult {
-    // TODO: Implement upper/lower wall generation for sectors with different heights
-    // This will be needed when we have adjacent sectors with different floor/ceiling heights
-    throw new Error('Partial wall generation not yet implemented');
+    throw new Error(
+      'TODO: generatePartialWalls is not implemented. This method should generate upper/lower wall geometry for sectors with different heights.'
+    );
   }
 
   /**
