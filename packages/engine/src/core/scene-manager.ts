@@ -1,15 +1,15 @@
 import {
-  Color3,
   type Engine,
   FreeCamera,
   HemisphericLight,
-  MeshBuilder,
+  Mesh,
   Scene,
-  StandardMaterial,
   Vector2,
   Vector3,
+  VertexData,
 } from '@babylonjs/core';
 import type { DoomSector, DoomVertex } from '../geometry/doom-geometry';
+import { SectorGeometry } from '../geometry/sector-geometry';
 
 export class SceneManager {
   private engine: Engine;
@@ -43,7 +43,7 @@ export class SceneManager {
       { id: 'v4', position: new Vector2(-5, 5) },
     ];
 
-    const _sector: DoomSector = {
+    const sector: DoomSector = {
       id: 's1',
       floorHeight: 0,
       ceilingHeight: 4,
@@ -58,13 +58,17 @@ export class SceneManager {
       meshId: 'sector_s1',
     };
 
-    // TODO: In the next step, we will use SectorGeometry to create the mesh from `sector` data.
-    // For now, let's keep the ground plane to have something to see.
-    console.log('Defined test sector:', _sector); // Temporary log to avoid unused variable error
-    const ground = MeshBuilder.CreateGround('ground', { width: 10, height: 10 }, scene);
-    const groundMaterial = new StandardMaterial('groundMaterial', scene);
-    groundMaterial.diffuseColor = new Color3(0.4, 0.4, 0.4);
-    ground.material = groundMaterial;
+    // Create geometry from the sector data
+    const sectorGeometry = new SectorGeometry(sector);
+    const triangulation = sectorGeometry.triangulate();
+
+    // Create a new mesh for the sector
+    const sectorMesh = new Mesh(sector.id, scene);
+    const vertexData = new VertexData();
+    vertexData.positions = triangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
+    vertexData.indices = triangulation.indices;
+    vertexData.uvs = triangulation.uvs.flatMap((v) => [v.x, v.y]);
+    vertexData.applyToMesh(sectorMesh);
 
     this.currentScene = scene;
     return scene;
