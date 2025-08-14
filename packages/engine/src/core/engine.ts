@@ -1,6 +1,6 @@
-import { Engine as BabylonEngine, Scene } from '@babylonjs/core';
-import type { EngineConfig } from '../types';
+import { Engine as BabylonEngine, type Scene } from '@babylonjs/core';
 import { Renderer } from '../rendering/renderer';
+import type { EngineConfig } from '../types';
 import { SceneManager } from './scene-manager';
 
 export class Engine {
@@ -36,7 +36,7 @@ export class Engine {
 
   public start(): void {
     if (this.isRunning) return;
-    
+
     this.isRunning = true;
     this.babylonEngine.runRenderLoop(() => {
       this.sceneManager.render();
@@ -45,7 +45,7 @@ export class Engine {
 
   public stop(): void {
     if (!this.isRunning) return;
-    
+
     this.isRunning = false;
     this.babylonEngine.stopRenderLoop();
   }
@@ -62,6 +62,10 @@ export class Engine {
 
   public getBabylonEngine(): BabylonEngine {
     return this.babylonEngine;
+  }
+
+  public getRenderer(): Renderer {
+    return this.renderer;
   }
 
   private setupEventListeners(): void {

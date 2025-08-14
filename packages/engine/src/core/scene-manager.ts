@@ -23,8 +23,11 @@ export class SceneManager {
     // Create camera
     const camera = new FreeCamera('camera', new Vector3(0, 2, -5), scene);
     camera.setTarget(Vector3.Zero());
-    // Attach controls to canvas - will be implemented later
-    // camera.attachControls(this.engine.getRenderingCanvas() as HTMLCanvasElement);
+    // Attach camera controls to canvas
+    const canvas = this.engine.getRenderingCanvas();
+    if (canvas) {
+      camera.attachControl(canvas, true);
+    }
 
     // Create lighting
     const light = new HemisphericLight('light', new Vector3(0, 1, 0), scene);

@@ -1,5 +1,4 @@
 export { Engine } from './core/engine';
-export { Renderer } from './rendering/renderer';
 export { WebGPURenderer } from './rendering/webgpu-renderer';
 export { WebGLRenderer } from './rendering/webgl-renderer';
 export { SceneManager } from './core/scene-manager';

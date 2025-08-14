@@ -17,7 +17,18 @@ export class Renderer {
   }
 
   public async initialize(): Promise<void> {
-    await this.activeRenderer.initialize();
+    try {
+      await this.activeRenderer.initialize();
+    } catch (error) {
+      // If WebGPU fails, fallback to WebGL
+      if (this.activeRenderer instanceof WebGPURenderer) {
+        console.log('[ENGINE] WebGPU failed, falling back to WebGL2');
+        this.activeRenderer = new WebGLRenderer(this.engine);
+        await this.activeRenderer.initialize();
+      } else {
+        throw error;
+      }
+    }
   }
 
   public getCapabilities() {

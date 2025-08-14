@@ -36,6 +36,7 @@ export interface WebGPUCapabilities {
 }
 
 export interface WebGLCapabilities {
+  supported: boolean;
   version: 1 | 2;
   extensions: string[];
   maxTextureSize: number;

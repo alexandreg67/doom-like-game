@@ -1,4 +1,4 @@
-import { Engine } from '@babylonjs/core';
+import type { Engine } from '@babylonjs/core';
 import type { WebGLCapabilities } from '../types';
 
 export class WebGLRenderer {
@@ -18,7 +18,7 @@ export class WebGLRenderer {
 
       // Try WebGL2 first, fallback to WebGL1
       this.gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-      
+
       if (!this.gl) {
         throw new Error('WebGL not supported');
       }
@@ -38,8 +38,9 @@ export class WebGLRenderer {
 
     const version = this.gl instanceof WebGL2RenderingContext ? 2 : 1;
     const extensions = this.gl.getSupportedExtensions() || [];
-    
+
     return {
+      supported: true,
       version: version as 1 | 2,
       extensions,
       maxTextureSize: this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE),

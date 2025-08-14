@@ -46,8 +46,11 @@ async function initializeGame() {
     const rendererInfo = document.getElementById('renderer-info');
     if (rendererInfo) {
       const babylonEngine = engine.getBabylonEngine();
+      const rendererType = engine.getRenderer().getRendererType();
+      const capabilities = engine.getRenderer().getCapabilities();
+
       rendererInfo.innerHTML = `
-        <p><strong>Renderer:</strong> WebGL</p>
+        <p><strong>Renderer:</strong> ${rendererType.toUpperCase()} ${capabilities.supported ? '✅' : '⚠️'}</p>
         <p><strong>Version:</strong> Babylon.js ${babylonEngine.version}</p>
         <p><strong>FPS:</strong> <span id="fps">--</span></p>
       `;
