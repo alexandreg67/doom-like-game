@@ -28,7 +28,8 @@ export class SceneManager {
     });
   }
 
-  public async createDefaultScene(): Promise<Scene> {
+  public createDefaultScene(): Scene {
+    console.log('[ENGINE] Creating default scene...');
     const scene = new Scene(this.engine);
 
     // Create camera
@@ -212,13 +213,19 @@ export class SceneManager {
     floorVertexData.applyToMesh(floorMesh);
 
     const floorMaterial = new StandardMaterial(`${sector.id}_floor_mat`, scene);
-    try {
-      const floorTexture = await this.assetLoader.loadBabylonTexture('/textures/floor.jpg', scene);
-      floorMaterial.diffuseTexture = floorTexture;
-    } catch (error) {
-      console.warn('Failed to load floor texture, using fallback color:', error);
-      floorMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5); // Fallback gray
-    }
+    // Set fallback color immediately
+    floorMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5); // Fallback gray
+
+    // Try to load texture asynchronously (non-blocking)
+    this.assetLoader
+      .loadBabylonTexture('/textures/floor.jpg', scene)
+      .then((texture) => {
+        floorMaterial.diffuseTexture = texture;
+        console.log('[ENGINE] Floor texture loaded successfully');
+      })
+      .catch((error) => {
+        console.warn('[ENGINE] Failed to load floor texture, using fallback color:', error);
+      });
     floorMesh.material = floorMaterial;
 
     // Create ceiling mesh
@@ -231,16 +238,19 @@ export class SceneManager {
     ceilingVertexData.applyToMesh(ceilingMesh);
 
     const ceilingMaterial = new StandardMaterial(`${sector.id}_ceiling_mat`, scene);
-    try {
-      const ceilingTexture = await this.assetLoader.loadBabylonTexture(
-        '/textures/ceiling.jpg',
-        scene
-      );
-      ceilingMaterial.diffuseTexture = ceilingTexture;
-    } catch (error) {
-      console.warn('Failed to load ceiling texture, using fallback color:', error);
-      ceilingMaterial.diffuseColor = new Color3(0.2, 0.2, 0.8); // Fallback blue
-    }
+    // Set fallback color immediately
+    ceilingMaterial.diffuseColor = new Color3(0.2, 0.2, 0.8); // Fallback blue
+
+    // Try to load texture asynchronously (non-blocking)
+    this.assetLoader
+      .loadBabylonTexture('/textures/ceiling.jpg', scene)
+      .then((texture) => {
+        ceilingMaterial.diffuseTexture = texture;
+        console.log('[ENGINE] Ceiling texture loaded successfully');
+      })
+      .catch((error) => {
+        console.warn('[ENGINE] Failed to load ceiling texture, using fallback color:', error);
+      });
     ceilingMesh.material = ceilingMaterial;
 
     // Create wall meshes
@@ -255,20 +265,27 @@ export class SceneManager {
         wallVertexData.applyToMesh(wallMesh);
 
         const wallMaterial = new StandardMaterial(`${lineDef.id}_wall_mat`, scene);
-        try {
-          const wallTexture = await this.assetLoader.loadBabylonTexture(
-            '/textures/wall.jpg',
-            scene
-          );
-          wallMaterial.diffuseTexture = wallTexture;
-        } catch (error) {
-          console.warn('Failed to load wall texture, using fallback color:', error);
-          wallMaterial.diffuseColor = new Color3(0.6, 0.6, 0.8); // Fallback light blue
-        }
+        // Set fallback color immediately
+        wallMaterial.diffuseColor = new Color3(0.6, 0.6, 0.8); // Fallback light blue
+
+        // Try to load texture asynchronously (non-blocking)
+        this.assetLoader
+          .loadBabylonTexture('/textures/wall.jpg', scene)
+          .then((texture) => {
+            wallMaterial.diffuseTexture = texture;
+            console.log(`[ENGINE] Wall texture loaded successfully for ${lineDef.id}`);
+          })
+          .catch((error) => {
+            console.warn(
+              `[ENGINE] Failed to load wall texture for ${lineDef.id}, using fallback color:`,
+              error
+            );
+          });
         wallMesh.material = wallMaterial;
       }
     }
 
+    console.log('[ENGINE] Default scene created successfully');
     this.currentScene = scene;
     return scene;
   }
