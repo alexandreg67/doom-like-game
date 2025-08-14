@@ -11,8 +11,5 @@
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "**/*.test.ts", "**/*.spec.ts"],
-  "references": [
-    { "path": "../engine" },
-    { "path": "../game-logic" }
-  ]
+  "references": [{ "path": "../engine" }, { "path": "../game-logic" }]
 }

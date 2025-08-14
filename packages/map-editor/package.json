@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch", 
+    "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
