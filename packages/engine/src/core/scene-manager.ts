@@ -221,6 +221,23 @@ export class SceneManager {
     ceilingMaterial.diffuseColor = new Color3(0.2, 0.2, 0.8);
     ceilingMesh.material = ceilingMaterial;
 
+    // Create wall meshes
+    for (const lineDef of sector.lineDefs) {
+      const wallTriangulation = sectorGeometry.generateWallGeometry(lineDef);
+      if (wallTriangulation) {
+        const wallMesh = new Mesh(`${lineDef.id}_wall`, scene);
+        const wallVertexData = new VertexData();
+        wallVertexData.positions = wallTriangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
+        wallVertexData.indices = wallTriangulation.indices;
+        wallVertexData.uvs = wallTriangulation.uvs.flatMap((v) => [v.x, v.y]);
+        wallVertexData.applyToMesh(wallMesh);
+
+        const wallMaterial = new StandardMaterial(`${lineDef.id}_wall_mat`, scene);
+        wallMaterial.diffuseColor = new Color3(0.8, 0.2, 0.2); // Red walls
+        wallMesh.material = wallMaterial;
+      }
+    }
+
     this.currentScene = scene;
     return scene;
   }
