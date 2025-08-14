@@ -4,6 +4,7 @@ import {
   FreeCamera,
   HemisphericLight,
   Mesh,
+  MeshBuilder,
   Scene,
   StandardMaterial,
   Vector2,
@@ -32,9 +33,9 @@ export class SceneManager {
     console.log('[ENGINE] Creating default scene...');
     const scene = new Scene(this.engine);
 
-    // Create camera
+    // Create camera - positioned to look forward (horizontal)
     const camera = new FreeCamera('camera', new Vector3(0, 2, 0), scene);
-    camera.setTarget(new Vector3(0, 2, 1));
+    camera.setTarget(new Vector3(0, 2, 1)); // Look forward horizontally
     // Attach camera controls to canvas
     const canvas = this.engine.getRenderingCanvas();
     if (canvas) {
@@ -221,11 +222,12 @@ export class SceneManager {
       .loadBabylonTexture('/textures/floor.jpg', scene)
       .then((texture) => {
         floorMaterial.diffuseTexture = texture;
-        // Remove fallback color when texture is loaded
-        floorMaterial.diffuseColor = new Color3(1, 1, 1);
-        console.log('[ENGINE] Floor texture loaded and applied successfully');
-        console.log('[ENGINE] Floor material diffuseTexture:', floorMaterial.diffuseTexture);
-        console.log('[ENGINE] Floor texture isReady:', texture.isReady());
+        // Strong concrete appearance: very matte and gray
+        floorMaterial.diffuseColor = new Color3(0.6, 0.6, 0.6); // Much more gray/concrete
+        // Very matte finish for concrete
+        floorMaterial.specularColor = new Color3(0.05, 0.05, 0.05); // Almost no reflections
+        floorMaterial.specularPower = 4; // Very diffuse, rough concrete surface
+        console.log('[ENGINE] Floor texture applied with concrete properties');
       })
       .catch((error) => {
         console.warn('[ENGINE] Failed to load floor texture, using fallback color:', error);
@@ -234,44 +236,45 @@ export class SceneManager {
     console.log('[ENGINE] Floor mesh created, material assigned');
 
     // Create ceiling mesh
-    const ceilingTriangulation = sectorGeometry.triangulateCeiling();
-    console.log('[ENGINE] Ceiling triangulation vertices:', ceilingTriangulation.vertices);
-    console.log('[ENGINE] Ceiling triangulation indices:', ceilingTriangulation.indices);
-    console.log('[ENGINE] Ceiling triangulation UVs:', ceilingTriangulation.uvs);
+    const ceilingMesh = MeshBuilder.CreateBox(
+      'test_ceiling',
+      {
+        width: 8,
+        height: 0.5, // Thicker so we can see it better
+        depth: 8,
+      },
+      scene
+    );
+    ceilingMesh.position.y = 3.8; // High up
+    const ceilingMaterial = new StandardMaterial('ceiling_mat', scene);
+    ceilingMaterial.diffuseColor = new Color3(0, 1, 0); // Green fallback
+    // Try with backFaceCulling enabled first
+    ceilingMaterial.backFaceCulling = true;
+    // Add some emission to make sure it's visible
+    ceilingMaterial.emissiveColor = new Color3(0.1, 0.3, 0.1); // Slight green emission
+    console.log('[ENGINE] Ceiling material created with green fallback and emission');
 
-    const ceilingMesh = new Mesh(`${sector.id}_ceiling`, scene);
-    const ceilingVertexData = new VertexData();
-    ceilingVertexData.positions = ceilingTriangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
-    ceilingVertexData.indices = ceilingTriangulation.indices;
-    ceilingVertexData.uvs = ceilingTriangulation.uvs.flatMap((v) => [v.x, v.y]);
-
-    console.log('[ENGINE] Ceiling positions array:', ceilingVertexData.positions);
-    console.log('[ENGINE] Ceiling indices array:', ceilingVertexData.indices);
-    console.log('[ENGINE] Ceiling UVs array:', ceilingVertexData.uvs);
-
-    ceilingVertexData.applyToMesh(ceilingMesh);
-
-    const ceilingMaterial = new StandardMaterial(`${sector.id}_ceiling_mat`, scene);
-    ceilingMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8); // Fallback light gray
-    ceilingMaterial.backFaceCulling = false; // Ensure ceiling is visible from below
-    console.log('[ENGINE] Ceiling material created');
-
-    // Try to load texture asynchronously (non-blocking)
+    // Load ceiling texture with proper brightness settings
     this.assetLoader
-      .loadBabylonTexture('/textures/ceiling.jpg', scene, 'ceiling', { invertY: false })
+      .loadBabylonTexture('/textures/ceiling-metal.jpg', scene, 'ceiling')
       .then((texture) => {
-        ceilingMaterial.diffuseTexture = texture;
-        ceilingMaterial.diffuseColor = new Color3(1, 1, 1); // Blanc pour texture
         console.log('[ENGINE] Ceiling texture loaded and applied successfully');
-        console.log('[ENGINE] Ceiling material diffuseTexture:', ceilingMaterial.diffuseTexture);
-        console.log('[ENGINE] Ceiling texture isReady:', texture.isReady());
+        ceilingMaterial.diffuseTexture = texture;
+        // Strong metallic appearance: chrome-like with high reflectivity
+        ceilingMaterial.diffuseColor = new Color3(2.2, 2.8, 4.2); // Much more blue-tinted metal
+        ceilingMaterial.emissiveColor = new Color3(0.3, 0.5, 1.0); // Strong blue emission
+        // Enhanced metallic properties
+        ceilingMaterial.specularColor = new Color3(1.2, 1.3, 1.5); // Very bright reflections
+        ceilingMaterial.specularPower = 128; // Very sharp, mirror-like reflections
+        // Note: metallicFactor is not available on StandardMaterial, using specular properties instead
+        console.log('[ENGINE] Ceiling texture applied with metallic properties');
       })
       .catch((error) => {
-        console.error('[ENGINE] Failed to load ceiling texture, using fallback:', error);
-        ceilingMaterial.diffuseColor = new Color3(0.2, 0.2, 0.8); // Fallback blue
+        console.warn('[ENGINE] Failed to load ceiling texture, using fallback:', error);
       });
+
     ceilingMesh.material = ceilingMaterial;
-    console.log('[ENGINE] Ceiling mesh created, material assigned');
+    console.log('[ENGINE] Debug ceiling created at:', ceilingMesh.position);
 
     // Create wall meshes
     for (const lineDef of sector.lineDefs) {
