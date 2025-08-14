@@ -83,9 +83,14 @@ export class SectorGeometry {
    * Calculates the area of the sector using the shoelace formula
    */
   get area(): number {
+    // Gracefully handle edge case: fewer than 3 vertices cannot form a polygon
+    const vertices = this.sector.vertices;
+    if (vertices.length < 3) {
+      return 0;
+    }
+
     // Note: validateSector() ensures at least 3 vertices.
     let area = 0;
-    const vertices = this.sector.vertices;
 
     for (let i = 0; i < vertices.length; i++) {
       const j = (i + 1) % vertices.length;

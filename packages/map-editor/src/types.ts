@@ -58,7 +58,7 @@ export interface Sector {
 }
 
 /**
- * @deprecated Will be removed in a future version. Please migrate to LineDef.
+ * @deprecated Will be removed in v2.0.0. Please migrate to LineDef.
  * Legacy compatibility.
  */
 export interface Line {
