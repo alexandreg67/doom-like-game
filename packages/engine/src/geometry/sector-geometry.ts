@@ -8,7 +8,6 @@ import type { DoomLineDef, DoomSector, GeometryBounds, TriangulationResult } fro
 export class SectorGeometry {
   private sector: DoomSector;
   private _boundingBox?: GeometryBounds | undefined;
-  private _triangulationCache?: TriangulationResult | undefined;
 
   constructor(sector: DoomSector) {
     this.sector = sector;
@@ -43,7 +42,7 @@ export class SectorGeometry {
    * Calculates and caches the 2D bounding box of the sector
    */
   private calculateBoundingBox(): void {
-    // Note: validateSector() ensures we have at least 3 vertices, so no empty checks are needed.
+    // biome-ignore lint/style/noNonNullAssertion: validateSector ensures at least 3 vertices.
     const firstVertex = this.sector.vertices[0]!;
 
     let minX = firstVertex.position.x;
@@ -52,6 +51,7 @@ export class SectorGeometry {
     let maxY = minY;
 
     for (let i = 1; i < this.sector.vertices.length; i++) {
+      // biome-ignore lint/style/noNonNullAssertion: Loop bounds are checked.
       const vertex = this.sector.vertices[i]!;
       minX = Math.min(minX, vertex.position.x);
       maxX = Math.max(maxX, vertex.position.x);
@@ -76,25 +76,25 @@ export class SectorGeometry {
     if (!this._boundingBox) {
       this.calculateBoundingBox();
     }
-    return this._boundingBox as GeometryBounds;
+    // biome-ignore lint/style/noNonNullAssertion: calculateBoundingBox is guaranteed to set this property.
+    return this._boundingBox!;
   }
 
   /**
    * Calculates the area of the sector using the shoelace formula
    */
   get area(): number {
-    // Gracefully handle edge case: fewer than 3 vertices cannot form a polygon
     const vertices = this.sector.vertices;
     if (vertices.length < 3) {
       return 0;
     }
 
-    // Note: validateSector() ensures at least 3 vertices.
     let area = 0;
-
     for (let i = 0; i < vertices.length; i++) {
       const j = (i + 1) % vertices.length;
+      // biome-ignore lint/style/noNonNullAssertion: Length is checked above.
       const vi = vertices[i]!;
+      // biome-ignore lint/style/noNonNullAssertion: Length is checked above.
       const vj = vertices[j]!;
       area += vi.position.x * vj.position.y;
       area -= vj.position.x * vi.position.y;
@@ -107,15 +107,20 @@ export class SectorGeometry {
    * Calculates the centroid (center point) of the sector
    */
   get centroid(): Vector2 {
+    const vertices = this.sector.vertices;
+    if (vertices.length === 0) {
+      return new Vector2(0, 0);
+    }
+
     let sumX = 0;
     let sumY = 0;
 
-    for (const vertex of this.sector.vertices) {
+    for (const vertex of vertices) {
       sumX += vertex.position.x;
       sumY += vertex.position.y;
     }
 
-    return new Vector2(sumX / this.sector.vertices.length, sumY / this.sector.vertices.length);
+    return new Vector2(sumX / vertices.length, sumY / vertices.length);
   }
 
   /**
@@ -123,12 +128,18 @@ export class SectorGeometry {
    * Uses shoelace formula: negative area = clockwise in screen coordinates
    */
   get isClockwise(): boolean {
-    let sum = 0;
     const vertices = this.sector.vertices;
+    if (vertices.length < 3) {
+      return false;
+    }
 
+    let sum = 0;
     for (let i = 0; i < vertices.length; i++) {
+      const j = (i + 1) % vertices.length;
+      // biome-ignore lint/style/noNonNullAssertion: Length is checked above.
       const curr = vertices[i]!;
-      const next = vertices[(i + 1) % vertices.length]!;
+      // biome-ignore lint/style/noNonNullAssertion: Length is checked above.
+      const next = vertices[j]!;
       sum += (next.position.x - curr.position.x) * (next.position.y + curr.position.y);
     }
 
@@ -144,7 +155,6 @@ export class SectorGeometry {
   ensureClockwiseOrder(): void {
     if (!this.isClockwise) {
       this.sector.vertices.reverse();
-      this._triangulationCache = undefined;
     }
   }
 
@@ -155,9 +165,14 @@ export class SectorGeometry {
   containsPoint(point: Vector2): boolean {
     let inside = false;
     const vertices = this.sector.vertices;
+    if (vertices.length < 3) {
+      return false;
+    }
 
     for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+      // biome-ignore lint/style/noNonNullAssertion: Length is checked above.
       const vi = vertices[i]!.position;
+      // biome-ignore lint/style/noNonNullAssertion: Length is checked above.
       const vj = vertices[j]!.position;
 
       if (
@@ -172,55 +187,55 @@ export class SectorGeometry {
   }
 
   /**
-   * Triangulates the sector for mesh generation
-   * Uses ear clipping algorithm for simple polygons
+   * Triangulates the sector floor for mesh generation
    */
-  triangulate(): TriangulationResult {
-    if (this._triangulationCache) {
-      return this._triangulationCache;
-    }
-
+  triangulateFloor(): TriangulationResult {
     this.ensureClockwiseOrder();
 
-    // Simple triangulation for convex polygons
-    // For complex polygons, we'll need a more sophisticated algorithm
     const vertices: Vector3[] = [];
     const indices: number[] = [];
     const uvs: Vector2[] = [];
 
-    // Generate floor vertices
     for (const vertex of this.sector.vertices) {
       vertices.push(new Vector3(vertex.position.x, this.sector.floorHeight, vertex.position.y));
-      // Simple UV mapping - can be improved later
       const bounds = this.boundingBox;
       const u = (vertex.position.x - bounds.minX) / (bounds.maxX - bounds.minX);
       const v = (vertex.position.y - bounds.minY) / (bounds.maxY - bounds.minY);
       uvs.push(new Vector2(u, v));
     }
 
-    // Generate ceiling vertices
-    for (const vertex of this.sector.vertices) {
-      vertices.push(new Vector3(vertex.position.x, this.sector.ceilingHeight, vertex.position.y));
-      // Ceiling UVs (flipped for proper texture mapping)
-      const bounds = this.boundingBox;
-      const u = (vertex.position.x - bounds.minX) / (bounds.maxX - bounds.minX);
-      const v = 1 - (vertex.position.y - bounds.minY) / (bounds.maxY - bounds.minY);
-      uvs.push(new Vector2(u, v));
-    }
-
-    // Triangulate floor (counter-clockwise for upward normal)
+    // Triangulate floor (fan triangulation from the first vertex, counter-clockwise for upward normal)
     for (let i = 1; i < this.sector.vertices.length - 1; i++) {
       indices.push(0, i + 1, i);
     }
 
-    // Triangulate ceiling (clockwise for downward normal)
-    const vertexCount = this.sector.vertices.length;
-    for (let i = 1; i < vertexCount - 1; i++) {
-      indices.push(vertexCount, vertexCount + i, vertexCount + i + 1);
+    return { vertices, indices, uvs };
+  }
+
+  /**
+   * Triangulates the sector ceiling for mesh generation
+   */
+  triangulateCeiling(): TriangulationResult {
+    this.ensureClockwiseOrder();
+
+    const vertices: Vector3[] = [];
+    const indices: number[] = [];
+    const uvs: Vector2[] = [];
+
+    for (const vertex of this.sector.vertices) {
+      vertices.push(new Vector3(vertex.position.x, this.sector.ceilingHeight, vertex.position.y));
+      const bounds = this.boundingBox;
+      const u = (vertex.position.x - bounds.minX) / (bounds.maxX - bounds.minX);
+      const v = 1 - (vertex.position.y - bounds.minY) / (bounds.maxY - bounds.minY); // Flipped V for ceiling
+      uvs.push(new Vector2(u, v));
     }
 
-    this._triangulationCache = { vertices, indices, uvs };
-    return this._triangulationCache;
+    // Triangulate ceiling (fan triangulation, clockwise for downward normal)
+    for (let i = 1; i < this.sector.vertices.length - 1; i++) {
+      indices.push(0, i, i + 1);
+    }
+
+    return { vertices, indices, uvs };
   }
 
   /**
@@ -285,7 +300,6 @@ export class SectorGeometry {
    */
   invalidateCache(): void {
     this._boundingBox = undefined;
-    this._triangulationCache = undefined;
   }
 
   /**

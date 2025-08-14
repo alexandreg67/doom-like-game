@@ -1,9 +1,11 @@
 import {
+  Color3,
   type Engine,
   FreeCamera,
   HemisphericLight,
   Mesh,
   Scene,
+  StandardMaterial,
   Vector2,
   Vector3,
   VertexData,
@@ -60,15 +62,32 @@ export class SceneManager {
 
     // Create geometry from the sector data
     const sectorGeometry = new SectorGeometry(sector);
-    const triangulation = sectorGeometry.triangulate();
 
-    // Create a new mesh for the sector
-    const sectorMesh = new Mesh(sector.id, scene);
-    const vertexData = new VertexData();
-    vertexData.positions = triangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
-    vertexData.indices = triangulation.indices;
-    vertexData.uvs = triangulation.uvs.flatMap((v) => [v.x, v.y]);
-    vertexData.applyToMesh(sectorMesh);
+    // Create floor mesh
+    const floorTriangulation = sectorGeometry.triangulateFloor();
+    const floorMesh = new Mesh(`${sector.id}_floor`, scene);
+    const floorVertexData = new VertexData();
+    floorVertexData.positions = floorTriangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
+    floorVertexData.indices = floorTriangulation.indices;
+    floorVertexData.uvs = floorTriangulation.uvs.flatMap((v) => [v.x, v.y]);
+    floorVertexData.applyToMesh(floorMesh);
+
+    const floorMaterial = new StandardMaterial(`${sector.id}_floor_mat`, scene);
+    floorMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5);
+    floorMesh.material = floorMaterial;
+
+    // Create ceiling mesh
+    const ceilingTriangulation = sectorGeometry.triangulateCeiling();
+    const ceilingMesh = new Mesh(`${sector.id}_ceiling`, scene);
+    const ceilingVertexData = new VertexData();
+    ceilingVertexData.positions = ceilingTriangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
+    ceilingVertexData.indices = ceilingTriangulation.indices;
+    ceilingVertexData.uvs = ceilingTriangulation.uvs.flatMap((v) => [v.x, v.y]);
+    ceilingVertexData.applyToMesh(ceilingMesh);
+
+    const ceilingMaterial = new StandardMaterial(`${sector.id}_ceiling_mat`, scene);
+    ceilingMaterial.diffuseColor = new Color3(0.2, 0.2, 0.8);
+    ceilingMesh.material = ceilingMaterial;
 
     this.currentScene = scene;
     return scene;
