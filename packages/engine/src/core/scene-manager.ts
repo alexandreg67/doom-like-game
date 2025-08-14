@@ -61,14 +61,10 @@ export class SceneManager {
     };
 
     // Define the walls (LineDefs) of the sector
-    const v1 = vertices[0];
-    const v2 = vertices[1];
-    const v3 = vertices[2];
-    const v4 = vertices[3];
-
-    if (!v1 || !v2 || !v3 || !v4) {
-      throw new Error('Hard-coded vertices are missing. This should not happen.');
-    }
+    const v1 = vertices[0]!;
+    const v2 = vertices[1]!;
+    const v3 = vertices[2]!;
+    const v4 = vertices[3]!;
 
     // Note: A circular dependency exists where LineDefs need a Sector and vice-versa.
     // We define the sector first, then the linedefs, then assign them back to the sector.
