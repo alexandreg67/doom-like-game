@@ -244,6 +244,7 @@ export class SceneManager {
 
     const ceilingMaterial = new StandardMaterial(`${sector.id}_ceiling_mat`, scene);
     ceilingMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8); // Fallback light gray
+    ceilingMaterial.backFaceCulling = false; // Ensure ceiling is visible from below
 
     // Try to load texture asynchronously (non-blocking)
     this.assetLoader

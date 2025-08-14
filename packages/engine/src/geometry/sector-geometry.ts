@@ -231,9 +231,10 @@ export class SectorGeometry {
       uvs.push(new Vector2(u, v));
     }
 
-    // Triangulate ceiling (fan triangulation, clockwise for downward normal)
+    // Triangulate ceiling (fan triangulation, counter-clockwise for visibility from below)
+    // We need the normals to point downward but be visible from below
     for (let i = 1; i < this.sector.vertices.length - 1; i++) {
-      indices.push(0, i, i + 1);
+      indices.push(0, i + 1, i); // Reversed order to make visible from below
     }
 
     return { vertices, indices, uvs };
