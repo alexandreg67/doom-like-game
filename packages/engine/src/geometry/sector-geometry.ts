@@ -146,7 +146,7 @@ export class SectorGeometry {
 
   /**
    * Checks if vertices are ordered clockwise
-   * DOOM convention: clockwise = positive area
+   * Uses shoelace formula: negative area = clockwise in screen coordinates
    */
   get isClockwise(): boolean {
     let sum = 0;
@@ -160,6 +160,9 @@ export class SectorGeometry {
       }
     }
 
+    // In screen coordinates (Y down), clockwise polygons have positive area
+    // In math coordinates (Y up), clockwise polygons have negative area
+    // DOOM uses screen coordinates convention
     return sum > 0;
   }
 
