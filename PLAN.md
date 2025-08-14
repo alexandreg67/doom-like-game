@@ -81,9 +81,9 @@ ECS System
 **Objectifs** : Rendu 3D fonctionnel avec géométrie secteur
 
 #### Semaine 3 : Rendu Core
-- [ ] Engine class avec lifecycle
-- [ ] WebGPU renderer + fallback WebGL2  
-- [ ] Scene manager avec transitions
+- [x] Engine class avec lifecycle
+- [x] WebGPU renderer + fallback WebGL2  
+- [x] Scene manager avec transitions
 - [ ] Asset loader (textures, modèles)
 
 #### Semaine 4 : Géométrie DOOM

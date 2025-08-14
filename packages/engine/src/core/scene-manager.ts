@@ -3,11 +3,15 @@ import {
   type Engine,
   FreeCamera,
   HemisphericLight,
-  MeshBuilder,
+  Mesh,
   Scene,
   StandardMaterial,
+  Vector2,
   Vector3,
+  VertexData,
 } from '@babylonjs/core';
+import type { DoomSector, DoomVertex } from '../geometry/doom-geometry';
+import { SectorGeometry } from '../geometry/sector-geometry';
 
 export class SceneManager {
   private engine: Engine;
@@ -21,8 +25,8 @@ export class SceneManager {
     const scene = new Scene(this.engine);
 
     // Create camera
-    const camera = new FreeCamera('camera', new Vector3(0, 2, -5), scene);
-    camera.setTarget(Vector3.Zero());
+    const camera = new FreeCamera('camera', new Vector3(0, 5, -10), scene);
+    camera.setTarget(new Vector3(0, 2, 0));
     // Attach camera controls to canvas
     const canvas = this.engine.getRenderingCanvas();
     if (canvas) {
@@ -33,18 +37,57 @@ export class SceneManager {
     const light = new HemisphericLight('light', new Vector3(0, 1, 0), scene);
     light.intensity = 0.7;
 
-    // Create simple ground plane
-    const ground = MeshBuilder.CreateGround('ground', { width: 10, height: 10 }, scene);
-    const groundMaterial = new StandardMaterial('groundMaterial', scene);
-    groundMaterial.diffuseColor = new Color3(0.4, 0.4, 0.4);
-    ground.material = groundMaterial;
+    // Define a simple square sector
+    const vertices: DoomVertex[] = [
+      { id: 'v1', position: new Vector2(-5, -5) },
+      { id: 'v2', position: new Vector2(5, -5) },
+      { id: 'v3', position: new Vector2(5, 5) },
+      { id: 'v4', position: new Vector2(-5, 5) },
+    ];
 
-    // Create a simple wall for testing
-    const wall = MeshBuilder.CreateBox('wall', { width: 10, height: 3, depth: 0.5 }, scene);
-    wall.position = new Vector3(0, 1.5, 3);
-    const wallMaterial = new StandardMaterial('wallMaterial', scene);
-    wallMaterial.diffuseColor = new Color3(0.6, 0.6, 0.8);
-    wall.material = wallMaterial;
+    const sector: DoomSector = {
+      id: 's1',
+      floorHeight: 0,
+      ceilingHeight: 4,
+      floorTexture: 'FLOOR1',
+      ceilingTexture: 'CEIL1',
+      lightLevel: 200,
+      vertices: vertices,
+      lineDefs: [], // Will be populated later
+      neighbors: [],
+      // Bounding box and other data will be calculated by SectorGeometry
+      boundingBox: { min: new Vector2(0, 0), max: new Vector2(0, 0) },
+      meshId: 'sector_s1',
+    };
+
+    // Create geometry from the sector data
+    const sectorGeometry = new SectorGeometry(sector);
+
+    // Create floor mesh
+    const floorTriangulation = sectorGeometry.triangulateFloor();
+    const floorMesh = new Mesh(`${sector.id}_floor`, scene);
+    const floorVertexData = new VertexData();
+    floorVertexData.positions = floorTriangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
+    floorVertexData.indices = floorTriangulation.indices;
+    floorVertexData.uvs = floorTriangulation.uvs.flatMap((v) => [v.x, v.y]);
+    floorVertexData.applyToMesh(floorMesh);
+
+    const floorMaterial = new StandardMaterial(`${sector.id}_floor_mat`, scene);
+    floorMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5);
+    floorMesh.material = floorMaterial;
+
+    // Create ceiling mesh
+    const ceilingTriangulation = sectorGeometry.triangulateCeiling();
+    const ceilingMesh = new Mesh(`${sector.id}_ceiling`, scene);
+    const ceilingVertexData = new VertexData();
+    ceilingVertexData.positions = ceilingTriangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
+    ceilingVertexData.indices = ceilingTriangulation.indices;
+    ceilingVertexData.uvs = ceilingTriangulation.uvs.flatMap((v) => [v.x, v.y]);
+    ceilingVertexData.applyToMesh(ceilingMesh);
+
+    const ceilingMaterial = new StandardMaterial(`${sector.id}_ceiling_mat`, scene);
+    ceilingMaterial.diffuseColor = new Color3(0.2, 0.2, 0.8);
+    ceilingMesh.material = ceilingMaterial;
 
     this.currentScene = scene;
     return scene;

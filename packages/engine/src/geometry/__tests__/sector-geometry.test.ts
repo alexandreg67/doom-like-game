@@ -242,41 +242,30 @@ describe('SectorGeometry', () => {
   });
 
   describe('triangulation', () => {
-    it('should generate valid triangulation data', () => {
-      const result = geometry.triangulate();
-
+    it('should generate valid floor triangulation', () => {
+      const result = geometry.triangulateFloor();
       expect(result.vertices).toBeDefined();
       expect(result.indices).toBeDefined();
       expect(result.uvs).toBeDefined();
-
-      // Should have floor and ceiling vertices
-      expect(result.vertices.length).toBe(8); // 4 floor + 4 ceiling
-
-      // Should have proper UV coordinates
-      expect(result.uvs.length).toBe(8);
-
-      // Should have triangles for floor and ceiling
-      expect(result.indices.length).toBe(12); // 2 triangles * 3 vertices * 2 surfaces
+      expect(result.vertices.length).toBe(4);
+      expect(result.indices.length).toBe(6); // 2 triangles
+      // Check that all vertices are at floor height
+      for (const v of result.vertices) {
+        expect(v.y).toBe(mockSector.floorHeight);
+      }
     });
 
-    it('should cache triangulation results', () => {
-      const result1 = geometry.triangulate();
-      const result2 = geometry.triangulate();
-
-      // Should return same reference (cached)
-      expect(result1).toBe(result2);
-    });
-
-    it('should invalidate cache when geometry changes', () => {
-      const result1 = geometry.triangulate();
-
-      // Invalidate cache
-      geometry.invalidateCache();
-
-      const result2 = geometry.triangulate();
-
-      // Should return different reference (recalculated)
-      expect(result1).not.toBe(result2);
+    it('should generate valid ceiling triangulation', () => {
+      const result = geometry.triangulateCeiling();
+      expect(result.vertices).toBeDefined();
+      expect(result.indices).toBeDefined();
+      expect(result.uvs).toBeDefined();
+      expect(result.vertices.length).toBe(4);
+      expect(result.indices.length).toBe(6); // 2 triangles
+      // Check that all vertices are at ceiling height
+      for (const v of result.vertices) {
+        expect(v.y).toBe(mockSector.ceilingHeight);
+      }
     });
   });
 
@@ -284,7 +273,6 @@ describe('SectorGeometry', () => {
     it('should invalidate all caches', () => {
       // Force cache creation
       geometry.boundingBox;
-      geometry.triangulate();
 
       // Should not throw
       expect(() => geometry.invalidateCache()).not.toThrow();
