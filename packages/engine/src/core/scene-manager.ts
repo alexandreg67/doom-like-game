@@ -25,8 +25,8 @@ export class SceneManager {
     const scene = new Scene(this.engine);
 
     // Create camera
-    const camera = new FreeCamera('camera', new Vector3(0, 5, -10), scene);
-    camera.setTarget(new Vector3(0, 2, 0));
+    const camera = new FreeCamera('camera', new Vector3(0, 2, 0), scene);
+    camera.setTarget(new Vector3(0, 2, 1));
     // Attach camera controls to canvas
     const canvas = this.engine.getRenderingCanvas();
     if (canvas) {
@@ -205,7 +205,8 @@ export class SceneManager {
     floorVertexData.applyToMesh(floorMesh);
 
     const floorMaterial = new StandardMaterial(`${sector.id}_floor_mat`, scene);
-    floorMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5);
+    floorMaterial.diffuseColor = new Color3(1, 0, 0);
+    floorMaterial.emissiveColor = new Color3(1, 0, 0);
     floorMesh.material = floorMaterial;
 
     // Create ceiling mesh
@@ -218,7 +219,8 @@ export class SceneManager {
     ceilingVertexData.applyToMesh(ceilingMesh);
 
     const ceilingMaterial = new StandardMaterial(`${sector.id}_ceiling_mat`, scene);
-    ceilingMaterial.diffuseColor = new Color3(0.2, 0.2, 0.8);
+    ceilingMaterial.diffuseColor = new Color3(0, 1, 0);
+    ceilingMaterial.emissiveColor = new Color3(0, 1, 0);
     ceilingMesh.material = ceilingMaterial;
 
     // Create wall meshes
@@ -233,7 +235,8 @@ export class SceneManager {
         wallVertexData.applyToMesh(wallMesh);
 
         const wallMaterial = new StandardMaterial(`${lineDef.id}_wall_mat`, scene);
-        wallMaterial.diffuseColor = new Color3(0.8, 0.2, 0.2); // Red walls
+        wallMaterial.diffuseColor = new Color3(0, 0, 1); // Blue walls
+        wallMaterial.emissiveColor = new Color3(0, 0, 1); // Make walls self-illuminating
         wallMesh.material = wallMaterial;
       }
     }
