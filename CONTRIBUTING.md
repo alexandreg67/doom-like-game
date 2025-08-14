@@ -42,8 +42,8 @@ We're building a modern web-based FPS that captures the essence of DOOM while sh
 
 1. **Create Feature Branch**
    ```bash
-   git checkout develop
-   git pull origin develop
+   git checkout main
+   git pull origin main
    git checkout -b feature/awesome-feature
    ```
 
