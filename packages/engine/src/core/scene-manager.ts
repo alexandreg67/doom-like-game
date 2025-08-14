@@ -1,4 +1,13 @@
-import { Scene, FreeCamera, Vector3, HemisphericLight, MeshBuilder, StandardMaterial, Color3, Engine } from '@babylonjs/core';
+import {
+  Color3,
+  type Engine,
+  FreeCamera,
+  HemisphericLight,
+  MeshBuilder,
+  Scene,
+  StandardMaterial,
+  Vector3,
+} from '@babylonjs/core';
 
 export class SceneManager {
   private engine: Engine;
@@ -10,11 +19,12 @@ export class SceneManager {
 
   public createDefaultScene(): Scene {
     const scene = new Scene(this.engine);
-    
+
     // Create camera
     const camera = new FreeCamera('camera', new Vector3(0, 2, -5), scene);
     camera.setTarget(Vector3.Zero());
-    camera.attachToCanvas(this.engine.getRenderingCanvas() as HTMLCanvasElement);
+    // Attach controls to canvas - will be implemented later
+    // camera.attachControls(this.engine.getRenderingCanvas() as HTMLCanvasElement);
 
     // Create lighting
     const light = new HemisphericLight('light', new Vector3(0, 1, 0), scene);

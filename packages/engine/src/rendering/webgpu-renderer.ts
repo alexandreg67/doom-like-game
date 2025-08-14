@@ -1,14 +1,8 @@
-import { Engine } from '@babylonjs/core';
 import type { WebGPUCapabilities } from '../types';
 
 export class WebGPURenderer {
-  private engine: Engine;
   private adapter: GPUAdapter | null = null;
   private device: GPUDevice | null = null;
-
-  constructor(engine: Engine) {
-    this.engine = engine;
-  }
 
   public async initialize(): Promise<void> {
     try {
@@ -16,17 +10,15 @@ export class WebGPURenderer {
         throw new Error('WebGPU not supported');
       }
 
-      this.adapter = await navigator.gpu.requestAdapter();
+      this.adapter = (await navigator.gpu?.requestAdapter()) || null;
       if (!this.adapter) {
         throw new Error('No suitable GPU adapter found');
       }
 
       this.device = await this.adapter.requestDevice();
-      
-      // Initialize WebGPU engine if available
-      if (this.engine.webgpuEngine) {
-        await this.engine.webgpuEngine.initAsync();
-      }
+
+      // TODO: Initialize WebGPU engine integration
+      // Note: Babylon.js WebGPU integration will be implemented in next phase
 
       console.log('[ENGINE] WebGPU renderer initialized successfully');
     } catch (error) {

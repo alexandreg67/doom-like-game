@@ -1,18 +1,18 @@
-import { Engine } from '@babylonjs/core';
-import { WebGPURenderer } from './webgpu-renderer';
+import type { Engine } from '@babylonjs/core';
 import { WebGLRenderer } from './webgl-renderer';
+import { WebGPURenderer } from './webgpu-renderer';
 
 export class Renderer {
   private activeRenderer: WebGPURenderer | WebGLRenderer;
   private engine: Engine;
 
-  constructor(engine: Engine, preferWebGPU: boolean = true) {
+  constructor(engine: Engine, preferWebGPU = true) {
     this.engine = engine;
-    
+
     if (preferWebGPU && this.isWebGPUSupported()) {
-      this.activeRenderer = new WebGPURenderer(engine);
+      this.activeRenderer = new WebGPURenderer();
     } else {
-      this.activeRenderer = new WebGLRenderer(engine);
+      this.activeRenderer = new WebGLRenderer(this.engine);
     }
   }
 

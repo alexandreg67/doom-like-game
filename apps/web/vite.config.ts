@@ -1,10 +1,9 @@
+import path from 'node:path';
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
-  
+  plugins: [],
+
   resolve: {
     alias: {
       '@doom-like/engine': path.resolve(__dirname, '../../packages/engine/src'),
@@ -39,11 +38,6 @@ export default defineConfig({
   },
 
   optimizeDeps: {
-    include: [
-      '@babylonjs/core',
-      '@babylonjs/materials', 
-      '@babylonjs/loaders',
-      '@babylonjs/gui',
-    ],
+    include: ['@babylonjs/core', '@babylonjs/materials', '@babylonjs/loaders', '@babylonjs/gui'],
   },
 });

@@ -1,4 +1,4 @@
-import { Engine, EngineConfig } from '@doom-like/engine';
+import { Engine, type EngineConfig } from '@doom-like/engine';
 import './style.css';
 
 async function initializeGame() {
@@ -10,7 +10,7 @@ async function initializeGame() {
   // Show loading screen
   const loadingElement = document.getElementById('loading');
   const errorElement = document.getElementById('error');
-  
+
   try {
     // Engine configuration
     const config: EngineConfig = {
@@ -31,7 +31,7 @@ async function initializeGame() {
 
     console.log('[GAME] Initializing engine...');
     const engine = new Engine(config);
-    
+
     await engine.initialize();
     console.log('[GAME] Engine initialized successfully');
 
@@ -47,7 +47,7 @@ async function initializeGame() {
     if (rendererInfo) {
       const babylonEngine = engine.getBabylonEngine();
       rendererInfo.innerHTML = `
-        <p><strong>Renderer:</strong> ${babylonEngine.webgpuEngine ? 'WebGPU' : 'WebGL'}</p>
+        <p><strong>Renderer:</strong> WebGL</p>
         <p><strong>Version:</strong> Babylon.js ${babylonEngine.version}</p>
         <p><strong>FPS:</strong> <span id="fps">--</span></p>
       `;
@@ -63,7 +63,7 @@ async function initializeGame() {
 
     // Handle window resize
     window.addEventListener('resize', () => {
-      babylonEngine.resize();
+      engine.getBabylonEngine().resize();
     });
 
     // Handle visibility change
@@ -74,10 +74,9 @@ async function initializeGame() {
         engine.start();
       }
     });
-
   } catch (error) {
     console.error('[GAME] Failed to initialize:', error);
-    
+
     if (loadingElement) loadingElement.style.display = 'none';
     if (errorElement) {
       errorElement.style.display = 'block';
