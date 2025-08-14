@@ -337,4 +337,98 @@ describe('SectorGeometry', () => {
       expect(collinearGeometry.area).toBe(0);
     });
   });
+
+  describe('wall geometry generation', () => {
+    it('should generate valid full wall geometry for single-sided linedef', () => {
+      const lineDef = {
+        id: 'test-line',
+        startVertex: mockSector.vertices[0],
+        endVertex: mockSector.vertices[1],
+        flags: { blocking: true, twoSided: false },
+        frontSide: {
+          id: 'test-side',
+          sector: mockSector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 100, // Distance between (0,0) and (100,0)
+        normal: new Vector2(0, 1),
+      };
+
+      const result = geometry.generateWallGeometry(lineDef);
+      expect(result).toBeDefined();
+      expect(result?.vertices).toBeDefined();
+      expect(result?.indices).toBeDefined();
+      expect(result?.uvs).toBeDefined();
+
+      // A full wall is a quad, so 4 vertices and 6 indices (2 triangles)
+      expect(result?.vertices.length).toBe(4);
+      expect(result?.indices.length).toBe(6);
+      expect(result?.uvs.length).toBe(4);
+
+      // Check vertex positions (bottom-left, bottom-right, top-right, top-left)
+      expect(result?.vertices[0].x).toBe(0);
+      expect(result?.vertices[0].y).toBe(mockSector.floorHeight);
+      expect(result?.vertices[0].z).toBe(0);
+
+      expect(result?.vertices[1].x).toBe(100);
+      expect(result?.vertices[1].y).toBe(mockSector.floorHeight);
+      expect(result?.vertices[1].z).toBe(0);
+
+      expect(result?.vertices[2].x).toBe(100);
+      expect(result?.vertices[2].y).toBe(mockSector.ceilingHeight);
+      expect(result?.vertices[2].z).toBe(0);
+
+      expect(result?.vertices[3].x).toBe(0);
+      expect(result?.vertices[3].y).toBe(mockSector.ceilingHeight);
+      expect(result?.vertices[3].z).toBe(0);
+    });
+
+    it('should return null for two-sided linedef if partial walls not implemented', () => {
+      const lineDef = {
+        id: 'test-line-two-sided',
+        startVertex: mockSector.vertices[0],
+        endVertex: mockSector.vertices[1],
+        flags: { blocking: true, twoSided: true }, // Two-sided
+        frontSide: {
+          id: 'test-side-front',
+          sector: mockSector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        backSide: {
+          // Minimal back side
+          id: 'test-side-back',
+          sector: mockSector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 100,
+        normal: new Vector2(0, 1),
+      };
+
+      // Expect it to throw an error because generatePartialWalls is not implemented
+      expect(() => geometry.generateWallGeometry(lineDef)).toThrow(
+        'TODO: generatePartialWalls is not implemented'
+      );
+    });
+  });
 });
