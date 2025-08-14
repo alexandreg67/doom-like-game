@@ -43,30 +43,8 @@ export class SectorGeometry {
    * Calculates and caches the 2D bounding box of the sector
    */
   private calculateBoundingBox(): void {
-    if (this.sector.vertices.length === 0) {
-      this._boundingBox = {
-        minX: 0,
-        maxX: 0,
-        minY: 0,
-        maxY: 0,
-        minZ: this.sector.floorHeight,
-        maxZ: this.sector.ceilingHeight,
-      };
-      return;
-    }
-
-    const firstVertex = this.sector.vertices[0];
-    if (!firstVertex) {
-      this._boundingBox = {
-        minX: 0,
-        maxX: 0,
-        minY: 0,
-        maxY: 0,
-        minZ: this.sector.floorHeight,
-        maxZ: this.sector.ceilingHeight,
-      };
-      return;
-    }
+    // Note: validateSector() ensures we have at least 3 vertices, so no empty checks are needed.
+    const firstVertex = this.sector.vertices[0]!;
 
     let minX = firstVertex.position.x;
     let maxX = minX;
@@ -74,13 +52,11 @@ export class SectorGeometry {
     let maxY = minY;
 
     for (let i = 1; i < this.sector.vertices.length; i++) {
-      const vertex = this.sector.vertices[i];
-      if (vertex) {
-        minX = Math.min(minX, vertex.position.x);
-        maxX = Math.max(maxX, vertex.position.x);
-        minY = Math.min(minY, vertex.position.y);
-        maxY = Math.max(maxY, vertex.position.y);
-      }
+      const vertex = this.sector.vertices[i]!;
+      minX = Math.min(minX, vertex.position.x);
+      maxX = Math.max(maxX, vertex.position.x);
+      minY = Math.min(minY, vertex.position.y);
+      maxY = Math.max(maxY, vertex.position.y);
     }
 
     this._boundingBox = {
@@ -107,19 +83,16 @@ export class SectorGeometry {
    * Calculates the area of the sector using the shoelace formula
    */
   get area(): number {
-    if (this.sector.vertices.length < 3) return 0;
-
+    // Note: validateSector() ensures at least 3 vertices.
     let area = 0;
     const vertices = this.sector.vertices;
 
     for (let i = 0; i < vertices.length; i++) {
       const j = (i + 1) % vertices.length;
-      const vi = vertices[i];
-      const vj = vertices[j];
-      if (vi && vj) {
-        area += vi.position.x * vj.position.y;
-        area -= vj.position.x * vi.position.y;
-      }
+      const vi = vertices[i]!;
+      const vj = vertices[j]!;
+      area += vi.position.x * vj.position.y;
+      area -= vj.position.x * vi.position.y;
     }
 
     return Math.abs(area) / 2;
@@ -129,10 +102,6 @@ export class SectorGeometry {
    * Calculates the centroid (center point) of the sector
    */
   get centroid(): Vector2 {
-    if (this.sector.vertices.length === 0) {
-      return new Vector2(0, 0);
-    }
-
     let sumX = 0;
     let sumY = 0;
 
@@ -153,11 +122,9 @@ export class SectorGeometry {
     const vertices = this.sector.vertices;
 
     for (let i = 0; i < vertices.length; i++) {
-      const curr = vertices[i];
-      const next = vertices[(i + 1) % vertices.length];
-      if (curr && next) {
-        sum += (next.position.x - curr.position.x) * (next.position.y + curr.position.y);
-      }
+      const curr = vertices[i]!;
+      const next = vertices[(i + 1) % vertices.length]!;
+      sum += (next.position.x - curr.position.x) * (next.position.y + curr.position.y);
     }
 
     // In screen coordinates (Y down), clockwise polygons have positive area
@@ -185,10 +152,8 @@ export class SectorGeometry {
     const vertices = this.sector.vertices;
 
     for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
-      const vi = vertices[i]?.position;
-      const vj = vertices[j]?.position;
-
-      if (!vi || !vj) continue;
+      const vi = vertices[i]!.position;
+      const vj = vertices[j]!.position;
 
       if (
         vi.y > point.y !== vj.y > point.y &&
