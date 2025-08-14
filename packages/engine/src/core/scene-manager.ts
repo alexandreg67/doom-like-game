@@ -10,7 +10,7 @@ import {
   Vector3,
   VertexData,
 } from '@babylonjs/core';
-import type { DoomSector, DoomVertex } from '../geometry/doom-geometry';
+import type { DoomLineDef, DoomSector, DoomVertex } from '../geometry/doom-geometry';
 import { SectorGeometry } from '../geometry/sector-geometry';
 
 export class SceneManager {
@@ -25,8 +25,8 @@ export class SceneManager {
     const scene = new Scene(this.engine);
 
     // Create camera
-    const camera = new FreeCamera('camera', new Vector3(0, 5, -10), scene);
-    camera.setTarget(new Vector3(0, 2, 0));
+    const camera = new FreeCamera('camera', new Vector3(0, 2, 0), scene);
+    camera.setTarget(new Vector3(0, 2, 1));
     // Attach camera controls to canvas
     const canvas = this.engine.getRenderingCanvas();
     if (canvas) {
@@ -60,6 +60,138 @@ export class SceneManager {
       meshId: 'sector_s1',
     };
 
+    // Define the walls (LineDefs) of the sector
+    const v1 = vertices[0]!;
+    const v2 = vertices[1]!;
+    const v3 = vertices[2]!;
+    const v4 = vertices[3]!;
+
+    // Note: A circular dependency exists where LineDefs need a Sector and vice-versa.
+    // We define the sector first, then the linedefs, then assign them back to the sector.
+    const lineDefs: DoomLineDef[] = [
+      {
+        id: 'l1',
+        startVertex: v1,
+        endVertex: v2,
+        flags: {
+          blocking: true,
+          twoSided: false,
+          dontDraw: false,
+          mapped: true,
+          soundBlock: false,
+          secret: false,
+          lowerUnpegged: false,
+          upperUnpegged: false,
+          blockMonsters: true,
+        },
+        frontSide: {
+          id: 's1_1',
+          sector: sector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 10,
+        normal: new Vector2(0, 1),
+      },
+      {
+        id: 'l2',
+        startVertex: v2,
+        endVertex: v3,
+        flags: {
+          blocking: true,
+          twoSided: false,
+          dontDraw: false,
+          mapped: true,
+          soundBlock: false,
+          secret: false,
+          lowerUnpegged: false,
+          upperUnpegged: false,
+          blockMonsters: true,
+        },
+        frontSide: {
+          id: 's1_2',
+          sector: sector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 10,
+        normal: new Vector2(-1, 0),
+      },
+      {
+        id: 'l3',
+        startVertex: v3,
+        endVertex: v4,
+        flags: {
+          blocking: true,
+          twoSided: false,
+          dontDraw: false,
+          mapped: true,
+          soundBlock: false,
+          secret: false,
+          lowerUnpegged: false,
+          upperUnpegged: false,
+          blockMonsters: true,
+        },
+        frontSide: {
+          id: 's1_3',
+          sector: sector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 10,
+        normal: new Vector2(0, -1),
+      },
+      {
+        id: 'l4',
+        startVertex: v4,
+        endVertex: v1,
+        flags: {
+          blocking: true,
+          twoSided: false,
+          dontDraw: false,
+          mapped: true,
+          soundBlock: false,
+          secret: false,
+          lowerUnpegged: false,
+          upperUnpegged: false,
+          blockMonsters: true,
+        },
+        frontSide: {
+          id: 's1_4',
+          sector: sector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 10,
+        normal: new Vector2(1, 0),
+      },
+    ];
+    sector.lineDefs = lineDefs;
+
     // Create geometry from the sector data
     const sectorGeometry = new SectorGeometry(sector);
 
@@ -73,7 +205,8 @@ export class SceneManager {
     floorVertexData.applyToMesh(floorMesh);
 
     const floorMaterial = new StandardMaterial(`${sector.id}_floor_mat`, scene);
-    floorMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5);
+    floorMaterial.diffuseColor = new Color3(1, 0, 0);
+    floorMaterial.emissiveColor = new Color3(1, 0, 0);
     floorMesh.material = floorMaterial;
 
     // Create ceiling mesh
@@ -86,8 +219,27 @@ export class SceneManager {
     ceilingVertexData.applyToMesh(ceilingMesh);
 
     const ceilingMaterial = new StandardMaterial(`${sector.id}_ceiling_mat`, scene);
-    ceilingMaterial.diffuseColor = new Color3(0.2, 0.2, 0.8);
+    ceilingMaterial.diffuseColor = new Color3(0, 1, 0);
+    ceilingMaterial.emissiveColor = new Color3(0, 1, 0);
     ceilingMesh.material = ceilingMaterial;
+
+    // Create wall meshes
+    for (const lineDef of sector.lineDefs) {
+      const wallTriangulation = sectorGeometry.generateWallGeometry(lineDef);
+      if (wallTriangulation) {
+        const wallMesh = new Mesh(`${lineDef.id}_wall`, scene);
+        const wallVertexData = new VertexData();
+        wallVertexData.positions = wallTriangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
+        wallVertexData.indices = wallTriangulation.indices;
+        wallVertexData.uvs = wallTriangulation.uvs.flatMap((v) => [v.x, v.y]);
+        wallVertexData.applyToMesh(wallMesh);
+
+        const wallMaterial = new StandardMaterial(`${lineDef.id}_wall_mat`, scene);
+        wallMaterial.diffuseColor = new Color3(0, 0, 1); // Blue walls
+        wallMaterial.emissiveColor = new Color3(0, 0, 1); // Make walls self-illuminating
+        wallMesh.material = wallMaterial;
+      }
+    }
 
     this.currentScene = scene;
     return scene;
