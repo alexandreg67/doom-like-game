@@ -22,7 +22,7 @@ export class Renderer {
     } catch (error) {
       // If WebGPU fails, fallback to WebGL
       if (this.activeRenderer instanceof WebGPURenderer) {
-        console.log('[ENGINE] WebGPU failed, falling back to WebGL2');
+        console.log('[ENGINE] WebGPU not available, using WebGL2 renderer');
         this.activeRenderer = new WebGLRenderer(this.engine);
         await this.activeRenderer.initialize();
       } else {
