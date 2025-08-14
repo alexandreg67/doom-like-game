@@ -93,7 +93,12 @@ export class AssetLoader {
     });
   }
 
-  public async loadBabylonTexture(url: string, scene: Scene, _name?: string): Promise<Texture> {
+  public async loadBabylonTexture(
+    url: string,
+    scene: Scene,
+    _name?: string,
+    options: { invertY?: boolean; fallbackExtensions?: string[] } = {}
+  ): Promise<Texture> {
     if (this.isAssetCached(url)) {
       const cached = this.loadedAssets.get(url);
       if (cached && cached.type === 'texture' && cached.data instanceof Texture) {
@@ -105,19 +110,30 @@ export class AssetLoader {
     return this.retryOperation(async () => {
       const texture = new Texture(url, scene, {
         noMipmap: false,
-        invertY: true,
+        invertY: options.invertY ?? true, // Use provided invertY option, default to true
         samplingMode: Texture.TRILINEAR_SAMPLINGMODE,
       });
 
       return new Promise<Texture>((resolve, reject) => {
+        console.log(`[AssetLoader] Starting to load texture: ${url}`);
+        console.log(`[AssetLoader] Texture isReady before load: ${texture.isReady()}`);
+
         // Note: onErrorObservable might not be available on all Texture types
         // We'll rely on the timeout mechanism for error handling
         const timeoutId = setTimeout(() => {
+          console.error(`[AssetLoader] Texture loading timeout for: ${url}`);
+          console.error(
+            `[AssetLoader] Texture state at timeout - isReady: ${texture.isReady()}, loadingError: ${texture.loadingError}`
+          );
           texture.dispose();
-          reject(new Error(`Failed to load Babylon texture: ${url}`));
+          reject(new Error(`Failed to load Babylon texture: ${url} (timeout)`));
         }, 10000); // 10 second timeout
 
         texture.onLoadObservable.addOnce(() => {
+          console.log(
+            `[AssetLoader] Texture loaded successfully: ${url}, size: ${texture.getSize().width}x${texture.getSize().height}`
+          );
+          console.log(`[AssetLoader] Texture isReady after load: ${texture.isReady()}`);
           clearTimeout(timeoutId);
           this.loadedAssets.set(url, {
             type: 'texture',
@@ -126,6 +142,16 @@ export class AssetLoader {
           });
           resolve(texture);
         });
+
+        // Check if texture has error observable
+        if ('onErrorObservable' in texture) {
+          (texture as any).onErrorObservable.addOnce((error: any) => {
+            console.error(`[AssetLoader] Texture loading error for ${url}:`, error);
+            clearTimeout(timeoutId);
+            texture.dispose();
+            reject(new Error(`Failed to load Babylon texture: ${url} (error)`));
+          });
+        }
       });
     });
   }

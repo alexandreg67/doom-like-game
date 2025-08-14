@@ -221,12 +221,17 @@ export class SceneManager {
       .loadBabylonTexture('/textures/floor.jpg', scene)
       .then((texture) => {
         floorMaterial.diffuseTexture = texture;
-        console.log('[ENGINE] Floor texture loaded successfully');
+        // Remove fallback color when texture is loaded
+        floorMaterial.diffuseColor = new Color3(1, 1, 1);
+        console.log('[ENGINE] Floor texture loaded and applied successfully');
+        console.log('[ENGINE] Floor material diffuseTexture:', floorMaterial.diffuseTexture);
+        console.log('[ENGINE] Floor texture isReady:', texture.isReady());
       })
       .catch((error) => {
         console.warn('[ENGINE] Failed to load floor texture, using fallback color:', error);
       });
     floorMesh.material = floorMaterial;
+    console.log('[ENGINE] Floor mesh created, material assigned');
 
     // Create ceiling mesh
     const ceilingTriangulation = sectorGeometry.triangulateCeiling();
@@ -238,20 +243,24 @@ export class SceneManager {
     ceilingVertexData.applyToMesh(ceilingMesh);
 
     const ceilingMaterial = new StandardMaterial(`${sector.id}_ceiling_mat`, scene);
-    // Set fallback color immediately
-    ceilingMaterial.diffuseColor = new Color3(0.2, 0.2, 0.8); // Fallback blue
+    ceilingMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8); // Fallback light gray
 
     // Try to load texture asynchronously (non-blocking)
     this.assetLoader
-      .loadBabylonTexture('/textures/ceiling.jpg', scene)
+      .loadBabylonTexture('/textures/ceiling.jpg', scene, 'ceiling', { invertY: false })
       .then((texture) => {
         ceilingMaterial.diffuseTexture = texture;
-        console.log('[ENGINE] Ceiling texture loaded successfully');
+        ceilingMaterial.diffuseColor = new Color3(1, 1, 1); // Blanc pour texture
+        console.log('[ENGINE] Ceiling texture loaded and applied successfully');
+        console.log('[ENGINE] Ceiling material diffuseTexture:', ceilingMaterial.diffuseTexture);
+        console.log('[ENGINE] Ceiling texture isReady:', texture.isReady());
       })
       .catch((error) => {
-        console.warn('[ENGINE] Failed to load ceiling texture, using fallback color:', error);
+        console.error('[ENGINE] Failed to load ceiling texture, using fallback:', error);
+        ceilingMaterial.diffuseColor = new Color3(0.2, 0.2, 0.8); // Fallback blue
       });
     ceilingMesh.material = ceilingMaterial;
+    console.log('[ENGINE] Ceiling mesh created, material assigned');
 
     // Create wall meshes
     for (const lineDef of sector.lineDefs) {
@@ -268,20 +277,42 @@ export class SceneManager {
         // Set fallback color immediately
         wallMaterial.diffuseColor = new Color3(0.6, 0.6, 0.8); // Fallback light blue
 
-        // Try to load texture asynchronously (non-blocking)
+        // Correction robuste : vérification de frontSide et textureMiddle
+        const rawTextureName = lineDef.frontSide?.textureMiddle;
+        console.log(`[ENGINE] Wall ${lineDef.id} - Raw texture name: '${rawTextureName}'`);
+
+        // Guard against '-' or empty strings
+        let wallTextureName = 'wall'; // default
+        if (rawTextureName && rawTextureName.trim() !== '' && rawTextureName !== '-') {
+          wallTextureName = rawTextureName.toLowerCase().trim();
+        }
+
+        const wallTexturePath = `/textures/${wallTextureName}.jpg`;
+        console.log(`[ENGINE] Wall ${lineDef.id} - Resolved texture path: '${wallTexturePath}'`);
+
         this.assetLoader
-          .loadBabylonTexture('/textures/wall.jpg', scene)
+          .loadBabylonTexture(wallTexturePath, scene)
           .then((texture) => {
             wallMaterial.diffuseTexture = texture;
-            console.log(`[ENGINE] Wall texture loaded successfully for ${lineDef.id}`);
+            // Remove fallback color when texture is loaded
+            wallMaterial.diffuseColor = new Color3(1, 1, 1);
+            console.log(
+              `[ENGINE] Wall texture loaded and applied successfully for ${lineDef.id} (${wallTexturePath})`
+            );
+            console.log(
+              `[ENGINE] Wall ${lineDef.id} material diffuseTexture:`,
+              wallMaterial.diffuseTexture
+            );
+            console.log(`[ENGINE] Wall ${lineDef.id} texture isReady:`, texture.isReady());
           })
           .catch((error) => {
             console.warn(
-              `[ENGINE] Failed to load wall texture for ${lineDef.id}, using fallback color:`,
+              `[ENGINE] Failed to load wall texture for ${lineDef.id} (${wallTexturePath}), using fallback color:`,
               error
             );
           });
         wallMesh.material = wallMaterial;
+        console.log(`[ENGINE] Wall mesh ${lineDef.id} created, material assigned`);
       }
     }
 
