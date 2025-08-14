@@ -10,7 +10,7 @@ import {
   Vector3,
   VertexData,
 } from '@babylonjs/core';
-import type { DoomSector, DoomVertex } from '../geometry/doom-geometry';
+import type { DoomLineDef, DoomSector, DoomVertex } from '../geometry/doom-geometry';
 import { SectorGeometry } from '../geometry/sector-geometry';
 
 export class SceneManager {
@@ -59,6 +59,142 @@ export class SceneManager {
       boundingBox: { min: new Vector2(0, 0), max: new Vector2(0, 0) },
       meshId: 'sector_s1',
     };
+
+    // Define the walls (LineDefs) of the sector
+    const v1 = vertices[0];
+    const v2 = vertices[1];
+    const v3 = vertices[2];
+    const v4 = vertices[3];
+
+    if (!v1 || !v2 || !v3 || !v4) {
+      throw new Error('Hard-coded vertices are missing. This should not happen.');
+    }
+
+    // Note: A circular dependency exists where LineDefs need a Sector and vice-versa.
+    // We define the sector first, then the linedefs, then assign them back to the sector.
+    const lineDefs: DoomLineDef[] = [
+      {
+        id: 'l1',
+        startVertex: v1,
+        endVertex: v2,
+        flags: {
+          blocking: true,
+          twoSided: false,
+          dontDraw: false,
+          mapped: true,
+          soundBlock: false,
+          secret: false,
+          lowerUnpegged: false,
+          upperUnpegged: false,
+          blockMonsters: true,
+        },
+        frontSide: {
+          id: 's1_1',
+          sector: sector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 10,
+        normal: new Vector2(0, 1),
+      },
+      {
+        id: 'l2',
+        startVertex: v2,
+        endVertex: v3,
+        flags: {
+          blocking: true,
+          twoSided: false,
+          dontDraw: false,
+          mapped: true,
+          soundBlock: false,
+          secret: false,
+          lowerUnpegged: false,
+          upperUnpegged: false,
+          blockMonsters: true,
+        },
+        frontSide: {
+          id: 's1_2',
+          sector: sector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 10,
+        normal: new Vector2(-1, 0),
+      },
+      {
+        id: 'l3',
+        startVertex: v3,
+        endVertex: v4,
+        flags: {
+          blocking: true,
+          twoSided: false,
+          dontDraw: false,
+          mapped: true,
+          soundBlock: false,
+          secret: false,
+          lowerUnpegged: false,
+          upperUnpegged: false,
+          blockMonsters: true,
+        },
+        frontSide: {
+          id: 's1_3',
+          sector: sector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 10,
+        normal: new Vector2(0, -1),
+      },
+      {
+        id: 'l4',
+        startVertex: v4,
+        endVertex: v1,
+        flags: {
+          blocking: true,
+          twoSided: false,
+          dontDraw: false,
+          mapped: true,
+          soundBlock: false,
+          secret: false,
+          lowerUnpegged: false,
+          upperUnpegged: false,
+          blockMonsters: true,
+        },
+        frontSide: {
+          id: 's1_4',
+          sector: sector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 10,
+        normal: new Vector2(1, 0),
+      },
+    ];
+    sector.lineDefs = lineDefs;
 
     // Create geometry from the sector data
     const sectorGeometry = new SectorGeometry(sector);
