@@ -205,6 +205,7 @@ export class SceneManager {
     floorVertexData.applyToMesh(floorMesh);
 
     const floorMaterial = new StandardMaterial(`${sector.id}_floor_mat`, scene);
+    // Debugging colors: Red floor for easy visual identification
     floorMaterial.diffuseColor = new Color3(1, 0, 0);
     floorMaterial.emissiveColor = new Color3(1, 0, 0);
     floorMesh.material = floorMaterial;
@@ -219,6 +220,7 @@ export class SceneManager {
     ceilingVertexData.applyToMesh(ceilingMesh);
 
     const ceilingMaterial = new StandardMaterial(`${sector.id}_ceiling_mat`, scene);
+    // Debugging colors: Green ceiling for easy visual identification
     ceilingMaterial.diffuseColor = new Color3(0, 1, 0);
     ceilingMaterial.emissiveColor = new Color3(0, 1, 0);
     ceilingMesh.material = ceilingMaterial;
@@ -235,7 +237,8 @@ export class SceneManager {
         wallVertexData.applyToMesh(wallMesh);
 
         const wallMaterial = new StandardMaterial(`${lineDef.id}_wall_mat`, scene);
-        wallMaterial.diffuseColor = new Color3(0, 0, 1); // Blue walls
+        // Debugging colors: Blue walls for easy visual identification
+        wallMaterial.diffuseColor = new Color3(0, 0, 1);
         wallMaterial.emissiveColor = new Color3(0, 0, 1); // Make walls self-illuminating
         wallMesh.material = wallMaterial;
       }
