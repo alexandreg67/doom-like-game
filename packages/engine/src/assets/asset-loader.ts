@@ -1,9 +1,10 @@
 export class AssetLoader {
-  private loadedAssets = new Map<string, any>();
+  private loadedAssets = new Map<string, HTMLImageElement | ArrayBuffer>();
 
   public async loadTexture(url: string): Promise<HTMLImageElement> {
-    if (this.loadedAssets.has(url)) {
-      return this.loadedAssets.get(url);
+    const cached = this.loadedAssets.get(url);
+    if (cached && cached instanceof HTMLImageElement) {
+      return cached;
     }
 
     return new Promise((resolve, reject) => {
@@ -18,8 +19,9 @@ export class AssetLoader {
   }
 
   public async loadAudio(url: string): Promise<ArrayBuffer> {
-    if (this.loadedAssets.has(url)) {
-      return this.loadedAssets.get(url);
+    const cached = this.loadedAssets.get(url);
+    if (cached && cached instanceof ArrayBuffer) {
+      return cached;
     }
 
     const response = await fetch(url);

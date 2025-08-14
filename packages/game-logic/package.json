@@ -1,6 +1,6 @@
 {
   "name": "@doom-like/game-logic",
-  "version": "0.1.0", 
+  "version": "0.1.0",
   "private": true,
   "description": "Core game logic and ECS system for DOOM-like gameplay",
   "type": "module",

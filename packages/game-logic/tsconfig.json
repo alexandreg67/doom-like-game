@@ -11,7 +11,5 @@
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "**/*.test.ts", "**/*.spec.ts"],
-  "references": [
-    { "path": "../engine" }
-  ]
+  "references": [{ "path": "../engine" }]
 }
