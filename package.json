@@ -1,0 +1,32 @@
+{
+  "name": "doom-like-game",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Modern DOOM-like web game built with Babylon.js and TypeScript",
+  "type": "module",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --recursive build",
+    "test": "pnpm --recursive test",
+    "lint": "pnpm --recursive lint",
+    "format": "pnpm --recursive format",
+    "typecheck": "pnpm --recursive typecheck",
+    "clean": "pnpm --recursive clean"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "tools/*"
+  ],
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "@types/node": "^20.14.0",
+    "lefthook": "^1.7.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

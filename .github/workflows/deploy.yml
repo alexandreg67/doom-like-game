@@ -1,0 +1,163 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://staging.doom-like-game.example.com
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build for staging
+        run: pnpm build
+        env:
+          VITE_APP_ENV: staging
+          VITE_WEBGPU_ENABLED: true
+          VITE_DEBUG_MODE: true
+
+      - name: Deploy to staging
+        run: |
+          # Add your deployment script here
+          echo "Deploying to staging environment..."
+          # Example: rsync, AWS S3, Netlify, Vercel, etc.
+
+  deploy-production:
+    name: Deploy to Production  
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://doom-like-game.example.com
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run full test suite
+        run: |
+          pnpm test
+          pnpm test:e2e
+
+      - name: Build for production
+        run: pnpm build
+        env:
+          VITE_APP_ENV: production
+          VITE_WEBGPU_ENABLED: true
+          VITE_DEBUG_MODE: false
+          VITE_TELEMETRY_ENDPOINT: ${{ secrets.TELEMETRY_ENDPOINT }}
+
+      - name: Create release artifact
+        run: |
+          tar -czf doom-like-game-${{ github.ref_name }}.tar.gz \
+            apps/web/dist/ \
+            packages/*/dist/ \
+            README.md \
+            CHANGELOG.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: doom-like-game-${{ github.ref_name }}.tar.gz
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') }}
+
+      - name: Deploy to production
+        run: |
+          # Add your production deployment script here
+          echo "Deploying to production environment..."
+          # Example: CDN upload, container deployment, etc.
+
+  performance-audit:
+    name: Performance Audit
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.12.x
+          lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+  notify:
+    name: Notify Teams
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always()
+    steps:
+      - name: Notify on success
+        if: needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success'
+        run: |
+          echo "Deployment successful! 🚀"
+          # Add notification logic (Slack, Discord, email, etc.)
+
+      - name: Notify on failure
+        if: needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure'
+        run: |
+          echo "Deployment failed! ❌"
+          # Add failure notification logic

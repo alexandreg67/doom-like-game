@@ -1,0 +1,33 @@
+{
+  "name": "@doom-like/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Web application for the DOOM-like game",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "clean": "rm -rf dist",
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit", 
+    "lint": "biome check .",
+    "format": "biome format . --write"
+  },
+  "dependencies": {
+    "@doom-like/engine": "workspace:*",
+    "@doom-like/game-logic": "workspace:*",
+    "@doom-like/map-editor": "workspace:*",
+    "@doom-like/assets": "workspace:*"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "playwright": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

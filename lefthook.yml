@@ -1,0 +1,32 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: "*.{js,ts,jsx,tsx}"
+      run: pnpm biome check --apply {staged_files}
+      stage_fixed: true
+    typecheck:
+      run: pnpm typecheck
+      fail_text: "TypeScript compilation failed"
+    test:
+      run: pnpm test --run --passWithNoTests
+      fail_text: "Tests failed"
+
+commit-msg:
+  commands:
+    conventional-commit:
+      run: |
+        if ! echo "$1" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+"; then
+          echo "Commit message must follow conventional commits format: type(scope): description"
+          exit 1
+        fi
+
+pre-push:
+  commands:
+    check-branch:
+      run: |
+        branch=$(git rev-parse --abbrev-ref HEAD)
+        if [ "$branch" = "main" ]; then
+          echo "Direct push to main branch is not allowed"
+          exit 1
+        fi
