@@ -31,7 +31,7 @@ export class Engine {
 
   public async initialize(): Promise<void> {
     await this.renderer.initialize();
-    this.sceneManager.createDefaultScene();
+    await this.sceneManager.createDefaultScene();
   }
 
   public start(): void {

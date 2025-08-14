@@ -10,18 +10,25 @@ import {
   Vector3,
   VertexData,
 } from '@babylonjs/core';
+import { AssetLoader } from '../assets/asset-loader';
 import type { DoomLineDef, DoomSector, DoomVertex } from '../geometry/doom-geometry';
 import { SectorGeometry } from '../geometry/sector-geometry';
 
 export class SceneManager {
   private engine: Engine;
   private currentScene: Scene | null = null;
+  private assetLoader: AssetLoader;
 
   constructor(engine: Engine) {
     this.engine = engine;
+    this.assetLoader = new AssetLoader(engine, {
+      maxRetries: 3,
+      retryDelay: 1000,
+      cacheMaxAge: 5 * 60 * 1000, // 5 minutes
+    });
   }
 
-  public createDefaultScene(): Scene {
+  public async createDefaultScene(): Promise<Scene> {
     const scene = new Scene(this.engine);
 
     // Create camera
@@ -205,8 +212,13 @@ export class SceneManager {
     floorVertexData.applyToMesh(floorMesh);
 
     const floorMaterial = new StandardMaterial(`${sector.id}_floor_mat`, scene);
-    floorMaterial.diffuseColor = new Color3(1, 0, 0);
-    floorMaterial.emissiveColor = new Color3(1, 0, 0);
+    try {
+      const floorTexture = await this.assetLoader.loadBabylonTexture('/textures/floor.jpg', scene);
+      floorMaterial.diffuseTexture = floorTexture;
+    } catch (error) {
+      console.warn('Failed to load floor texture, using fallback color:', error);
+      floorMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5); // Fallback gray
+    }
     floorMesh.material = floorMaterial;
 
     // Create ceiling mesh
@@ -219,8 +231,16 @@ export class SceneManager {
     ceilingVertexData.applyToMesh(ceilingMesh);
 
     const ceilingMaterial = new StandardMaterial(`${sector.id}_ceiling_mat`, scene);
-    ceilingMaterial.diffuseColor = new Color3(0, 1, 0);
-    ceilingMaterial.emissiveColor = new Color3(0, 1, 0);
+    try {
+      const ceilingTexture = await this.assetLoader.loadBabylonTexture(
+        '/textures/ceiling.jpg',
+        scene
+      );
+      ceilingMaterial.diffuseTexture = ceilingTexture;
+    } catch (error) {
+      console.warn('Failed to load ceiling texture, using fallback color:', error);
+      ceilingMaterial.diffuseColor = new Color3(0.2, 0.2, 0.8); // Fallback blue
+    }
     ceilingMesh.material = ceilingMaterial;
 
     // Create wall meshes
@@ -235,8 +255,16 @@ export class SceneManager {
         wallVertexData.applyToMesh(wallMesh);
 
         const wallMaterial = new StandardMaterial(`${lineDef.id}_wall_mat`, scene);
-        wallMaterial.diffuseColor = new Color3(0, 0, 1); // Blue walls
-        wallMaterial.emissiveColor = new Color3(0, 0, 1); // Make walls self-illuminating
+        try {
+          const wallTexture = await this.assetLoader.loadBabylonTexture(
+            '/textures/wall.jpg',
+            scene
+          );
+          wallMaterial.diffuseTexture = wallTexture;
+        } catch (error) {
+          console.warn('Failed to load wall texture, using fallback color:', error);
+          wallMaterial.diffuseColor = new Color3(0.6, 0.6, 0.8); // Fallback light blue
+        }
         wallMesh.material = wallMaterial;
       }
     }
@@ -263,5 +291,6 @@ export class SceneManager {
       this.currentScene.dispose();
       this.currentScene = null;
     }
+    this.assetLoader.dispose();
   }
 }
