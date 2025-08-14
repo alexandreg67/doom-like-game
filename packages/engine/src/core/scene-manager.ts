@@ -235,16 +235,26 @@ export class SceneManager {
 
     // Create ceiling mesh
     const ceilingTriangulation = sectorGeometry.triangulateCeiling();
+    console.log('[ENGINE] Ceiling triangulation vertices:', ceilingTriangulation.vertices);
+    console.log('[ENGINE] Ceiling triangulation indices:', ceilingTriangulation.indices);
+    console.log('[ENGINE] Ceiling triangulation UVs:', ceilingTriangulation.uvs);
+
     const ceilingMesh = new Mesh(`${sector.id}_ceiling`, scene);
     const ceilingVertexData = new VertexData();
     ceilingVertexData.positions = ceilingTriangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
     ceilingVertexData.indices = ceilingTriangulation.indices;
     ceilingVertexData.uvs = ceilingTriangulation.uvs.flatMap((v) => [v.x, v.y]);
+
+    console.log('[ENGINE] Ceiling positions array:', ceilingVertexData.positions);
+    console.log('[ENGINE] Ceiling indices array:', ceilingVertexData.indices);
+    console.log('[ENGINE] Ceiling UVs array:', ceilingVertexData.uvs);
+
     ceilingVertexData.applyToMesh(ceilingMesh);
 
     const ceilingMaterial = new StandardMaterial(`${sector.id}_ceiling_mat`, scene);
     ceilingMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8); // Fallback light gray
     ceilingMaterial.backFaceCulling = false; // Ensure ceiling is visible from below
+    console.log('[ENGINE] Ceiling material created');
 
     // Try to load texture asynchronously (non-blocking)
     this.assetLoader
