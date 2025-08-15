@@ -578,14 +578,22 @@ export class SceneManager {
     console.log(`  Frame time: ${metrics.frameTime.toFixed(3)}ms`);
     console.log(`  BSP traversal: ${metrics.bspTraversalTime.toFixed(3)}ms`);
     console.log(
-      `  Rendered sectors: ${metrics.renderedSectors} / ${metrics.renderedSectors + metrics.culledSectors}`
+      `  Rendered sectors: ${metrics.renderedSectors} / ${
+        metrics.renderedSectors + metrics.culledSectors
+      }`
     );
     console.log(
       `  Rendered lines: ${metrics.renderedLines} / ${metrics.renderedLines + metrics.culledLines}`
     );
-    console.log(
-      `  Culling efficiency: ${(((metrics.culledSectors + metrics.culledLines) / metrics.totalGeometry) * 100).toFixed(1)}%`
-    );
+    if (metrics.totalGeometry === 0) {
+      console.log('  Culling efficiency: N/A (total geometry is zero)');
+    } else {
+      console.log(
+        `  Culling efficiency: ${(
+          ((metrics.culledSectors + metrics.culledLines) / metrics.totalGeometry) * 100
+        ).toFixed(1)}%`
+      );
+    }
   }
 
   public render(): void {

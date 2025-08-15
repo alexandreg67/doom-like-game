@@ -1,5 +1,5 @@
 import { Vector2, type Vector3 } from '@babylonjs/core';
-import type { BSPNode, DoomLineDef, DoomSector } from './doom-geometry';
+import type { BSPNode, DoomLineDef, DoomSector, DoomVertex } from './doom-geometry';
 
 /**
  * BSP (Binary Space Partitioning) Tree implementation for DOOM-like geometry culling
@@ -9,6 +9,7 @@ import type { BSPNode, DoomLineDef, DoomSector } from './doom-geometry';
 export interface PartitionResult {
   frontLines: DoomLineDef[];
   backLines: DoomLineDef[];
+  colinearLines: DoomLineDef[]; // Colinear lines separated to avoid duplicates
   splitLine: DoomLineDef;
 }
 
@@ -19,6 +20,10 @@ export interface BSPTraversalResult {
 }
 
 export class BSPTree {
+  // Configurable thresholds for BSP construction
+  public static readonly LEAF_LINE_THRESHOLD = 4;
+  public static readonly MAX_TREE_DEPTH = 20;
+
   private root: BSPNode | null = null;
   private allLines: DoomLineDef[] = [];
 
@@ -36,7 +41,7 @@ export class BSPTree {
     }
 
     // Leaf node condition: small number of lines or max depth reached
-    if (lines.length <= 4 || depth > 20) {
+    if (lines.length <= BSPTree.LEAF_LINE_THRESHOLD || depth > BSPTree.MAX_TREE_DEPTH) {
       return {
         id: `leaf_${depth}_${lines.length}`,
         isLeaf: true,
@@ -66,6 +71,7 @@ export class BSPTree {
       id: `node_${depth}_${partitionLine.id}`,
       isLeaf: false,
       splitLine: partitionLine,
+      colinearLines: partition.colinearLines,
     };
 
     if (frontChild) {
@@ -114,6 +120,7 @@ export class BSPTree {
   private partitionLines(lines: DoomLineDef[], partitionLine: DoomLineDef): PartitionResult {
     const frontLines: DoomLineDef[] = [];
     const backLines: DoomLineDef[] = [];
+    const colinearLines: DoomLineDef[] = [];
 
     for (const line of lines) {
       if (line === partitionLine) {
@@ -130,24 +137,128 @@ export class BSPTree {
           backLines.push(line);
           break;
         case 'colinear':
-          // Colinear lines go to both sides for safety
-          frontLines.push(line);
-          backLines.push(line);
+          // Keep colinear lines separate to avoid duplicates and make handling explicit
+          colinearLines.push(line);
           break;
-        case 'spanning':
-          // For now, spanning lines go to both sides
-          // TODO: Implement actual line splitting for better accuracy
-          frontLines.push(line);
-          backLines.push(line);
+        case 'spanning': {
+          // Split the spanning line at the intersection point so each side gets a proper segment
+          const split = this.splitLineAtPartition(line, partitionLine);
+          if (split.front) frontLines.push(split.front);
+          if (split.back) backLines.push(split.back);
           break;
+        }
       }
     }
 
     return {
       frontLines,
       backLines,
+      colinearLines,
       splitLine: partitionLine,
     };
+  }
+
+  /**
+   * Splits a line by the partition line if it spans across it.
+   * Returns optional front/back segments. Does not mutate original vertices.
+   */
+  private splitLineAtPartition(
+    line: DoomLineDef,
+    partition: DoomLineDef
+  ): { front?: DoomLineDef; back?: DoomLineDef } {
+    // Convert points to simple 2D coordinates
+    const a = line.startVertex.position;
+    const b = line.endVertex.position;
+    const p1 = partition.startVertex.position;
+    const p2 = partition.endVertex.position;
+
+    // Compute intersection between segment AB and infinite line P1-P2
+    // Parametric form: A + t*(B-A). Solve for t where intersects line
+    const ax = a.x;
+    const ay = a.y;
+    const bx = b.x;
+    const by = b.y;
+    const px = p1.x;
+    const py = p1.y;
+    const qx = p2.x;
+    const qy = p2.y;
+
+    const rdx = bx - ax;
+    const rdy = by - ay;
+    const sdx = qx - px;
+    const sdy = qy - py;
+
+    const denom = rdx * sdy - rdy * sdx;
+    if (denom === 0) {
+      // Parallel — no clean intersection to split on
+      return {};
+    }
+
+    const t = ((px - ax) * sdy - (py - ay) * sdx) / denom;
+
+    // Intersection point
+    const ix = ax + t * rdx;
+    const iy = ay + t * rdy;
+
+    // Create a new DoomVertex for the intersection
+    const interVertex: DoomVertex = {
+      id: `${line.id}_i`,
+      position: new Vector2(ix, iy),
+    } as DoomVertex;
+
+    // Build front/back segments depending on which side each original endpoint lies
+    const startSide = this.classifyPointRelativeToLine(line.startVertex.position, partition);
+
+    // Construct new DoomLineDefs for the split segments
+    const segments: { front?: DoomLineDef; back?: DoomLineDef } = {};
+
+    if (startSide >= 0) {
+      // start is front
+      segments.front = {
+        id: `${line.id}_front`,
+        startVertex: line.startVertex,
+        endVertex: interVertex,
+        flags: { ...line.flags },
+        frontSide: line.frontSide,
+        backSide: line.backSide,
+        normal: line.normal,
+        length: Math.hypot(ix - ax, iy - ay),
+      } as DoomLineDef;
+      segments.back = {
+        id: `${line.id}_back`,
+        startVertex: interVertex,
+        endVertex: line.endVertex,
+        flags: { ...line.flags },
+        frontSide: line.frontSide,
+        backSide: line.backSide,
+        normal: line.normal,
+        length: Math.hypot(bx - ix, by - iy),
+      } as DoomLineDef;
+    } else {
+      // start is back, end is front
+      segments.front = {
+        id: `${line.id}_front`,
+        startVertex: interVertex,
+        endVertex: line.endVertex,
+        flags: { ...line.flags },
+        frontSide: line.frontSide,
+        backSide: line.backSide,
+        normal: line.normal,
+        length: Math.hypot(bx - ix, by - iy),
+      } as DoomLineDef;
+      segments.back = {
+        id: `${line.id}_back`,
+        startVertex: line.startVertex,
+        endVertex: interVertex,
+        flags: { ...line.flags },
+        frontSide: line.frontSide,
+        backSide: line.backSide,
+        normal: line.normal,
+        length: Math.hypot(ix - ax, iy - ay),
+      } as DoomLineDef;
+    }
+
+    return segments;
   }
 
   /**
@@ -302,10 +413,63 @@ export class BSPTree {
       return childNode ? this.isPointVisibleFromNode(childNode, point, viewpoint) : true;
     }
 
-    // Points are on different sides - need line of sight check
-    // For now, return true (basic implementation)
-    // TODO: Implement proper line-of-sight test through partition
+    // Points are on different sides - perform a conservative line-of-sight test
+    // We'll perform a simple 2D raycast between viewpoint and point and test against blocking lines in this node.
+    const vp = viewpoint2D;
+    const pt = point2D;
+
+    // Collect candidate blocking segments from this node: split line, colinear lines, and optionally children
+    const segments: Array<{ a: Vector2; b: Vector2; blocking: boolean }> = [];
+
+    if (node.splitLine) {
+      segments.push({
+        a: node.splitLine.startVertex.position,
+        b: node.splitLine.endVertex.position,
+        blocking: true,
+      });
+    }
+
+    if (node.colinearLines) {
+      for (const l of node.colinearLines) {
+        segments.push({
+          a: l.startVertex.position,
+          b: l.endVertex.position,
+          blocking: l.flags.blocking,
+        });
+      }
+    }
+
+    // Simple segment intersection test: if any blocking segment intersects the segment vp-pt, consider occluded
+    for (const seg of segments) {
+      if (!seg.blocking) continue;
+      if (this.segmentsIntersect(vp, pt, seg.a, seg.b)) {
+        return false; // blocked
+      }
+    }
+
+    // No blocking segment in this node — conservatively assume visible across partition
+    // A full implementation would recurse and check other nodes; this reduces false negatives while still catching obvious blockers.
     return true;
+  }
+
+  /**
+   * 2D segment intersection (excluding endpoints considered intersecting)
+   */
+  private segmentsIntersect(a: Vector2, b: Vector2, c: Vector2, d: Vector2): boolean {
+    const orient = (p: Vector2, q: Vector2, r: Vector2) =>
+      (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+
+    const o1 = orient(a, b, c);
+    const o2 = orient(a, b, d);
+    const o3 = orient(c, d, a);
+    const o4 = orient(c, d, b);
+
+    if (o1 === 0 && o2 === 0 && o3 === 0 && o4 === 0) {
+      // Colinear case: treat as non-intersecting for LOS (conservative)
+      return false;
+    }
+
+    return o1 * o2 < 0 && o3 * o4 < 0;
   }
 
   /**

@@ -88,6 +88,8 @@ export interface BSPNode {
   frontChild?: BSPNode;
   backChild?: BSPNode;
   sectors?: DoomSector[]; // Only for leaf nodes
+  // Lines that are colinear with the splitLine and attached to this node
+  colinearLines?: DoomLineDef[];
 }
 
 // Utility types for geometry operations
