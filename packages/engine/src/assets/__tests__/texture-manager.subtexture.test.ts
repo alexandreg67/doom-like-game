@@ -31,7 +31,7 @@ describe('TextureManager sub-texture (atlas) support', () => {
       height: 256,
       placements: [{ id: 't1', x: 0, y: 0, width: 64, height: 64 }],
     };
-    const _p = mgr.loadAtlasImage('demo', '/textures/atlas.png', atlas as unknown);
+    const _p = mgr.loadAtlasImage('demo', '/textures/atlas.png', atlas as any);
     const sub = await mgr.getSubTexture('demo', 't1');
     expect(sub).toBeDefined();
     expect(sub?.uv).toBeDefined();
