@@ -78,7 +78,12 @@ export class LightManager {
       return;
     }
 
-    light.shadowGenerator?.dispose();
+    // Decrement shadow maps counter if this light had shadows
+    if (light.shadowGenerator) {
+      light.shadowGenerator.dispose();
+      this.metrics.shadowMapsUsed = Math.max(0, this.metrics.shadowMapsUsed - 1);
+    }
+
     light.babylonLight.dispose();
     this.lights.delete(lightId);
 

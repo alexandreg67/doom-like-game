@@ -2,6 +2,7 @@ import { Color3, type Engine, NullEngine, Scene, Vector3 } from '@babylonjs/core
 import { Vector2 } from '@babylonjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DoomSector } from '../../geometry/doom-geometry';
+import { FogManager } from '../fog-manager';
 import { LightManager } from '../light-manager';
 import { SectorLightingManager } from '../sector-lighting';
 import type { LightTransition, SectorLightingConfig } from '../types';
@@ -10,6 +11,7 @@ describe('SectorLightingManager', () => {
   let engine: Engine;
   let scene: Scene;
   let lightManager: LightManager;
+  let fogManager: FogManager;
   let sectorLightingManager: SectorLightingManager;
   let mockSector1: DoomSector;
   let mockSector2: DoomSector;
@@ -18,7 +20,8 @@ describe('SectorLightingManager', () => {
     engine = new NullEngine();
     scene = new Scene(engine);
     lightManager = new LightManager(scene);
-    sectorLightingManager = new SectorLightingManager(scene, lightManager);
+    fogManager = new FogManager(scene);
+    sectorLightingManager = new SectorLightingManager(scene, lightManager, fogManager);
 
     // Create mock sectors
     mockSector1 = {

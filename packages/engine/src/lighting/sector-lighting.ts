@@ -1,20 +1,16 @@
-import { Color3, Scene, type Vector3 } from '@babylonjs/core';
+import { Color3, type Scene, type Vector3 } from '@babylonjs/core';
 import type { DoomSector } from '../geometry/doom-geometry';
 import { Logger } from '../utils/logger';
+import type { FogManager } from './fog-manager';
 import type { LightManager } from './light-manager';
-import type { FogConfig, FogSystemState, LightTransition, SectorLightingConfig } from './types';
+import type { FogConfig, LightTransition, SectorLightingConfig } from './types';
 
 export class SectorLightingManager {
   private scene: Scene;
   private lightManager: LightManager;
+  private fogManager: FogManager;
   private sectorConfigs: Map<string, SectorLightingConfig> = new Map();
   private currentSectorId: string | null = null;
-  private fogState: FogSystemState = {
-    currentFog: undefined,
-    targetFog: undefined,
-    transitionProgress: 0,
-    transitionDuration: 0,
-  };
   private transitionState: {
     isTransitioning: boolean;
     fromSectorId: string | null;
@@ -31,9 +27,10 @@ export class SectorLightingManager {
     startTime: 0,
   };
 
-  constructor(scene: Scene, lightManager: LightManager) {
+  constructor(scene: Scene, lightManager: LightManager, fogManager: FogManager) {
     this.scene = scene;
     this.lightManager = lightManager;
+    this.fogManager = fogManager;
     Logger.info('[SECTOR-LIGHTING] SectorLightingManager initialized');
   }
 
@@ -75,33 +72,8 @@ export class SectorLightingManager {
   }
 
   public setFog(fogConfig: FogConfig | undefined): void {
-    if (!fogConfig || !fogConfig.enabled) {
-      this.scene.fogEnabled = false;
-      return;
-    }
-
-    this.scene.fogEnabled = true;
-    this.scene.fogColor = fogConfig.color;
-
-    switch (fogConfig.mode) {
-      case 'linear':
-        this.scene.fogMode = Scene.FOGMODE_LINEAR;
-        this.scene.fogStart = fogConfig.start || 10;
-        this.scene.fogEnd = fogConfig.end || 100;
-        break;
-
-      case 'exponential':
-        this.scene.fogMode = Scene.FOGMODE_EXP;
-        this.scene.fogDensity = fogConfig.density || 0.1;
-        break;
-
-      case 'exponential2':
-        this.scene.fogMode = Scene.FOGMODE_EXP2;
-        this.scene.fogDensity = fogConfig.density || 0.1;
-        break;
-    }
-
-    Logger.debug(`[SECTOR-LIGHTING] Applied ${fogConfig.mode} fog`);
+    // Delegate fog management to FogManager
+    this.fogManager.setFog(fogConfig);
   }
 
   public startLightTransition(
@@ -152,9 +124,8 @@ export class SectorLightingManager {
       this.updateTransition();
     }
 
-    if (this.fogState.targetFog && this.fogState.transitionProgress < 1) {
-      this.updateFogTransition(deltaTime);
-    }
+    // Fog transitions are now handled by FogManager
+    this.fogManager.updateFogTransition(deltaTime);
   }
 
   private handleSectorTransition(fromSectorId: string | null, toSectorId: string): void {
@@ -316,25 +287,7 @@ export class SectorLightingManager {
     }
   }
 
-  private updateFogTransition(deltaTime: number): void {
-    if (!this.fogState.targetFog) return;
-
-    if (this.fogState.transitionDuration <= 0) {
-      Logger.warn(
-        '[SECTOR-LIGHTING] Fog transition duration is zero or negative; completing transition instantly.'
-      );
-      this.fogState.transitionProgress = 1;
-    } else {
-      this.fogState.transitionProgress += deltaTime / this.fogState.transitionDuration;
-    }
-
-    if (this.fogState.transitionProgress >= 1) {
-      this.setFog(this.fogState.targetFog);
-      this.fogState.currentFog = this.fogState.targetFog;
-      this.fogState.targetFog = undefined;
-      this.fogState.transitionProgress = 0;
-    }
-  }
+  // Fog transition management is now delegated to FogManager
 
   private applyEasing(
     progress: number,

@@ -140,7 +140,7 @@ export class SceneManager {
     console.log('[ENGINE] Loading Phase 1 demo level...');
 
     try {
-      // Parse the demo level - validate and cast the imported JSON data
+      // Parse the demo level and validate the data format of the imported JSON
       if (!this.isValidLevelData(demoLevelData)) {
         throw new Error('Invalid demo level data format');
       }
@@ -740,8 +740,12 @@ export class SceneManager {
 
     // Initialize core lighting managers
     this.lightManager = new LightManager(scene);
-    this.sectorLightingManager = new SectorLightingManager(scene, this.lightManager);
     this.fogManager = new FogManager(scene);
+    this.sectorLightingManager = new SectorLightingManager(
+      scene,
+      this.lightManager,
+      this.fogManager
+    );
     this.lightingDebugUI = new LightingDebugUI(this.lightManager);
 
     // Connect managers

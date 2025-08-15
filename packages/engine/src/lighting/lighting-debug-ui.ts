@@ -386,7 +386,13 @@ export class LightingDebugUI {
     // Update value display
     const valueSpan = target.parentElement?.querySelector('.value');
     if (valueSpan && property !== 'color') {
-      valueSpan.textContent = target.value + (property === 'angle' ? '°' : '');
+      if (property === 'angle') {
+        const radianValue = Number.parseFloat(target.value);
+        const degreeValue = ((radianValue * 180) / Math.PI).toFixed(1);
+        valueSpan.textContent = `${degreeValue}°`;
+      } else {
+        valueSpan.textContent = target.value;
+      }
     }
   }
 
