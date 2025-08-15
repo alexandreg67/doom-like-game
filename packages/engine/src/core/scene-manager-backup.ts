@@ -1,5 +1,4 @@
 import {
-  ActionManager,
   Color3,
   type Engine,
   FreeCamera,
@@ -13,10 +12,8 @@ import {
   VertexData,
 } from '@babylonjs/core';
 import { AssetLoader } from '../assets/asset-loader';
-import demoLevelData from '../fixtures/demo_level_simple.json';
 import { BSPTree } from '../geometry/bsp-tree';
 import type { BSPNode, DoomLineDef, DoomSector, DoomVertex } from '../geometry/doom-geometry';
-import { LevelLoader, type ParsedLevel } from '../geometry/level-loader';
 import { SectorGeometry } from '../geometry/sector-geometry';
 
 export interface RenderMetrics {
@@ -39,9 +36,6 @@ export class SceneManager {
   private _debugBSP = false; // Toggle for BSP debug visualization
   private enableMetrics = false; // Toggle for performance metrics
   private lastMetrics: RenderMetrics | null = null;
-  private currentLevel: ParsedLevel | null = null;
-  private doorLineDef: DoomLineDef | null = null; // Reference to the door for interaction
-  private doorOpen = false; // Door state
 
   constructor(engine: Engine) {
     this.engine = engine;
@@ -53,97 +47,23 @@ export class SceneManager {
   }
 
   public createDefaultScene(): Scene {
-    console.log('[ENGINE] Creating Phase 1 demo scene...');
+    console.log('[ENGINE] Creating default scene...');
     const scene = new Scene(this.engine);
 
-    // Create camera - positioned inside main room looking towards door
-    const camera = new FreeCamera('camera', new Vector3(0, 1.7, 0), scene);
-    camera.setTarget(new Vector3(6.5, 1.7, 0)); // Look towards the door
-
-    // Configure camera for FPS-like movement
-    camera.minZ = 0.1;
-    camera.maxZ = 1000;
-    camera.fov = Math.PI / 3; // 60 degrees FOV
-    camera.angularSensibility = 2000;
-    camera.keysUp = [87]; // W
-    camera.keysDown = [83]; // S
-    camera.keysLeft = [65]; // A
-    camera.keysRight = [68]; // D
-    camera.speed = 0.5; // Movement speed
-
+    // Create camera - positioned to look forward (horizontal)
+    const camera = new FreeCamera('camera', new Vector3(0, 2, 0), scene);
+    camera.setTarget(new Vector3(0, 2, 1)); // Look forward horizontally
     // Attach camera controls to canvas
     const canvas = this.engine.getRenderingCanvas();
     if (canvas) {
       camera.attachControl(canvas, true);
-      camera.setTarget(new Vector3(6.5, 1.7, 0));
     }
-
-    console.log(
-      '[ENGINE] Camera positioned at:',
-      camera.position,
-      'looking at:',
-      camera.getTarget()
-    );
 
     // Create lighting
     const light = new HemisphericLight('light', new Vector3(0, 1, 0), scene);
-    light.intensity = 1.2; // Increase intensity
-    light.diffuse = new Color3(1, 1, 1);
-    light.groundColor = new Color3(0.5, 0.5, 0.5);
+    light.intensity = 0.7;
 
-    // Add a directional light for better visibility
-    const directionalLight = new HemisphericLight('dirLight', new Vector3(1, 1, 1), scene);
-    directionalLight.intensity = 0.8;
-    directionalLight.diffuse = new Color3(1, 1, 0.9);
-
-    // Load the demo level
-    this.loadDemoLevel(scene);
-
-    // Setup keyboard interaction for door
-    this.setupKeyboardInteraction(scene);
-
-    this.currentScene = scene;
-    return scene;
-  }
-
-  /**
-   * Loads the Phase 1 demo level with multiple sectors
-   */
-  private loadDemoLevel(scene: Scene): void {
-    console.log('[ENGINE] Loading Phase 1 demo level...');
-
-    try {
-      // Parse the demo level
-      this.currentLevel = LevelLoader.parseLevel(demoLevelData);
-
-      // Find the door lineDef for interaction
-      this.doorLineDef = this.currentLevel.lineDefs.find((line) => line.id === 'l3_door') || null;
-
-      // Create meshes for all sectors
-      const sectorsArray = Array.from(this.currentLevel.sectors.values());
-      this.createSectorMeshes(sectorsArray, scene);
-
-      // Build BSP tree for culling
-      this.bspTree = new BSPTree(sectorsArray);
-
-      console.log('[ENGINE] Demo level loaded successfully');
-      console.log(
-        `[ENGINE] Sectors: ${this.currentLevel.sectors.size}, LineDefs: ${this.currentLevel.lineDefs.length}`
-      );
-    } catch (error) {
-      console.error('[ENGINE] Failed to load demo level:', error);
-      // Fallback to simple scene
-      this.createFallbackScene(scene);
-    }
-  }
-
-  /**
-   * Creates a simple fallback scene if demo level loading fails
-   */
-  private createFallbackScene(scene: Scene): void {
-    console.log('[ENGINE] Creating fallback scene...');
-
-    // Define a simple square sector as fallback
+    // Define a simple square sector
     const vertices: DoomVertex[] = [
       { id: 'v1', position: new Vector2(-5, -5) },
       { id: 'v2', position: new Vector2(5, -5) },
@@ -166,12 +86,23 @@ export class SceneManager {
       meshId: 'sector_s1',
     };
 
-    // Create simplified LineDefs for fallback
+    // Define the walls (LineDefs) of the sector
+    const v1 = vertices[0];
+    const v2 = vertices[1];
+    const v3 = vertices[2];
+    const v4 = vertices[3];
+
+    if (!v1 || !v2 || !v3 || !v4) {
+      throw new Error('Invalid vertices array - missing required vertices');
+    }
+
+    // Note: A circular dependency exists where LineDefs need a Sector and vice-versa.
+    // We define the sector first, then the linedefs, then assign them back to the sector.
     const lineDefs: DoomLineDef[] = [
       {
         id: 'l1',
-        startVertex: vertices[0]!,
-        endVertex: vertices[1]!,
+        startVertex: v1,
+        endVertex: v2,
         flags: {
           blocking: true,
           twoSided: false,
@@ -198,178 +129,240 @@ export class SceneManager {
         length: 10,
         normal: new Vector2(0, 1),
       },
-      // Add other walls...
+      {
+        id: 'l2',
+        startVertex: v2,
+        endVertex: v3,
+        flags: {
+          blocking: true,
+          twoSided: false,
+          dontDraw: false,
+          mapped: true,
+          soundBlock: false,
+          secret: false,
+          lowerUnpegged: false,
+          upperUnpegged: false,
+          blockMonsters: true,
+        },
+        frontSide: {
+          id: 's1_2',
+          sector: sector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 10,
+        normal: new Vector2(-1, 0),
+      },
+      {
+        id: 'l3',
+        startVertex: v3,
+        endVertex: v4,
+        flags: {
+          blocking: true,
+          twoSided: false,
+          dontDraw: false,
+          mapped: true,
+          soundBlock: false,
+          secret: false,
+          lowerUnpegged: false,
+          upperUnpegged: false,
+          blockMonsters: true,
+        },
+        frontSide: {
+          id: 's1_3',
+          sector: sector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 10,
+        normal: new Vector2(0, -1),
+      },
+      {
+        id: 'l4',
+        startVertex: v4,
+        endVertex: v1,
+        flags: {
+          blocking: true,
+          twoSided: false,
+          dontDraw: false,
+          mapped: true,
+          soundBlock: false,
+          secret: false,
+          lowerUnpegged: false,
+          upperUnpegged: false,
+          blockMonsters: true,
+        },
+        frontSide: {
+          id: 's1_4',
+          sector: sector,
+          textureMiddle: 'WALL1',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true,
+        },
+        length: 10,
+        normal: new Vector2(1, 0),
+      },
     ];
-
-    // Assign linedefs to sector
     sector.lineDefs = lineDefs;
 
-    // Create mesh for the sector
-    this.createSectorMesh(sector, scene);
+    // Build BSP Tree for culling optimization
+    console.log('[ENGINE] Building BSP tree for sector culling...');
+    const sectors = [sector]; // For now, single sector
+    this.bspTree = new BSPTree(sectors);
+    const bspStats = this.bspTree.getStats();
+    console.log(
+      `[ENGINE] BSP tree built: ${bspStats.nodes} nodes, ${bspStats.leafs} leafs, depth ${bspStats.maxDepth}`
+    );
 
-    // Build BSP tree for culling
-    this.bspTree = new BSPTree([sector]);
-  }
-
-  /**
-   * Sets up keyboard interaction for door opening/closing
-   */
-  private setupKeyboardInteraction(scene: Scene): void {
-    scene.actionManager = scene.actionManager || new ActionManager(scene);
-
-    // Listen for E key press
-    window.addEventListener('keydown', (event) => {
-      if (event.code === 'KeyE' && this.doorLineDef) {
-        this.toggleDoor();
-      }
-    });
-  }
-
-  /**
-   * Toggles the door open/closed state
-   */
-  private toggleDoor(): void {
-    if (!this.doorLineDef || !this.currentScene) {
-      return;
-    }
-
-    this.doorOpen = !this.doorOpen;
-
-    // Toggle blocking flag
-    this.doorLineDef.flags.blocking = !this.doorOpen;
-
-    // Find and toggle door mesh visibility
-    const doorMeshes = this.currentScene.meshes.filter((mesh) => mesh.metadata?.isDoor);
-    for (const mesh of doorMeshes) {
-      mesh.setEnabled(!this.doorOpen);
-    }
-
-    console.log(`[ENGINE] Door ${this.doorOpen ? 'opened' : 'closed'}`);
-  }
-
-  /**
-   * Creates meshes for multiple sectors
-   */
-  private createSectorMeshes(sectors: DoomSector[], scene: Scene): void {
-    for (const sector of sectors) {
-      this.createSectorMesh(sector, scene);
-    }
-  }
-
-  /**
-   * Creates a mesh for a sector (floor, ceiling, and walls)
-   */
-  private createSectorMesh(sector: DoomSector, scene: Scene): void {
-    const sectorGeom = new SectorGeometry(sector);
+    // Create geometry from the sector data
+    const sectorGeometry = new SectorGeometry(sector);
 
     // Create floor mesh
-    const floorGeometry = sectorGeom.triangulateFloor();
-    const floorMesh = new Mesh(`${sector.meshId}_floor`, scene);
+    const floorTriangulation = sectorGeometry.triangulateFloor();
+    const floorMesh = new Mesh(`${sector.id}_floor`, scene);
     const floorVertexData = new VertexData();
-    floorVertexData.positions = floorGeometry.vertices.flatMap((v) => [v.x, v.y, v.z]);
-    floorVertexData.indices = floorGeometry.indices;
-    floorVertexData.uvs = floorGeometry.uvs.flatMap((uv) => [uv.x, uv.y]);
-
-    // Compute normals for proper lighting
-    floorVertexData.normals = [];
-    VertexData.ComputeNormals(
-      floorVertexData.positions,
-      floorVertexData.indices,
-      floorVertexData.normals
-    );
+    floorVertexData.positions = floorTriangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
+    floorVertexData.indices = floorTriangulation.indices;
+    floorVertexData.uvs = floorTriangulation.uvs.flatMap((v) => [v.x, v.y]);
     floorVertexData.applyToMesh(floorMesh);
 
-    console.log(
-      `[ENGINE] Floor mesh for ${sector.id}: ${floorGeometry.vertices.length} vertices, ${floorGeometry.indices.length} indices`
-    );
+    const floorMaterial = new StandardMaterial(`${sector.id}_floor_mat`, scene);
+    // Set fallback color immediately
+    floorMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5); // Fallback gray
+
+    // Try to load texture asynchronously (non-blocking)
+    this.assetLoader
+      .loadBabylonTexture('/textures/floor.jpg', scene)
+      .then((texture) => {
+        floorMaterial.diffuseTexture = texture;
+        // Strong concrete appearance: very matte and gray
+        floorMaterial.diffuseColor = new Color3(0.6, 0.6, 0.6); // Much more gray/concrete
+        // Very matte finish for concrete
+        floorMaterial.specularColor = new Color3(0.05, 0.05, 0.05); // Almost no reflections
+        floorMaterial.specularPower = 4; // Very diffuse, rough concrete surface
+        console.log('[ENGINE] Floor texture applied with concrete properties');
+      })
+      .catch((error) => {
+        console.warn('[ENGINE] Failed to load floor texture, using fallback color:', error);
+      });
+    floorMesh.material = floorMaterial;
+    console.log('[ENGINE] Floor mesh created, material assigned');
 
     // Create ceiling mesh
-    const ceilingGeometry = sectorGeom.triangulateCeiling();
-    const ceilingMesh = new Mesh(`${sector.meshId}_ceiling`, scene);
-    const ceilingVertexData = new VertexData();
-    ceilingVertexData.positions = ceilingGeometry.vertices.flatMap((v) => [v.x, v.y, v.z]);
-    ceilingVertexData.indices = ceilingGeometry.indices;
-    ceilingVertexData.uvs = ceilingGeometry.uvs.flatMap((uv) => [uv.x, uv.y]);
-
-    // Compute normals for proper lighting
-    ceilingVertexData.normals = [];
-    VertexData.ComputeNormals(
-      ceilingVertexData.positions,
-      ceilingVertexData.indices,
-      ceilingVertexData.normals
+    const ceilingMesh = MeshBuilder.CreateBox(
+      'test_ceiling',
+      {
+        width: 8,
+        height: 0.5, // Thicker so we can see it better
+        depth: 8,
+      },
+      scene
     );
-    ceilingVertexData.applyToMesh(ceilingMesh);
+    ceilingMesh.position.y = 3.8; // High up
+    const ceilingMaterial = new StandardMaterial('ceiling_mat', scene);
+    ceilingMaterial.diffuseColor = new Color3(0, 1, 0); // Green fallback
+    // Try with backFaceCulling enabled first
+    ceilingMaterial.backFaceCulling = true;
+    // Add some emission to make sure it's visible
+    ceilingMaterial.emissiveColor = new Color3(0.1, 0.3, 0.1); // Slight green emission
+    console.log('[ENGINE] Ceiling material created with green fallback and emission');
 
-    console.log(
-      `[ENGINE] Ceiling mesh for ${sector.id}: ${ceilingGeometry.vertices.length} vertices, ${ceilingGeometry.indices.length} indices`
-    );
+    // Load ceiling texture with proper brightness settings
+    this.assetLoader
+      .loadBabylonTexture('/textures/ceiling-metal.jpg', scene, 'ceiling')
+      .then((texture) => {
+        console.log('[ENGINE] Ceiling texture loaded and applied successfully');
+        ceilingMaterial.diffuseTexture = texture;
+        // Strong metallic appearance: chrome-like with high reflectivity
+        ceilingMaterial.diffuseColor = new Color3(2.2, 2.8, 4.2); // Much more blue-tinted metal
+        ceilingMaterial.emissiveColor = new Color3(0.3, 0.5, 1.0); // Strong blue emission
+        // Enhanced metallic properties
+        ceilingMaterial.specularColor = new Color3(1.2, 1.3, 1.5); // Very bright reflections
+        ceilingMaterial.specularPower = 128; // Very sharp, mirror-like reflections
+        // Note: metallicFactor is not available on StandardMaterial, using specular properties instead
+        console.log('[ENGINE] Ceiling texture applied with metallic properties');
+      })
+      .catch((error) => {
+        console.warn('[ENGINE] Failed to load ceiling texture, using fallback:', error);
+      });
 
-    // Create materials with sector-specific colors
-    const floorMaterial = new StandardMaterial(`${sector.meshId}_floor_mat`, scene);
-    if (sector.id === 'main_room') {
-      floorMaterial.diffuseColor = new Color3(0.6, 0.4, 0.2); // Brown
-    } else if (sector.id === 'side_room') {
-      floorMaterial.diffuseColor = new Color3(0.3, 0.5, 0.7); // Blue
-    } else {
-      floorMaterial.diffuseColor = new Color3(0.6, 0.4, 0.2); // Default brown
-    }
-
-    const ceilingMaterial = new StandardMaterial(`${sector.meshId}_ceiling_mat`, scene);
-    ceilingMaterial.diffuseColor = new Color3(0.8, 0.8, 0.9);
-
-    const wallMaterial = new StandardMaterial(`${sector.meshId}_wall_mat`, scene);
-    if (sector.id === 'side_room') {
-      wallMaterial.diffuseColor = new Color3(0.8, 0.6, 0.4); // Brick color
-    } else {
-      wallMaterial.diffuseColor = new Color3(0.7, 0.7, 0.7); // Stone color
-    }
-
-    floorMesh.material = floorMaterial;
     ceilingMesh.material = ceilingMaterial;
+    console.log('[ENGINE] Debug ceiling created at:', ceilingMesh.position);
 
-    console.log(
-      `[ENGINE] Applied materials to ${sector.id}: floor=${floorMaterial.diffuseColor}, ceiling=${ceilingMaterial.diffuseColor}, wall=${wallMaterial.diffuseColor}`
-    );
-
-    // Make sure materials are not transparent and have proper lighting
-    floorMaterial.alpha = 1.0;
-    ceilingMaterial.alpha = 1.0;
-    wallMaterial.alpha = 1.0;
-
-    // Enable backface culling for better performance but make sure normals are correct
-    floorMaterial.backFaceCulling = false;
-    ceilingMaterial.backFaceCulling = false;
-    wallMaterial.backFaceCulling = false;
-
-    // Make materials more responsive to light
-    // floorMaterial.diffuseColor = floorMaterial.diffuseColor; // Already set above
-    floorMaterial.ambientColor = floorMaterial.diffuseColor.scale(0.3);
-    ceilingMaterial.ambientColor = ceilingMaterial.diffuseColor.scale(0.3);
-    wallMaterial.ambientColor = wallMaterial.diffuseColor.scale(0.3);
-
-    // Create wall meshes for each LineDef
+    // Create wall meshes
     for (const lineDef of sector.lineDefs) {
-      const wallGeometry = sectorGeom.generateWallGeometry(lineDef);
-      if (wallGeometry && wallGeometry.vertices.length > 0) {
-        const wallMesh = new Mesh(`${sector.meshId}_wall_${lineDef.id}`, scene);
+      const wallTriangulation = sectorGeometry.generateWallGeometry(lineDef);
+      if (wallTriangulation) {
+        const wallMesh = new Mesh(`${lineDef.id}_wall`, scene);
         const wallVertexData = new VertexData();
-        wallVertexData.positions = wallGeometry.vertices.flatMap((v) => [v.x, v.y, v.z]);
-        wallVertexData.indices = wallGeometry.indices;
-        wallVertexData.uvs = wallGeometry.uvs.flatMap((uv) => [uv.x, uv.y]);
+        wallVertexData.positions = wallTriangulation.vertices.flatMap((v) => [v.x, v.y, v.z]);
+        wallVertexData.indices = wallTriangulation.indices;
+        wallVertexData.uvs = wallTriangulation.uvs.flatMap((v) => [v.x, v.y]);
         wallVertexData.applyToMesh(wallMesh);
 
-        // Use different material for door
-        if (lineDef.id === 'l3_door') {
-          const doorMaterial = new StandardMaterial('door_material', scene);
-          doorMaterial.diffuseColor = new Color3(0.6, 0.3, 0.1); // Wood color
-          wallMesh.material = doorMaterial;
-          // Tag for easy identification
-          wallMesh.metadata = { isDoor: true, lineDefId: lineDef.id };
-        } else {
-          wallMesh.material = wallMaterial;
+        const wallMaterial = new StandardMaterial(`${lineDef.id}_wall_mat`, scene);
+        // Set fallback color immediately
+        wallMaterial.diffuseColor = new Color3(0.6, 0.6, 0.8); // Fallback light blue
+
+        // Robust correction: check for frontSide and textureMiddle
+        const rawTextureName = lineDef.frontSide?.textureMiddle;
+        console.log(`[ENGINE] Wall ${lineDef.id} - Raw texture name: '${rawTextureName}'`);
+
+        // Guard against '-' or empty strings
+        let wallTextureName = 'wall'; // default
+        if (rawTextureName && rawTextureName.trim() !== '' && rawTextureName !== '-') {
+          wallTextureName = rawTextureName.toLowerCase().trim();
         }
+
+        const wallTexturePath = `/textures/${wallTextureName}.jpg`;
+        console.log(`[ENGINE] Wall ${lineDef.id} - Resolved texture path: '${wallTexturePath}'`);
+
+        this.assetLoader
+          .loadBabylonTexture(wallTexturePath, scene)
+          .then((texture) => {
+            wallMaterial.diffuseTexture = texture;
+            // Remove fallback color when texture is loaded
+            wallMaterial.diffuseColor = new Color3(1, 1, 1);
+            console.log(
+              `[ENGINE] Wall texture loaded and applied successfully for ${lineDef.id} (${wallTexturePath})`
+            );
+            console.log(
+              `[ENGINE] Wall ${lineDef.id} material diffuseTexture:`,
+              wallMaterial.diffuseTexture
+            );
+            console.log(`[ENGINE] Wall ${lineDef.id} texture isReady:`, texture.isReady());
+          })
+          .catch((error) => {
+            console.warn(
+              `[ENGINE] Failed to load wall texture for ${lineDef.id} (${wallTexturePath}), using fallback color:`,
+              error
+            );
+          });
+        wallMesh.material = wallMaterial;
+        console.log(`[ENGINE] Wall mesh ${lineDef.id} created, material assigned`);
       }
     }
+
+    console.log('[ENGINE] Default scene created successfully');
+    this.currentScene = scene;
+    return scene;
   }
 
   /**
@@ -377,23 +370,26 @@ export class SceneManager {
    */
   public setDebugBSP(enabled: boolean): void {
     this._debugBSP = enabled;
-    if (enabled) {
-      this.createBSPDebugWireframe();
-    } else {
-      this.removeBSPDebugWireframe();
-    }
     console.log(`[ENGINE] BSP debug visualization ${enabled ? 'enabled' : 'disabled'}`);
+
+    if (this.currentScene && this.bspTree) {
+      if (enabled) {
+        this.createBSPDebugWireframe();
+      } else {
+        this.removeBSPDebugWireframe();
+      }
+    }
   }
 
   /**
-   * Gets current BSP debug state
+   * Returns whether BSP debug visualization is enabled
    */
-  public get debugBSP(): boolean {
+  public isDebugBSPEnabled(): boolean {
     return this._debugBSP;
   }
 
   /**
-   * Creates wireframe visualization of BSP tree structure
+   * Creates wireframe visualization of the BSP tree partitions
    */
   private createBSPDebugWireframe(): void {
     if (!this.currentScene || !this.bspTree) return;

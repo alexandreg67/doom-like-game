@@ -58,13 +58,6 @@
     }
   },
   "files": {
-    "ignore": [
-      "node_modules",
-      "dist",
-      "build",
-      "coverage",
-      ".git",
-      "*.min.js"
-    ]
+    "ignore": ["node_modules", "dist", "build", "coverage", ".git", "*.min.js"]
   }
 }

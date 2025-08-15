@@ -16,7 +16,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         // Enable WebGPU for testing
         launchOptions: {
@@ -30,7 +30,7 @@ export default defineConfig({
       },
     },
     {
-      name: 'firefox', 
+      name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
     },
     {
