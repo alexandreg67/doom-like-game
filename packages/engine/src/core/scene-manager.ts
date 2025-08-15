@@ -16,7 +16,7 @@ import { AssetLoader } from '../assets/asset-loader';
 import demoLevelData from '../fixtures/demo_level_simple.json';
 import { BSPTree } from '../geometry/bsp-tree';
 import type { BSPNode, DoomLineDef, DoomSector, DoomVertex } from '../geometry/doom-geometry';
-import { LevelLoader, type ParsedLevel } from '../geometry/level-loader';
+import { type ParsedLevel, parseLevel } from '../geometry/level-loader';
 import { SectorGeometry } from '../geometry/sector-geometry';
 
 export interface RenderMetrics {
@@ -114,7 +114,7 @@ export class SceneManager {
 
     try {
       // Parse the demo level
-      this.currentLevel = LevelLoader.parseLevel(demoLevelData);
+      this.currentLevel = parseLevel(demoLevelData);
 
       // Find the door lineDef for interaction
       this.doorLineDef = this.currentLevel.lineDefs.find((line) => line.id === 'l3_door') || null;
