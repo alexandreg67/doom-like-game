@@ -145,7 +145,8 @@ export class AssetLoader {
 
         // Check if texture has error observable
         if ('onErrorObservable' in texture) {
-          (texture as any).onErrorObservable.addOnce((error: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (texture as any).onErrorObservable.addOnce((error: unknown) => {
             console.error(`[AssetLoader] Texture loading error for ${url}:`, error);
             clearTimeout(timeoutId);
             texture.dispose();

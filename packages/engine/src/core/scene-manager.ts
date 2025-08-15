@@ -291,7 +291,7 @@ export class SceneManager {
         // Set fallback color immediately
         wallMaterial.diffuseColor = new Color3(0.6, 0.6, 0.8); // Fallback light blue
 
-        // Correction robuste : vérification de frontSide et textureMiddle
+        // Robust correction: check for frontSide and textureMiddle
         const rawTextureName = lineDef.frontSide?.textureMiddle;
         console.log(`[ENGINE] Wall ${lineDef.id} - Raw texture name: '${rawTextureName}'`);
 

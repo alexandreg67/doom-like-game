@@ -226,7 +226,7 @@ export class SectorGeometry {
       vertices.push(new Vector3(vertex.position.x, this.sector.ceilingHeight, vertex.position.y));
       const bounds = this.boundingBox;
       const u = (vertex.position.x - bounds.minX) / (bounds.maxX - bounds.minX);
-      // Try without flipping V first to see if this fixes the ceiling
+      // UV coordinates normalized to sector bounding box
       const v = (vertex.position.y - bounds.minY) / (bounds.maxY - bounds.minY);
       uvs.push(new Vector2(u, v));
     }
