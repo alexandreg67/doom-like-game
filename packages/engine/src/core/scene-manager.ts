@@ -1058,13 +1058,13 @@ export class SceneManager {
 
     // Use window events for better compatibility
     window.addEventListener('keydown', (event) => {
-      Logger.info(`[INPUT] Key pressed: ${event.code}`);
+      Logger.debug(`[INPUT] Key pressed: ${event.code}`);
       keys[event.code] = true;
       this.updateMovementInput(keys);
 
       // Handle door interaction
       if (event.code === 'KeyE') {
-        Logger.info(`[INPUT] E key pressed, doorLineDef exists: ${!!this.doorLineDef}`);
+        Logger.debug(`[INPUT] E key pressed, doorLineDef exists: ${!!this.doorLineDef}`);
         if (this.doorLineDef) {
           this.toggleDoor();
         }
@@ -1072,7 +1072,7 @@ export class SceneManager {
     });
 
     window.addEventListener('keyup', (event) => {
-      Logger.info(`[INPUT] Key released: ${event.code}`);
+      Logger.debug(`[INPUT] Key released: ${event.code}`);
       keys[event.code] = false;
       this.updateMovementInput(keys);
     });
