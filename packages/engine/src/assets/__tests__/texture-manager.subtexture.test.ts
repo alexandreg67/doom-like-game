@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { AtlasResult } from '../atlas-builder';
 import TextureManager from '../texture-manager';
 
 vi.mock('@babylonjs/core/Materials/Textures/texture', () => {
@@ -26,12 +27,12 @@ vi.mock('@babylonjs/core/Materials/Textures/texture', () => {
 describe('TextureManager sub-texture (atlas) support', () => {
   it('loads atlas image and returns sub-texture handle with uv', async () => {
     const mgr = new TextureManager({} as unknown);
-    const atlas = {
+    const atlas: AtlasResult = {
       width: 256,
       height: 256,
       placements: [{ id: 't1', x: 0, y: 0, width: 64, height: 64 }],
     };
-    mgr.loadAtlasImage('demo', '/textures/atlas.png', atlas as any);
+    mgr.loadAtlasImage('demo', '/textures/atlas.png', atlas);
     const sub = await mgr.getSubTexture('demo', 't1');
     expect(sub).toBeDefined();
     expect(sub?.uv).toBeDefined();

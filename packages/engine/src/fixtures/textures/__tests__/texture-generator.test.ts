@@ -13,9 +13,9 @@ describe('TextureGenerator', () => {
     expect(TEXTURE_DATA_URLS.wood_door).toBeDefined();
 
     // All should be data URLs
-    Object.values(TEXTURE_DATA_URLS).forEach((url) => {
+    for (const url of Object.values(TEXTURE_DATA_URLS)) {
       expect(url).toMatch(/^data:image\/jpeg;base64,/);
-    });
+    }
   });
 
   test('should provide fallback textures in test environment', () => {

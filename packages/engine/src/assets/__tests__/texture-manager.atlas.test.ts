@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import type { AtlasResult } from '../atlas-builder';
 import TextureManager from '../texture-manager';
 
-const dummyAtlas = {
+const dummyAtlas: AtlasResult = {
   width: 256,
   height: 256,
   placements: [
@@ -13,7 +14,7 @@ const dummyAtlas = {
 describe('TextureManager atlas integration', () => {
   it('registers atlas and returns uv for placement', () => {
     const mgr = new TextureManager({} as unknown);
-    mgr.registerAtlas('demo', dummyAtlas as any);
+    mgr.registerAtlas('demo', dummyAtlas);
     const uv = mgr.getUV('demo', 'tile_b');
     expect(uv).toBeDefined();
     expect(uv?.u0).toBeGreaterThan(0);

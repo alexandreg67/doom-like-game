@@ -175,11 +175,17 @@ export class SceneManager {
     };
 
     // Create simplified LineDefs for fallback
+    const startVertex = vertices[0];
+    const endVertex = vertices[1];
+    if (!startVertex || !endVertex) {
+      throw new Error('Invalid fallback vertices: missing start or end vertex');
+    }
+
     const lineDefs: DoomLineDef[] = [
       {
         id: 'l1',
-        startVertex: vertices[0]!,
-        endVertex: vertices[1]!,
+        startVertex,
+        endVertex,
         flags: {
           blocking: true,
           twoSided: false,
