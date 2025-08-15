@@ -107,3 +107,10 @@ export interface TriangulationResult {
   indices: number[];
   uvs: Vector2[];
 }
+
+/**
+ * Factory helpers
+ */
+export function createDoomVertex(id: string, position: Vector2): DoomVertex {
+  return { id, position } as DoomVertex;
+}

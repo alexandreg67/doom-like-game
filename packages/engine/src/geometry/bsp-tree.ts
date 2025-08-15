@@ -1,5 +1,6 @@
 import { Vector2, type Vector3 } from '@babylonjs/core';
-import type { BSPNode, DoomLineDef, DoomSector, DoomVertex } from './doom-geometry';
+import { createDoomVertex } from './doom-geometry';
+import type { BSPNode, DoomLineDef, DoomSector } from './doom-geometry';
 
 /**
  * BSP (Binary Space Partitioning) Tree implementation for DOOM-like geometry culling
@@ -23,6 +24,7 @@ export class BSPTree {
   // Configurable thresholds for BSP construction
   public static readonly LEAF_LINE_THRESHOLD = 4;
   public static readonly MAX_TREE_DEPTH = 20;
+  public static readonly EPSILON = 1e-8;
 
   private root: BSPNode | null = null;
   private allLines: DoomLineDef[] = [];
@@ -201,10 +203,7 @@ export class BSPTree {
     const iy = ay + t * rdy;
 
     // Create a new DoomVertex for the intersection
-    const interVertex: DoomVertex = {
-      id: `${line.id}_i`,
-      position: new Vector2(ix, iy),
-    } as DoomVertex;
+    const interVertex = createDoomVertex(`${line.id}_i`, new Vector2(ix, iy));
 
     // Build front/back segments depending on which side each original endpoint lies
     const startSide = this.classifyPointRelativeToLine(line.startVertex.position, partition);
@@ -290,14 +289,17 @@ export class BSPTree {
    * Classifies a point relative to a line
    * Returns: > 0 for front, < 0 for back, 0 for on line
    */
-  private classifyPointRelativeToLine(point: Vector2, line: DoomLineDef): number {
+  // Made protected so internal tests may access classification logic
+  protected classifyPointRelativeToLine(point: Vector2, line: DoomLineDef): number {
     const dx = line.endVertex.position.x - line.startVertex.position.x;
     const dy = line.endVertex.position.y - line.startVertex.position.y;
     const px = point.x - line.startVertex.position.x;
     const py = point.y - line.startVertex.position.y;
 
     // Cross product: positive = left/front, negative = right/back
-    return dx * py - dy * px;
+    const cross = dx * py - dy * px;
+    if (Math.abs(cross) < BSPTree.EPSILON) return 0;
+    return cross;
   }
 
   /**
