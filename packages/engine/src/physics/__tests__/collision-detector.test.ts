@@ -1,7 +1,7 @@
-import { describe, expect, it, beforeEach } from 'vitest';
 import { Vector2 } from '@babylonjs/core';
-import { CollisionDetector } from '../collision-detector';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { DoomLineDef, DoomSector, DoomVertex } from '../../geometry/doom-geometry';
+import { CollisionDetector } from '../collision-detector';
 import type { CollisionGeometry } from '../types';
 
 describe('CollisionDetector', () => {
@@ -128,7 +128,7 @@ describe('CollisionDetector', () => {
 
     testGeometry = {
       lineDefs: testLineDefs,
-      sectors: [testSector]
+      sectors: [testSector],
     };
 
     detector.setGeometry(testGeometry);
@@ -217,7 +217,7 @@ describe('CollisionDetector', () => {
 
       // Reset metrics
       detector.resetMetrics();
-      
+
       // Perform multiple collision tests
       detector.testCircleLineCollision(position, radius, velocity, deltaTime);
       detector.testCircleLineCollision(position, radius, velocity, deltaTime);
@@ -235,11 +235,11 @@ describe('CollisionDetector', () => {
 
       // Generate some metrics
       detector.testCircleLineCollision(position, radius, velocity, deltaTime);
-      
+
       // Reset and verify
       detector.resetMetrics();
       const metrics = detector.getMetrics();
-      
+
       expect(metrics.collisionChecks).toBe(0);
       expect(metrics.lineTests).toBe(0);
     });

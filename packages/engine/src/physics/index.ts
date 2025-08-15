@@ -8,5 +8,5 @@ export type {
   PhysicsConfig,
   CollisionGeometry,
   CollisionEvent,
-  PhysicsMetrics
+  PhysicsMetrics,
 } from './types';

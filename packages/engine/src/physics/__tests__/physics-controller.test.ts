@@ -1,14 +1,9 @@
-import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { Vector2, Vector3 } from '@babylonjs/core';
-import { PhysicsController } from '../physics-controller';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { DoomLineDef, DoomSector, DoomVertex } from '../../geometry/doom-geometry';
 import { CollisionDetector } from '../collision-detector';
-import type { 
-  MovementInput, 
-  PhysicsConfig,
-  CollisionEvent,
-  CollisionGeometry 
-} from '../types';
-import type { DoomSector, DoomLineDef, DoomVertex } from '../../geometry/doom-geometry';
+import { PhysicsController } from '../physics-controller';
+import type { CollisionEvent, CollisionGeometry, MovementInput, PhysicsConfig } from '../types';
 
 // Mock collision detector
 vi.mock('../collision-detector');
@@ -16,6 +11,7 @@ const MockCollisionDetector = vi.mocked(CollisionDetector);
 
 describe('PhysicsController', () => {
   let controller: PhysicsController;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockCollisionDetector: any;
   let config: PhysicsConfig;
 
@@ -30,20 +26,20 @@ describe('PhysicsController', () => {
         collided: false,
         normal: new Vector2(0, 0),
         correction: new Vector2(0, 0),
-        distance: 0
+        distance: 0,
       }),
       findSectorAtPosition: vi.fn().mockReturnValue({
         id: 'test_sector',
         floorHeight: 0,
-        ceilingHeight: 8
+        ceilingHeight: 8,
       } as DoomSector),
       resetMetrics: vi.fn(),
       getMetrics: vi.fn().mockReturnValue({
         collisionChecks: 0,
         lineTests: 0,
-        averageLineTestsPerCheck: 0
+        averageLineTestsPerCheck: 0,
       }),
-      dispose: vi.fn()
+      dispose: vi.fn(),
     };
 
     MockCollisionDetector.mockImplementation(() => mockCollisionDetector);
@@ -65,7 +61,7 @@ describe('PhysicsController', () => {
     it('should initialize with specified position and state', () => {
       const initialPos = new Vector3(5, 2, 3);
       const newController = new PhysicsController(initialPos, config);
-      
+
       expect(newController.getPosition()).toEqual(initialPos);
       expect(newController.getVelocity()).toEqual(Vector3.Zero());
       expect(newController.isOnGround()).toBe(false);
@@ -75,7 +71,7 @@ describe('PhysicsController', () => {
     it('should set geometry on collision detector', () => {
       const geometry: CollisionGeometry = {
         lineDefs: [],
-        sectors: []
+        sectors: [],
       };
 
       controller.setGeometry(geometry);
@@ -89,12 +85,12 @@ describe('PhysicsController', () => {
         forward: 1,
         strafe: 0,
         jump: false,
-        sprint: false
+        sprint: false,
       };
 
       const deltaTime = 1.0 / 60;
       const initialPosition = controller.getPosition();
-      
+
       controller.update(input, deltaTime);
 
       const newPosition = controller.getPosition();
@@ -107,12 +103,12 @@ describe('PhysicsController', () => {
         forward: 0,
         strafe: 1,
         jump: false,
-        sprint: false
+        sprint: false,
       };
 
       const deltaTime = 1.0 / 60;
       const initialPosition = controller.getPosition();
-      
+
       controller.update(input, deltaTime);
 
       const newPosition = controller.getPosition();
@@ -125,21 +121,21 @@ describe('PhysicsController', () => {
         forward: 1,
         strafe: 1,
         jump: false,
-        sprint: false
+        sprint: false,
       };
 
       const deltaTime = 1.0 / 60;
       const initialPosition = controller.getPosition();
-      
+
       controller.update(input, deltaTime);
 
       const newPosition = controller.getPosition();
       const velocity = controller.getVelocity();
-      
+
       // Should move in both directions
       expect(newPosition.x).toBeGreaterThan(initialPosition.x);
       expect(newPosition.z).toBeGreaterThan(initialPosition.z);
-      
+
       // Velocity should be limited by maxVelocity
       const horizontalSpeed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
       expect(horizontalSpeed).toBeLessThanOrEqual(config.maxVelocity + 0.1);
@@ -150,18 +146,18 @@ describe('PhysicsController', () => {
         forward: 1,
         strafe: 0,
         jump: false,
-        sprint: false
+        sprint: false,
       };
 
       const sprintInput: MovementInput = {
         forward: 1,
         strafe: 0,
         jump: false,
-        sprint: true
+        sprint: true,
       };
 
       const deltaTime = 1.0 / 60;
-      
+
       // Test walk speed
       const walkController = new PhysicsController(Vector3.Zero(), config);
       walkController.update(walkInput, deltaTime);
@@ -183,18 +179,18 @@ describe('PhysicsController', () => {
         forward: 0,
         strafe: 0,
         jump: false,
-        sprint: false
+        sprint: false,
       };
 
       const deltaTime = 1.0 / 60;
       const initialVelocity = controller.getVelocity();
-      
+
       controller.update(input, deltaTime);
-      
+
       const newVelocity = controller.getVelocity();
       // Y velocity should decrease due to gravity
       expect(newVelocity.y).toBeLessThan(initialVelocity.y);
-      
+
       const expectedVelocityChange = config.gravity * deltaTime;
       expect(newVelocity.y).toBeCloseTo(initialVelocity.y + expectedVelocityChange, 5);
     });
@@ -204,14 +200,14 @@ describe('PhysicsController', () => {
       const groundedSector = {
         id: 'ground_sector',
         floorHeight: 0,
-        ceilingHeight: 8
+        ceilingHeight: 8,
       } as DoomSector;
-      
+
       mockCollisionDetector.findSectorAtPosition.mockReturnValue(groundedSector);
-      
+
       // Position at ground level
       controller.setPosition(new Vector3(0, 0, 0));
-      
+
       // Update once to establish grounded state
       const deltaTime = 1.0 / 60;
       controller.update({ forward: 0, strafe: 0, jump: false, sprint: false }, deltaTime);
@@ -221,18 +217,18 @@ describe('PhysicsController', () => {
         forward: 0,
         strafe: 0,
         jump: true,
-        sprint: false
+        sprint: false,
       };
 
       const initialVelocity = controller.getVelocity();
       controller.update(jumpInput, deltaTime);
 
       const newVelocity = controller.getVelocity();
-      
+
       // Should have positive Y velocity from jump
       expect(newVelocity.y).toBeGreaterThan(initialVelocity.y);
       // Jump force minus gravity applied during the frame
-      const expectedVelocity = config.jumpForce + (config.gravity * deltaTime);
+      const expectedVelocity = config.jumpForce + config.gravity * deltaTime;
       expect(newVelocity.y).toBeCloseTo(expectedVelocity, 1);
     });
   });
@@ -244,19 +240,19 @@ describe('PhysicsController', () => {
         collided: true,
         normal: new Vector2(1, 0), // Wall facing right
         correction: new Vector2(0.1, 0),
-        distance: 0.1
+        distance: 0.1,
       });
 
       const input: MovementInput = {
         forward: 0,
         strafe: -1, // Moving left into wall
         jump: false,
-        sprint: false
+        sprint: false,
       };
-      
+
       const deltaTime = 1.0 / 60;
       const initialPosition = controller.getPosition();
-      
+
       controller.update(input, deltaTime);
 
       const newPosition = controller.getPosition();
@@ -270,13 +266,13 @@ describe('PhysicsController', () => {
       const oldSector = {
         id: 'old_sector',
         floorHeight: 0,
-        ceilingHeight: 8
+        ceilingHeight: 8,
       } as DoomSector;
 
       const newSector = {
         id: 'new_sector',
         floorHeight: 2,
-        ceilingHeight: 10
+        ceilingHeight: 10,
       } as DoomSector;
 
       // Start in old sector
@@ -296,29 +292,29 @@ describe('PhysicsController', () => {
     it('should allow position override', () => {
       const newPosition = new Vector3(10, 5, -3);
       controller.setPosition(newPosition);
-      
+
       expect(controller.getPosition()).toEqual(newPosition);
     });
 
     it('should provide configuration updates', () => {
       const newConfig: Partial<PhysicsConfig> = {
         walkSpeed: 5.0,
-        jumpForce: 6.0
+        jumpForce: 6.0,
       };
-      
+
       controller.setConfig(newConfig);
-      
+
       // Test that new config is applied
       const input: MovementInput = {
         forward: 1,
         strafe: 0,
         jump: false,
-        sprint: false
+        sprint: false,
       };
-      
+
       const deltaTime = 1.0 / 60;
       controller.update(input, deltaTime);
-      
+
       const velocity = controller.getVelocity();
       // Should use new walk speed (5.0 instead of original 2.5)
       // The velocity accumulates over time, so we just check it's reasonable
@@ -330,16 +326,16 @@ describe('PhysicsController', () => {
         forward: 1,
         strafe: 1,
         jump: false,
-        sprint: false
+        sprint: false,
       };
-      
+
       const deltaTime = 1.0 / 60;
-      
+
       // Perform multiple updates
       for (let i = 0; i < 5; i++) {
         controller.update(input, deltaTime);
       }
-      
+
       const metrics = controller.getMetrics();
       expect(metrics).toBeDefined();
       expect(typeof metrics.averageFrameTime).toBe('number');

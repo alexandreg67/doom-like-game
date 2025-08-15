@@ -93,6 +93,7 @@ Notes et décisions d'architecture (à documenter en ADR)
 
 **Sprint 2 - Éclairage : ✅ COMPLÉTÉ**
 Le système d'éclairage est maintenant entièrement fonctionnel avec :
+
 - Architecture solide et extensible
 - Interface de debug complète
 - Métriques de performance intégrées
@@ -103,6 +104,7 @@ Prochaines actions proposées
 
 **Sprint 1 - Textures : ✅ COMPLÉTÉ**
 Le système de textures est maintenant entièrement finalisé avec :
+
 - TextureManager avec cache LRU optimisé et TTL
 - Atlas builder avec shelf packer performant
 - Intégration complète avec le système d'éclairage
@@ -110,7 +112,9 @@ Le système de textures est maintenant entièrement finalisé avec :
 - Code de qualité production
 
 **Priorité immédiate :**
+
 1. **Commencer Sprint 3 (Collision & Player Controller)** :
+
    - Design du système de collision AABB vs segments
    - Implémentation du contrôleur joueur physique
    - Prévention de traversée des murs
@@ -121,6 +125,7 @@ Le système de textures est maintenant entièrement finalisé avec :
    - Intégration avec Babylon.js Audio Engine
 
 **Actions administratives :**
+
 1. Créer milestone "Phase 2" et assigner les issues créées
 2. Mettre à jour les issues GitHub avec le statut des éclairages (fermer #9)
 3. Documenter les décisions d'architecture dans des ADR
