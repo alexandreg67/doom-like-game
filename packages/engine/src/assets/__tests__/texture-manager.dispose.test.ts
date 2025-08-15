@@ -31,16 +31,21 @@ vi.mock('@babylonjs/core/Materials/Textures/texture', () => {
   };
 });
 
+import type { Mock } from 'vitest';
 import { logger } from '../../utils/logger';
 
 describe('TextureManager dispose handling', () => {
   it('handles dispose rejection gracefully and logs error', async () => {
-    const mgr = new TextureManager({} as unknown as any, { maxEntries: 10, ttlMs: 10000 });
+    const mgr = new TextureManager({} as unknown as any, {
+      maxEntries: 10,
+      ttlMs: 10000,
+    });
     await mgr.load('/to-dispose.png');
     // release should not throw even if dispose rejects
     expect(() => mgr.release('/to-dispose.png')).not.toThrow();
     // give microtasks time to run
     await new Promise((r) => setTimeout(r, 10));
-    expect((logger.error as any).mock.calls.length).toBeGreaterThanOrEqual(1);
+    const errMock = logger.error as unknown as Mock;
+    expect(errMock.mock.calls.length).toBeGreaterThanOrEqual(1);
   });
 });

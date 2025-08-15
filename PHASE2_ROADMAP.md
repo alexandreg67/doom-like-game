@@ -48,6 +48,10 @@ Checklist mise à jour
 - [ ] Créer milestone "Phase 2" et assigner issues
 - [ ] Ouvrir PR `feature/phase2-start` -> `develop` contenant docs + prototype `TextureManager`
 
+Progression Sprint 1 — Textures
+
+- [>] Issue #13 (Atlas builder) : en cours — ajout d'un packer d'atlas simple (shelf packer) dans `packages/engine/src/assets/atlas-builder.ts` et tests unitaires.
+
 Découpage par sprints (rappel rapide)
 
 - Sprint 1 — Textures (infrastructure, integration, mapping UV)
