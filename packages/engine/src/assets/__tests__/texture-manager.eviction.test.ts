@@ -29,14 +29,27 @@ describe('TextureManager eviction and TTL', () => {
       maxEntries: 2,
       ttlMs: 10000,
     });
+
+    // Load a and b first (order: a=time1, b=time2)
     await mgr.preload(['/a.png', '/b.png']);
-    // access a to make b LRU
+
+    // Small delay to ensure different timestamps
+    await new Promise((r) => setTimeout(r, 1));
+
+    // Access a to make it more recent (order: b=time2, a=time3)
     await mgr.load('/a.png');
+
+    // Small delay before loading c
+    await new Promise((r) => setTimeout(r, 1));
+
+    // Load c - this should evict b since b is LRU
     await mgr.load('/c.png');
-    // now one entry should have been evicted
+
+    // Test access - b should be evicted
     const a = mgr.get('/a.png');
     const b = mgr.get('/b.png');
     const c = mgr.get('/c.png');
+
     expect(a).toBeDefined();
     expect(c).toBeDefined();
     // b should be undefined (evicted)
