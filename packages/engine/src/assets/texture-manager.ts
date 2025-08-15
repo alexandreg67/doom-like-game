@@ -1,5 +1,23 @@
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import type { Scene } from '@babylonjs/core/scene';
 import { logger } from '../utils/logger';
+import type { AtlasResult, Placement } from './atlas-builder';
+
+// Inline placementToUV to avoid transient module resolution issues during editing
+export type UVRect = { u0: number; v0: number; u1: number; v1: number };
+function placementToUV(p: Placement, atlasW: number, atlasH: number): UVRect {
+  const u0 = p.x / atlasW;
+  const v0 = p.y / atlasH;
+  const u1 = (p.x + p.width) / atlasW;
+  const v1 = (p.y + p.height) / atlasH;
+  return { u0, v0, u1, v1 };
+}
+
+function isPromise(v: unknown): v is Promise<unknown> {
+  return (
+    typeof v === 'object' && v !== null && typeof (v as { then?: unknown }).then === 'function'
+  );
+}
 
 export type LoadOptions = {
   wrapU?: 'repeat' | 'clamp';
@@ -18,6 +36,10 @@ export type TextureHandle = {
 
 /** Prototype minimal d'un TextureManager. Gère LRU (éviction) et TTL (expiration) pour les textures en cache. */
 export class TextureManager {
+  // registry for build-time or runtime atlases (name -> atlas result)
+  private atlasRegistry = new Map<string, AtlasResult>();
+  // map atlasName -> loaded atlas texture handle
+  private atlasTextureRegistry = new Map<string, Promise<TextureHandle>>();
   // cache maps path -> { promise, lastAccess, sizeEstimate }
   private cache = new Map<
     string,
@@ -53,7 +75,7 @@ export class TextureManager {
       try {
         const tex = new Texture(
           path,
-          this.scene as any,
+          this.scene as unknown as Scene,
           true,
           false,
           Texture.TRILINEAR_SAMPLINGMODE,
@@ -107,6 +129,68 @@ export class TextureManager {
     return Promise.all(paths.map((p) => this.load(p)));
   }
 
+  /**
+   * Register an atlas mapping by name. Useful for runtime lookup of placements -> UVs.
+   */
+  registerAtlas(name: string, atlas: AtlasResult) {
+    this.atlasRegistry.set(name, atlas);
+  }
+
+  getAtlasPlacement(atlasName: string, id: string): Placement | undefined {
+    const atlas = this.atlasRegistry.get(atlasName);
+    return atlas?.placements.find((p) => p.id === id);
+  }
+
+  /**
+   * Return normalized UV coordinates {u0,v0,u1,v1} for a placement id inside a named atlas.
+   * Returns undefined when atlas or placement is not known.
+   */
+  getUV(atlasName: string, id: string) {
+    const atlas = this.atlasRegistry.get(atlasName);
+    if (!atlas) return undefined;
+    const p = atlas.placements.find((pl) => pl.id === id);
+    if (!p) return undefined;
+    return placementToUV(p, atlas.width, atlas.height);
+  }
+
+  /**
+   * Load an atlas image into the manager and register its mapping.
+   * atlasResult should come from a build-time packer (placements + width/height).
+   */
+  async loadAtlasImage(name: string, atlasImagePath: string, atlasResult: AtlasResult) {
+    this.registerAtlas(name, atlasResult);
+    // start loading the atlas image as a single texture and store the promise
+    const p = this.load(atlasImagePath).then((h) => {
+      // store resolved handle as the atlas texture
+      return h;
+    });
+    this.atlasTextureRegistry.set(name, p);
+    return p;
+  }
+
+  /**
+   * Return the atlas texture handle and UV rect for a placement id. Promise because atlas image may be loading.
+   */
+  async getSubTexture(
+    atlasName: string,
+    id: string
+  ): Promise<(TextureHandle & { uv: ReturnType<typeof placementToUV> }) | undefined> {
+    const atlas = this.atlasRegistry.get(atlasName);
+    if (!atlas) return undefined;
+    const placement = atlas.placements.find((pl) => pl.id === id);
+    if (!placement) return undefined;
+    const texP = this.atlasTextureRegistry.get(atlasName);
+    if (!texP) return undefined;
+    try {
+      const handle = await texP;
+      const uv = placementToUV(placement, atlas.width, atlas.height);
+      return { ...(handle as TextureHandle), uv } as TextureHandle & { uv: UVRect };
+    } catch (err) {
+      logger.error(`Failed to load atlas image for ${atlasName}:`, err);
+      return undefined;
+    }
+  }
+
   release(path: string) {
     const e = this.cache.get(path);
     if (e) {
@@ -114,8 +198,9 @@ export class TextureManager {
       e.promise
         .then(async (h) => {
           try {
-            const res: any = (h.texture as any).dispose?.();
-            if (res && typeof res.then === 'function') await res;
+            const disposable = h.texture as unknown as { dispose?: () => void | Promise<void> };
+            const res = disposable.dispose?.();
+            if (isPromise(res)) await res;
           } catch (err) {
             // don't throw from release; log for debugging
             logger.error(`Error disposing texture for path ${path}:`, err);

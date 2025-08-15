@@ -25,7 +25,10 @@ vi.mock('@babylonjs/core/Materials/Textures/texture', () => {
 
 describe('TextureManager eviction and TTL', () => {
   it('evicts least recently used when over capacity', async () => {
-    const mgr = new TextureManager({} as unknown as any, { maxEntries: 2, ttlMs: 10000 });
+    const mgr = new TextureManager({} as unknown as any, {
+      maxEntries: 2,
+      ttlMs: 10000,
+    });
     await mgr.preload(['/a.png', '/b.png']);
     // access a to make b LRU
     await mgr.load('/a.png');
@@ -41,7 +44,10 @@ describe('TextureManager eviction and TTL', () => {
   });
 
   it('respects TTL and removes expired entries', async () => {
-    const mgr = new TextureManager({} as unknown as any, { maxEntries: 10, ttlMs: 10 });
+    const mgr = new TextureManager({} as unknown as any, {
+      maxEntries: 10,
+      ttlMs: 10,
+    });
     await mgr.load('/ttl.png');
     expect(mgr.get('/ttl.png')).toBeDefined();
     // wait past TTL
