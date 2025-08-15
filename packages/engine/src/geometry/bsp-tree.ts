@@ -1,6 +1,6 @@
 import { Vector2, type Vector3 } from '@babylonjs/core';
-import { createDoomVertex } from './doom-geometry';
 import type { BSPNode, DoomLineDef, DoomSector } from './doom-geometry';
+import { EPSILON, segmentsIntersect, splitLineByPartition } from './geometry-utils';
 
 /**
  * BSP (Binary Space Partitioning) Tree implementation for DOOM-like geometry culling
@@ -24,9 +24,7 @@ export class BSPTree {
   // Configurable thresholds for BSP construction
   public static readonly LEAF_LINE_THRESHOLD = 4;
   public static readonly MAX_TREE_DEPTH = 20;
-  public static readonly EPSILON = 1e-8;
-  // Counter to generate unique intersection vertex ids per tree instance
-  private intersectionCounter = 0;
+  public static readonly EPSILON = EPSILON;
 
   private root: BSPNode | null = null;
   private allLines: DoomLineDef[] = [];
@@ -145,8 +143,8 @@ export class BSPTree {
           colinearLines.push(line);
           break;
         case 'spanning': {
-          // Split the spanning line at the intersection point so each side gets a proper segment
-          const split = this.splitLineAtPartition(line, partitionLine);
+          // Split the spanning line at the partition for accuracy
+          const split = splitLineByPartition(line, partitionLine);
           if (split.front) frontLines.push(split.front);
           if (split.back) backLines.push(split.back);
           break;
@@ -162,108 +160,7 @@ export class BSPTree {
     };
   }
 
-  /**
-   * Splits a line by the partition line if it spans across it.
-   * Returns optional front/back segments. Does not mutate original vertices.
-   */
-  private splitLineAtPartition(
-    line: DoomLineDef,
-    partition: DoomLineDef
-  ): { front?: DoomLineDef; back?: DoomLineDef } {
-    // Convert points to simple 2D coordinates
-    const a = line.startVertex.position;
-    const b = line.endVertex.position;
-    const p1 = partition.startVertex.position;
-    const p2 = partition.endVertex.position;
-
-    // Compute intersection between segment AB and infinite line P1-P2
-    // Parametric form: A + t*(B-A). Solve for t where intersects line
-    const ax = a.x;
-    const ay = a.y;
-    const bx = b.x;
-    const by = b.y;
-    const px = p1.x;
-    const py = p1.y;
-    const qx = p2.x;
-    const qy = p2.y;
-
-    const rdx = bx - ax;
-    const rdy = by - ay;
-    const sdx = qx - px;
-    const sdy = qy - py;
-
-    const denom = rdx * sdy - rdy * sdx;
-    if (Math.abs(denom) < BSPTree.EPSILON) {
-      // Parallel or nearly parallel — no clean intersection to split on
-      return {};
-    }
-
-    const t = ((px - ax) * sdy - (py - ay) * sdx) / denom;
-
-    // Intersection point
-    const ix = ax + t * rdx;
-    const iy = ay + t * rdy;
-
-    // Create a new DoomVertex for the intersection with a stable unique id per tree
-    const interVertex = createDoomVertex(
-      `${line.id}_i${this.intersectionCounter++}`,
-      new Vector2(ix, iy)
-    );
-
-    // Build front/back segments depending on which side each original endpoint lies
-    const startSide = this.classifyPointRelativeToLine(line.startVertex.position, partition);
-
-    // Construct new DoomLineDefs for the split segments
-    const segments: { front?: DoomLineDef; back?: DoomLineDef } = {};
-
-    if (startSide >= 0) {
-      // start is front
-      segments.front = {
-        id: `${line.id}_front`,
-        startVertex: line.startVertex,
-        endVertex: interVertex,
-        flags: { ...line.flags },
-        frontSide: line.frontSide,
-        backSide: line.backSide,
-        normal: line.normal,
-        length: Math.hypot(ix - ax, iy - ay),
-      } as DoomLineDef;
-      segments.back = {
-        id: `${line.id}_back`,
-        startVertex: interVertex,
-        endVertex: line.endVertex,
-        flags: { ...line.flags },
-        frontSide: line.frontSide,
-        backSide: line.backSide,
-        normal: line.normal,
-        length: Math.hypot(bx - ix, by - iy),
-      } as DoomLineDef;
-    } else {
-      // start is back, end is front
-      segments.front = {
-        id: `${line.id}_front`,
-        startVertex: interVertex,
-        endVertex: line.endVertex,
-        flags: { ...line.flags },
-        frontSide: line.frontSide,
-        backSide: line.backSide,
-        normal: line.normal,
-        length: Math.hypot(bx - ix, by - iy),
-      } as DoomLineDef;
-      segments.back = {
-        id: `${line.id}_back`,
-        startVertex: line.startVertex,
-        endVertex: interVertex,
-        flags: { ...line.flags },
-        frontSide: line.frontSide,
-        backSide: line.backSide,
-        normal: line.normal,
-        length: Math.hypot(ix - ax, iy - ay),
-      } as DoomLineDef;
-    }
-
-    return segments;
-  }
+  // splitLineAtPartition is delegated to geometry-utils.splitLineByPartition
 
   /**
    * Classifies a line relative to a partition line
@@ -449,7 +346,7 @@ export class BSPTree {
     // Simple segment intersection test: if any blocking segment intersects the segment vp-pt, consider occluded
     for (const seg of segments) {
       if (!seg.blocking) continue;
-      if (this.segmentsIntersect(vp, pt, seg.a, seg.b)) {
+      if (segmentsIntersect(vp, pt, seg.a, seg.b)) {
         return false; // blocked
       }
     }
@@ -459,26 +356,7 @@ export class BSPTree {
     return true;
   }
 
-  /**
-   * 2D segment intersection (excluding endpoints considered intersecting)
-   */
-  private segmentsIntersect(a: Vector2, b: Vector2, c: Vector2, d: Vector2): boolean {
-    const orient = (p: Vector2, q: Vector2, r: Vector2) =>
-      (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
-
-    const o1 = orient(a, b, c);
-    const o2 = orient(a, b, d);
-    const o3 = orient(c, d, a);
-    const o4 = orient(c, d, b);
-
-    const eps = BSPTree.EPSILON;
-    if (Math.abs(o1) < eps && Math.abs(o2) < eps && Math.abs(o3) < eps && Math.abs(o4) < eps) {
-      // Colinear case: treat as non-intersecting for LOS (conservative)
-      return false;
-    }
-
-    return o1 * o2 < 0 && o3 * o4 < 0;
-  }
+  // segmentsIntersect is provided by geometry-utils
 
   /**
    * Returns the root node of the BSP tree
