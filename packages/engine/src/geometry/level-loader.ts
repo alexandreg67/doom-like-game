@@ -1,4 +1,6 @@
-import { Vector2 } from '@babylonjs/core';
+import { Color3, Vector2, Vector3 } from '@babylonjs/core';
+import type { LightConfig, LightingSystemConfig, SectorLightingConfig } from '../lighting';
+import { Logger } from '../utils/logger';
 import type {
   DoomLineDef,
   DoomLineFlags,
@@ -51,6 +53,61 @@ export interface LevelPlayerStart {
   sector: string; // sector ID
 }
 
+// Raw JSON lighting data structures
+interface RawLightingData {
+  globalAmbient: {
+    color: { r: number; g: number; b: number };
+    intensity: number;
+  };
+  lights?: Array<{
+    id: string;
+    type: string;
+    color: { r: number; g: number; b: number };
+    intensity: number;
+    enabled?: boolean;
+    position?: { x: number; y: number; z: number };
+    direction?: { x: number; y: number; z: number };
+    range?: number;
+    angle?: number;
+    exponent?: number;
+    shadows?: {
+      enabled?: boolean;
+      mapSize?: number;
+      bias?: number;
+      darkness?: number;
+      useBlurExponentialShadowMap?: boolean;
+      blurKernel?: number;
+    };
+  }>;
+  sectorLighting?: Array<{
+    sectorId: string;
+    ambient: {
+      color: { r: number; g: number; b: number };
+      intensity: number;
+    };
+    lights?: string[];
+    fog?: {
+      enabled?: boolean;
+      mode?: string;
+      color: { r: number; g: number; b: number };
+      density?: number;
+      start?: number;
+      end?: number;
+    };
+    transitions?: Array<{
+      toSectorId: string;
+      duration?: number;
+      easing?: string;
+    }>;
+  }>;
+  performance?: {
+    maxActiveLights?: number;
+    shadowMapPoolSize?: number;
+    cullingDistance?: number;
+    enableLOD?: boolean;
+  };
+}
+
 export interface LevelData {
   name: string;
   description: string;
@@ -59,6 +116,7 @@ export interface LevelData {
   sectors: LevelSectorData[];
   lineDefs: LevelLineDefData[];
   playerStart: LevelPlayerStart;
+  lighting?: RawLightingData;
 }
 
 // Parsed level types
@@ -71,13 +129,14 @@ export interface ParsedLevel {
     angle: number;
     sector: DoomSector;
   };
+  lighting?: LightingSystemConfig | undefined;
 }
 
 /**
  * Loads and parses a level from JSON data
  */
 export function parseLevel(levelData: LevelData): ParsedLevel {
-  console.log(`[LevelLoader] Loading level: ${levelData.name} v${levelData.version}`);
+  Logger.info(`[LevelLoader] Loading level: ${levelData.name} v${levelData.version}`);
 
   // Parse vertices first
   const vertices = new Map<string, DoomVertex>();
@@ -235,18 +294,177 @@ export function parseLevel(levelData: LevelData): ParsedLevel {
     sector: playerStartSector,
   };
 
-  console.log('[LevelLoader] Level loaded successfully:');
-  console.log(`  - ${vertices.size} vertices`);
-  console.log(`  - ${sectors.size} sectors`);
-  console.log(`  - ${lineDefs.length} lineDefs`);
-  console.log(`  - Player starts in sector ${playerStart.sector.id}`);
+  // Parse lighting configuration
+  let lightingConfig: LightingSystemConfig | undefined;
+  if (levelData.lighting) {
+    lightingConfig = parseLightingConfig(levelData.lighting);
+    Logger.info(`  - ${lightingConfig.lights.length} lights configured`);
+    Logger.info(`  - ${lightingConfig.sectorLighting.length} sector lighting configurations`);
+  }
+
+  Logger.info('[LevelLoader] Level loaded successfully:');
+  Logger.info(`  - ${vertices.size} vertices`);
+  Logger.info(`  - ${sectors.size} sectors`);
+  Logger.info(`  - ${lineDefs.length} lineDefs`);
+  Logger.info(`  - Player starts in sector ${playerStart.sector.id}`);
 
   return {
     vertices,
     sectors,
     lineDefs,
     playerStart,
+    lighting: lightingConfig,
   };
+}
+
+/**
+ * Parses lighting configuration from JSON format to engine format
+ */
+function parseLightingConfig(lightingData: RawLightingData): LightingSystemConfig {
+  Logger.info('[LevelLoader] Parsing lighting configuration...');
+
+  const lightingConfig: LightingSystemConfig = {
+    globalAmbient: {
+      color: new Color3(
+        lightingData.globalAmbient.color.r,
+        lightingData.globalAmbient.color.g,
+        lightingData.globalAmbient.color.b
+      ),
+      intensity: lightingData.globalAmbient.intensity,
+    },
+    lights: [],
+    sectorLighting: [],
+    performance: {
+      maxActiveLights: lightingData.performance?.maxActiveLights || 8,
+      shadowMapPoolSize: lightingData.performance?.shadowMapPoolSize || 4,
+      cullingDistance: lightingData.performance?.cullingDistance || 25,
+      enableLOD: lightingData.performance?.enableLOD ?? true,
+    },
+  };
+
+  // Parse light configurations
+  for (const lightData of lightingData.lights || []) {
+    // Validate light type
+    const allowedLightTypes: LightConfig['type'][] = [
+      'point',
+      'directional',
+      'spot',
+      'hemispheric',
+    ];
+    let lightType: LightConfig['type'] = 'point';
+    if (allowedLightTypes.includes(lightData.type as LightConfig['type'])) {
+      lightType = lightData.type as LightConfig['type'];
+    } else {
+      Logger.warn(
+        `[LevelLoader] Invalid light type "${lightData.type}" for light "${lightData.id}". Defaulting to "point".`
+      );
+    }
+
+    const lightConfig: LightConfig = {
+      id: lightData.id,
+      type: lightType,
+      color: new Color3(lightData.color.r, lightData.color.g, lightData.color.b),
+      intensity: lightData.intensity,
+      enabled: lightData.enabled !== false,
+    };
+
+    // Add position if present
+    if (lightData.position) {
+      lightConfig.position = new Vector3(
+        lightData.position.x,
+        lightData.position.y,
+        lightData.position.z
+      );
+    }
+
+    // Add direction if present
+    if (lightData.direction) {
+      lightConfig.direction = new Vector3(
+        lightData.direction.x,
+        lightData.direction.y,
+        lightData.direction.z
+      );
+    }
+
+    // Add range for point/spot lights
+    if (lightData.range !== undefined) {
+      lightConfig.range = lightData.range;
+    }
+
+    // Add angle and exponent for spot lights
+    if (lightData.angle !== undefined) {
+      lightConfig.angle = lightData.angle;
+    }
+    if (lightData.exponent !== undefined) {
+      lightConfig.exponent = lightData.exponent;
+    }
+
+    // Parse shadow configuration
+    if (lightData.shadows) {
+      lightConfig.shadows = {
+        enabled: lightData.shadows.enabled || false,
+        mapSize: lightData.shadows.mapSize || 1024,
+        bias: lightData.shadows.bias || 0.0001,
+        darkness: lightData.shadows.darkness || 0.3,
+        useBlurExponentialShadowMap: lightData.shadows.useBlurExponentialShadowMap || false,
+        blurKernel: lightData.shadows.blurKernel || 16,
+      };
+    }
+
+    lightingConfig.lights.push(lightConfig);
+  }
+
+  // Parse sector lighting configurations
+  for (const sectorData of lightingData.sectorLighting || []) {
+    const sectorLightingConfig: SectorLightingConfig = {
+      sectorId: sectorData.sectorId,
+      ambient: {
+        color: new Color3(
+          sectorData.ambient.color.r,
+          sectorData.ambient.color.g,
+          sectorData.ambient.color.b
+        ),
+        intensity: sectorData.ambient.intensity,
+      },
+      lights: sectorData.lights || [],
+    };
+
+    // Parse fog configuration
+    if (sectorData.fog) {
+      sectorLightingConfig.fog = {
+        enabled: sectorData.fog.enabled || false,
+        mode: (sectorData.fog.mode as 'linear' | 'exponential' | 'exponential2') || 'linear',
+        color: new Color3(sectorData.fog.color.r, sectorData.fog.color.g, sectorData.fog.color.b),
+      };
+
+      if (sectorData.fog.density !== undefined && sectorLightingConfig.fog) {
+        sectorLightingConfig.fog.density = sectorData.fog.density;
+      }
+      if (sectorData.fog.start !== undefined && sectorLightingConfig.fog) {
+        sectorLightingConfig.fog.start = sectorData.fog.start;
+      }
+      if (sectorData.fog.end !== undefined && sectorLightingConfig.fog) {
+        sectorLightingConfig.fog.end = sectorData.fog.end;
+      }
+    }
+
+    // Parse transitions
+    if (sectorData.transitions) {
+      sectorLightingConfig.transitions = sectorData.transitions.map((transition) => ({
+        toSectorId: transition.toSectorId,
+        duration: transition.duration || 1000,
+        easing:
+          (transition.easing as 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out') || 'linear',
+      }));
+    }
+
+    lightingConfig.sectorLighting.push(sectorLightingConfig);
+  }
+
+  Logger.info(
+    `[LevelLoader] Parsed lighting config: ${lightingConfig.lights.length} lights, ${lightingConfig.sectorLighting.length} sectors`
+  );
+  return lightingConfig;
 }
 
 /**

@@ -3,7 +3,6 @@ import {
   Color3,
   type Engine,
   FreeCamera,
-  HemisphericLight,
   Mesh,
   MeshBuilder,
   Scene,
@@ -17,8 +16,16 @@ import { TextureManager } from '../assets/texture-manager';
 import demoLevelData from '../fixtures/demo_level_simple.json';
 import { BSPTree } from '../geometry/bsp-tree';
 import type { BSPNode, DoomLineDef, DoomSector, DoomVertex } from '../geometry/doom-geometry';
-import { type ParsedLevel, parseLevel } from '../geometry/level-loader';
+import { type LevelData, type ParsedLevel, parseLevel } from '../geometry/level-loader';
 import { SectorGeometry } from '../geometry/sector-geometry';
+import {
+  FogManager,
+  LightManager,
+  LightingDebugUI,
+  type LightingSystemConfig,
+  SectorLightingManager,
+} from '../lighting';
+import { Logger } from '../utils/logger';
 
 export interface RenderMetrics {
   frameTime: number;
@@ -30,6 +37,8 @@ export interface RenderMetrics {
   totalGeometry: number;
   totalSectors: number;
   totalLines: number;
+  lightingTime?: number;
+  activeLights?: number;
 }
 
 export class SceneManager {
@@ -44,6 +53,10 @@ export class SceneManager {
   private currentLevel: ParsedLevel | null = null;
   private doorLineDef: DoomLineDef | null = null; // Reference to the door for interaction
   private doorOpen = false; // Door state
+  private lightManager: LightManager | null = null;
+  private sectorLightingManager: SectorLightingManager | null = null;
+  private fogManager: FogManager | null = null;
+  private lightingDebugUI: LightingDebugUI | null = null;
 
   constructor(engine: Engine) {
     this.engine = engine;
@@ -93,24 +106,30 @@ export class SceneManager {
       camera.getTarget()
     );
 
-    // Create lighting
-    const light = new HemisphericLight('light', new Vector3(0, 1, 0), scene);
-    light.intensity = 1.2; // Increase intensity
-    light.diffuse = new Color3(1, 1, 1);
-    light.groundColor = new Color3(0.5, 0.5, 0.5);
-
-    // Add a directional light for better visibility
-    const directionalLight = new HemisphericLight('dirLight', new Vector3(1, 1, 1), scene);
-    directionalLight.intensity = 0.8;
-    directionalLight.diffuse = new Color3(1, 1, 0.9);
+    // Initialize new lighting system
+    this.initializeLightingSystem(scene);
 
     // Load the demo level
     await this.loadDemoLevel(scene);
+
+    // Load lighting configuration from level if available
+    if (this.currentLevel?.lighting) {
+      this.loadLightingFromLevel(this.currentLevel.lighting);
+    }
 
     // Setup keyboard interaction for door
     this.setupKeyboardInteraction(scene);
 
     this.currentScene = scene;
+
+    // Update lighting system with camera position
+    if (this.sectorLightingManager && this.currentLevel) {
+      const currentSector = this.getCurrentSector(camera.position);
+      if (currentSector) {
+        this.sectorLightingManager.updatePlayerPosition(camera.position, currentSector);
+      }
+    }
+
     return scene;
   }
 
@@ -121,7 +140,10 @@ export class SceneManager {
     console.log('[ENGINE] Loading Phase 1 demo level...');
 
     try {
-      // Parse the demo level
+      // Parse the demo level and validate the data format of the imported JSON
+      if (!this.isValidLevelData(demoLevelData)) {
+        throw new Error('Invalid demo level data format');
+      }
       this.currentLevel = parseLevel(demoLevelData);
 
       // Find the door lineDef for interaction
@@ -710,7 +732,253 @@ export class SceneManager {
     return this.currentScene;
   }
 
+  /**
+   * Initializes the advanced lighting system
+   */
+  private initializeLightingSystem(scene: Scene): void {
+    Logger.info('[ENGINE] Initializing advanced lighting system...');
+
+    // Initialize core lighting managers
+    this.lightManager = new LightManager(scene);
+    this.fogManager = new FogManager(scene);
+    this.sectorLightingManager = new SectorLightingManager(
+      scene,
+      this.lightManager,
+      this.fogManager
+    );
+    this.lightingDebugUI = new LightingDebugUI(this.lightManager);
+
+    // Connect managers
+    this.lightingDebugUI.setSectorLightingManager(this.sectorLightingManager);
+    this.lightingDebugUI.setFogManager(this.fogManager);
+
+    // Load default lighting configuration
+    this.loadDefaultLights();
+
+    Logger.info('[ENGINE] Advanced lighting system initialized');
+  }
+
+  /**
+   * Loads default lighting configuration
+   */
+  private loadDefaultLights(): void {
+    if (!this.lightManager) return;
+
+    // Create default ambient lighting
+    this.lightManager.addLight({
+      id: 'ambient_light',
+      type: 'hemispheric',
+      direction: new Vector3(0, 1, 0),
+      color: new Color3(1, 1, 1),
+      intensity: 0.3,
+      enabled: true,
+    });
+
+    // Create main directional light (sun/moon)
+    this.lightManager.addLight({
+      id: 'main_directional',
+      type: 'directional',
+      direction: new Vector3(0.5, -1, 0.3),
+      color: new Color3(1, 0.9, 0.8),
+      intensity: 0.8,
+      shadows: {
+        enabled: true,
+        mapSize: 1024,
+        bias: 0.0001,
+        darkness: 0.3,
+        useBlurExponentialShadowMap: true,
+        blurKernel: 16,
+      },
+      enabled: true,
+    });
+
+    // Create point lights for atmospheric effect
+    this.lightManager.addLight({
+      id: 'torch_1',
+      type: 'point',
+      position: new Vector3(-4, 2, -4),
+      color: new Color3(1, 0.6, 0.2),
+      intensity: 2.0,
+      range: 8,
+      enabled: true,
+    });
+
+    this.lightManager.addLight({
+      id: 'torch_2',
+      type: 'point',
+      position: new Vector3(4, 2, 4),
+      color: new Color3(0.2, 0.6, 1),
+      intensity: 1.5,
+      range: 6,
+      enabled: true,
+    });
+  }
+
+  /**
+   * Gets the current sector based on camera position
+   */
+  private getCurrentSector(position: Vector3): DoomSector | null {
+    if (!this.currentLevel) return null;
+
+    // Simple sector detection - in a full implementation this would use proper point-in-polygon
+    for (const sector of this.currentLevel.sectors.values()) {
+      if (this.isPointInSector(position, sector)) {
+        return sector;
+      }
+    }
+
+    // Default to first sector if none found
+    return Array.from(this.currentLevel.sectors.values())[0] || null;
+  }
+
+  /**
+   * Simple point-in-sector check (placeholder implementation)
+   */
+  private isPointInSector(point: Vector3, sector: DoomSector): boolean {
+    // For now, just check if within sector bounds (simplified)
+    const bounds = sector.boundingBox;
+    return (
+      point.x >= bounds.min.x &&
+      point.x <= bounds.max.x &&
+      point.z >= bounds.min.y &&
+      point.z <= bounds.max.y
+    );
+  }
+
+  /**
+   * Updates lighting system each frame
+   */
+  public updateLighting(deltaTime: number, cameraPosition: Vector3): void {
+    if (!this.lightManager || !this.sectorLightingManager) return;
+
+    const startTime = performance.now();
+
+    // Update light culling based on camera position
+    this.lightManager.updateCulling(cameraPosition);
+
+    // Update sector lighting transitions
+    this.sectorLightingManager.update(deltaTime);
+
+    // Update fog transitions
+    if (this.fogManager) {
+      this.fogManager.updateFogTransition(deltaTime);
+    }
+
+    // Update metrics
+    if (this.enableMetrics) {
+      const lightingTime = performance.now() - startTime;
+      const lightingMetrics = this.lightManager.getMetrics();
+
+      if (this.lastMetrics) {
+        this.lastMetrics.lightingTime = lightingTime;
+        this.lastMetrics.activeLights = lightingMetrics.activeLights;
+      }
+    }
+  }
+
+  /**
+   * Loads lighting configuration from level data
+   */
+  public loadLightingFromLevel(lightingConfig: LightingSystemConfig): void {
+    if (!this.lightManager || !this.sectorLightingManager) return;
+
+    Logger.info('[ENGINE] Loading lighting configuration from level data');
+
+    // Clear existing lights (except defaults)
+    const existingLights = this.lightManager.getAllLights();
+    for (const [lightId] of existingLights) {
+      if (!['ambient_light', 'main_directional'].includes(lightId)) {
+        this.lightManager.removeLight(lightId);
+      }
+    }
+
+    // Add lights from configuration
+    for (const lightConfig of lightingConfig.lights) {
+      this.lightManager.addLight(lightConfig);
+    }
+
+    // Setup sector lighting
+    this.sectorLightingManager.setSectorConfigs(lightingConfig.sectorLighting);
+
+    // Apply performance settings
+    this.lightManager.setPerformanceConfig(lightingConfig.performance);
+
+    Logger.info(
+      `[ENGINE] Loaded ${lightingConfig.lights.length} lights and ${lightingConfig.sectorLighting.length} sector configurations`
+    );
+  }
+
+  /**
+   * Toggles the lighting debug UI
+   */
+  public toggleLightingDebugUI(): void {
+    if (this.lightingDebugUI) {
+      this.lightingDebugUI.toggle();
+    }
+  }
+
+  /**
+   * Gets lighting system metrics
+   */
+  public getLightingMetrics() {
+    return this.lightManager?.getMetrics() || null;
+  }
+
+  /**
+   * Validates that imported JSON data conforms to expected LevelData structure
+   */
+  private isValidLevelData(data: unknown): data is LevelData {
+    if (!data || typeof data !== 'object') {
+      return false;
+    }
+
+    const levelData = data as Partial<LevelData>;
+
+    // Check required properties
+    if (!Array.isArray(levelData.sectors) || !Array.isArray(levelData.lineDefs)) {
+      return false;
+    }
+
+    // Basic validation of sector structure
+    if (levelData.sectors.length > 0) {
+      const firstSector = levelData.sectors[0];
+      if (
+        !firstSector ||
+        typeof firstSector.id !== 'string' ||
+        typeof firstSector.floorHeight !== 'number' ||
+        typeof firstSector.ceilingHeight !== 'number' ||
+        typeof firstSector.lightLevel !== 'number' ||
+        !Array.isArray(firstSector.vertices)
+      ) {
+        return false;
+      }
+    }
+
+    // Basic validation of lineDef structure
+    if (levelData.lineDefs.length > 0) {
+      const firstLineDef = levelData.lineDefs[0];
+      if (
+        !firstLineDef ||
+        typeof firstLineDef.id !== 'string' ||
+        !firstLineDef.startVertex ||
+        !firstLineDef.endVertex ||
+        !firstLineDef.flags
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   public dispose(): void {
+    // Dispose lighting system
+    this.lightingDebugUI?.hide();
+    this.lightManager?.dispose();
+    this.sectorLightingManager = null;
+    this.fogManager = null;
+    this.lightingDebugUI = null;
+
     if (this.currentScene) {
       this.currentScene.dispose();
       this.currentScene = null;

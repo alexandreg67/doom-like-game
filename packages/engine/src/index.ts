@@ -10,6 +10,12 @@ export {
   loadLevelFromJSON,
   loadLevelFromURL,
 } from './geometry/level-loader';
+export {
+  LightManager,
+  SectorLightingManager,
+  FogManager,
+  LightingDebugUI,
+} from './lighting';
 
 export type { EngineConfig, RenderConfig } from './types';
 export type {
@@ -31,3 +37,15 @@ export type {
   LevelLineDefData,
   LevelPlayerStart,
 } from './geometry/level-loader';
+export type {
+  LightConfig,
+  LightType,
+  ShadowConfig,
+  FogConfig,
+  SectorLightingConfig,
+  LightTransition,
+  LightingSystemConfig,
+  LightInstance,
+  LightingMetrics,
+  FogSystemState,
+} from './lighting';

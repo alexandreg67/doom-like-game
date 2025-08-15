@@ -12,6 +12,13 @@ export const logger = {
     // eslint-disable-next-line no-console
     console.error(message, ...optionalParams);
   },
+  debug: (message?: string, ...optionalParams: unknown[]) => {
+    // eslint-disable-next-line no-console
+    console.debug(message, ...optionalParams);
+  },
 };
+
+// Also export as Logger for consistency
+export const Logger = logger;
 
 export default logger;
