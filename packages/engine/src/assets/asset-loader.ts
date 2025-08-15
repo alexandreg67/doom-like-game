@@ -123,7 +123,9 @@ export class AssetLoader {
         const timeoutId = setTimeout(() => {
           console.error(`[AssetLoader] Texture loading timeout for: ${url}`);
           console.error(
-            `[AssetLoader] Texture state at timeout - isReady: ${texture.isReady()}, loadingError: ${texture.loadingError}`
+            `[AssetLoader] Texture state at timeout - isReady: ${texture.isReady()}, loadingError: ${
+              texture.loadingError
+            }`
           );
           texture.dispose();
           reject(new Error(`Failed to load Babylon texture: ${url} (timeout)`));
@@ -131,7 +133,9 @@ export class AssetLoader {
 
         texture.onLoadObservable.addOnce(() => {
           console.log(
-            `[AssetLoader] Texture loaded successfully: ${url}, size: ${texture.getSize().width}x${texture.getSize().height}`
+            `[AssetLoader] Texture loaded successfully: ${url}, size: ${
+              texture.getSize().width
+            }x${texture.getSize().height}`
           );
           console.log(`[AssetLoader] Texture isReady after load: ${texture.isReady()}`);
           clearTimeout(timeoutId);
@@ -144,9 +148,19 @@ export class AssetLoader {
         });
 
         // Check if texture has error observable
-        if ('onErrorObservable' in texture) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (texture as any).onErrorObservable.addOnce((error: unknown) => {
+        if (
+          'onErrorObservable' in texture &&
+          typeof (texture as { onErrorObservable?: unknown }).onErrorObservable === 'object' &&
+          typeof (texture as { onErrorObservable?: { addOnce?: unknown } }).onErrorObservable
+            ?.addOnce === 'function'
+        ) {
+          (
+            texture as {
+              onErrorObservable: {
+                addOnce: (cb: (error: unknown) => void) => void;
+              };
+            }
+          ).onErrorObservable.addOnce((error: unknown) => {
             console.error(`[AssetLoader] Texture loading error for ${url}:`, error);
             clearTimeout(timeoutId);
             texture.dispose();
@@ -167,10 +181,18 @@ export class AssetLoader {
     }
 
     return this.retryOperation(async () => {
-      const response = await fetch(url);
-      if (!response.ok) {
+      let response: Response | undefined;
+      try {
+        response = await fetch(url);
+      } catch (_err) {
+        throw new Error(`Failed to load audio: ${url} - fetch failed`);
+      }
+
+      if (!response || !response.ok) {
         throw new Error(
-          `Failed to load audio: ${url} - ${response.status}: ${response.statusText}`
+          `Failed to load audio: ${url} - ${
+            response ? response.status : 'No Response'
+          }: ${response ? response.statusText : 'Unknown error'}`
         );
       }
 
@@ -194,9 +216,19 @@ export class AssetLoader {
     }
 
     return this.retryOperation(async () => {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Failed to load WAD: ${url} - ${response.status}: ${response.statusText}`);
+      let response: Response | undefined;
+      try {
+        response = await fetch(url);
+      } catch (_err) {
+        throw new Error(`Failed to load WAD: ${url} - fetch failed`);
+      }
+
+      if (!response || !response.ok) {
+        throw new Error(
+          `Failed to load WAD: ${url} - ${
+            response ? response.status : 'No Response'
+          }: ${response ? response.statusText : 'Unknown error'}`
+        );
       }
 
       const buffer = await response.arrayBuffer();
