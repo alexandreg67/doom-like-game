@@ -1,5 +1,6 @@
 import { Color3, Vector2, Vector3 } from '@babylonjs/core';
 import type { LightConfig, LightingSystemConfig, SectorLightingConfig } from '../lighting';
+import { Logger } from '../utils/logger';
 import type {
   DoomLineDef,
   DoomLineFlags,
@@ -135,7 +136,7 @@ export interface ParsedLevel {
  * Loads and parses a level from JSON data
  */
 export function parseLevel(levelData: LevelData): ParsedLevel {
-  console.log(`[LevelLoader] Loading level: ${levelData.name} v${levelData.version}`);
+  Logger.info(`[LevelLoader] Loading level: ${levelData.name} v${levelData.version}`);
 
   // Parse vertices first
   const vertices = new Map<string, DoomVertex>();
@@ -297,15 +298,15 @@ export function parseLevel(levelData: LevelData): ParsedLevel {
   let lightingConfig: LightingSystemConfig | undefined;
   if (levelData.lighting) {
     lightingConfig = parseLightingConfig(levelData.lighting);
-    console.log(`  - ${lightingConfig.lights.length} lights configured`);
-    console.log(`  - ${lightingConfig.sectorLighting.length} sector lighting configurations`);
+    Logger.info(`  - ${lightingConfig.lights.length} lights configured`);
+    Logger.info(`  - ${lightingConfig.sectorLighting.length} sector lighting configurations`);
   }
 
-  console.log('[LevelLoader] Level loaded successfully:');
-  console.log(`  - ${vertices.size} vertices`);
-  console.log(`  - ${sectors.size} sectors`);
-  console.log(`  - ${lineDefs.length} lineDefs`);
-  console.log(`  - Player starts in sector ${playerStart.sector.id}`);
+  Logger.info('[LevelLoader] Level loaded successfully:');
+  Logger.info(`  - ${vertices.size} vertices`);
+  Logger.info(`  - ${sectors.size} sectors`);
+  Logger.info(`  - ${lineDefs.length} lineDefs`);
+  Logger.info(`  - Player starts in sector ${playerStart.sector.id}`);
 
   return {
     vertices,
@@ -320,7 +321,7 @@ export function parseLevel(levelData: LevelData): ParsedLevel {
  * Parses lighting configuration from JSON format to engine format
  */
 function parseLightingConfig(lightingData: RawLightingData): LightingSystemConfig {
-  console.log('[LevelLoader] Parsing lighting configuration...');
+  Logger.info('[LevelLoader] Parsing lighting configuration...');
 
   const lightingConfig: LightingSystemConfig = {
     globalAmbient: {
@@ -444,7 +445,7 @@ function parseLightingConfig(lightingData: RawLightingData): LightingSystemConfi
     lightingConfig.sectorLighting.push(sectorLightingConfig);
   }
 
-  console.log(
+  Logger.info(
     `[LevelLoader] Parsed lighting config: ${lightingConfig.lights.length} lights, ${lightingConfig.sectorLighting.length} sectors`
   );
   return lightingConfig;

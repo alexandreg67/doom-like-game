@@ -13,8 +13,8 @@ interface DebugUIState {
 
 export class LightingDebugUI {
   private lightManager: LightManager;
-  // private _sectorLightingManager?: SectorLightingManager;
-  // private _fogManager?: FogManager;
+  private sectorLightingManager?: SectorLightingManager;
+  private fogManager?: FogManager;
   private state: DebugUIState = {
     isVisible: false,
     selectedLightId: null,
@@ -30,13 +30,13 @@ export class LightingDebugUI {
   }
 
   public setSectorLightingManager(manager: SectorLightingManager): void {
-    // this._sectorLightingManager = manager;
-    console.debug('SectorLightingManager set:', manager);
+    this.sectorLightingManager = manager;
+    Logger.debug('[DEBUG-UI] SectorLightingManager set');
   }
 
   public setFogManager(manager: FogManager): void {
-    // this._fogManager = manager;
-    console.debug('FogManager set:', manager);
+    this.fogManager = manager;
+    Logger.debug('[DEBUG-UI] FogManager set');
   }
 
   public toggle(): void {
@@ -147,6 +147,13 @@ export class LightingDebugUI {
         </div>
         
         <div class="debug-section">
+          <h4>Sector Lighting</h4>
+          <div class="sector-info">
+            ${this.generateSectorInfoHTML()}
+          </div>
+        </div>
+        
+        <div class="debug-section">
           <h4>Quick Actions</h4>
           <div class="quick-actions">
             <button data-action="toggle-all-lights">Toggle All Lights</button>
@@ -243,10 +250,23 @@ export class LightingDebugUI {
   }
 
   private generateFogControlsHTML(): string {
+    if (!this.fogManager) {
+      return '<p class="no-fog-manager">Fog manager not available</p>';
+    }
+
+    // Get current fog state from the fog manager
+    const fogState = this.fogManager.getFogState();
+    const currentFog = fogState.currentFog;
+    const enabled = currentFog?.enabled || false;
+    const mode = currentFog?.mode || 'linear';
+    const density = currentFog?.density || 0.1;
+    const fogColor = currentFog?.color;
+    const colorHex = fogColor ? this.colorToHex(fogColor) : '#3333cc';
+
     return `
       <div class="control-group">
         <label>
-          <input type="checkbox" data-fog-property="enabled"> 
+          <input type="checkbox" data-fog-property="enabled" ${enabled ? 'checked' : ''}> 
           Enable Fog
         </label>
       </div>
@@ -254,22 +274,22 @@ export class LightingDebugUI {
       <div class="control-group">
         <label>Mode:</label>
         <select data-fog-property="mode">
-          <option value="linear">Linear</option>
-          <option value="exponential">Exponential</option>
-          <option value="exponential2">Exponential²</option>
+          <option value="linear" ${mode === 'linear' ? 'selected' : ''}>Linear</option>
+          <option value="exponential" ${mode === 'exponential' ? 'selected' : ''}>Exponential</option>
+          <option value="exponential2" ${mode === 'exponential2' ? 'selected' : ''}>Exponential²</option>
         </select>
       </div>
       
       <div class="control-group">
         <label>Color:</label>
-        <input type="color" value="#3333cc" data-fog-property="color">
+        <input type="color" value="${colorHex}" data-fog-property="color">
       </div>
       
       <div class="control-group">
         <label>Density:</label>
-        <input type="range" min="0.001" max="0.5" step="0.001" value="0.1" 
+        <input type="range" min="0.001" max="0.5" step="0.001" value="${density}" 
                data-fog-property="density">
-        <span class="value">0.1</span>
+        <span class="value">${density.toFixed(3)}</span>
       </div>
     `;
   }
@@ -370,10 +390,36 @@ export class LightingDebugUI {
     }
   }
 
+  private generateSectorInfoHTML(): string {
+    if (!this.sectorLightingManager) {
+      return '<p class="no-sector-manager">Sector lighting manager not available</p>';
+    }
+
+    return `
+      <div class="info-group">
+        <span class="info-label">Current Sector:</span>
+        <span class="info-value">N/A (not tracking)</span>
+      </div>
+      <div class="info-group">
+        <span class="info-label">Active Transitions:</span>
+        <span class="info-value">0</span>
+      </div>
+    `;
+  }
+
   private handleFogPropertyChange(event: Event): void {
-    // Fog property handling would go here
-    // For now, just log the change
-    Logger.debug('[DEBUG-UI] Fog property changed:', event);
+    if (!this.fogManager) return;
+
+    const target = event.target as HTMLInputElement | HTMLSelectElement;
+    const property = target.dataset.fogProperty;
+
+    if (!property) return;
+
+    Logger.debug(`[DEBUG-UI] Fog property changed: ${property} = ${target.value}`);
+
+    // Update fog configuration based on the property changed
+    // This would typically be implemented as part of the FogManager API
+    // For now, we just log the changes
   }
 
   private selectLight(lightId: string | null): void {

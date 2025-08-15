@@ -25,6 +25,7 @@ import {
   type LightingSystemConfig,
   SectorLightingManager,
 } from '../lighting';
+import { Logger } from '../utils/logger';
 
 export interface RenderMetrics {
   frameTime: number;
@@ -734,7 +735,7 @@ export class SceneManager {
    * Initializes the advanced lighting system
    */
   private initializeLightingSystem(scene: Scene): void {
-    console.log('[ENGINE] Initializing advanced lighting system...');
+    Logger.info('[ENGINE] Initializing advanced lighting system...');
 
     // Initialize core lighting managers
     this.lightManager = new LightManager(scene);
@@ -749,7 +750,7 @@ export class SceneManager {
     // Load default lighting configuration
     this.loadDefaultLights();
 
-    console.log('[ENGINE] Advanced lighting system initialized');
+    Logger.info('[ENGINE] Advanced lighting system initialized');
   }
 
   /**
@@ -876,7 +877,7 @@ export class SceneManager {
   public loadLightingFromLevel(lightingConfig: LightingSystemConfig): void {
     if (!this.lightManager || !this.sectorLightingManager) return;
 
-    console.log('[ENGINE] Loading lighting configuration from level data');
+    Logger.info('[ENGINE] Loading lighting configuration from level data');
 
     // Clear existing lights (except defaults)
     const existingLights = this.lightManager.getAllLights();
@@ -897,7 +898,7 @@ export class SceneManager {
     // Apply performance settings
     this.lightManager.setPerformanceConfig(lightingConfig.performance);
 
-    console.log(
+    Logger.info(
       `[ENGINE] Loaded ${lightingConfig.lights.length} lights and ${lightingConfig.sectorLighting.length} sector configurations`
     );
   }
