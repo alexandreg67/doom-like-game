@@ -305,9 +305,11 @@ describe('BSPTree', () => {
         throw new Error('Test line definitions must have at least one line');
       }
 
-      // Use private method reflection for testing (not ideal but necessary for internal logic testing)
-      // biome-ignore lint/suspicious/noExplicitAny: Testing private method requires any
-      const classifyMethod = (bspTree as any).classifyPointRelativeToLine;
+      // Access protected method for testing via a test-only interface (keeps typing)
+      interface BSPTreeTestAccess {
+        classifyPointRelativeToLine(point: Vector2, line: DoomLineDef): number;
+      }
+      const classifyMethod = (bspTree as unknown as BSPTreeTestAccess).classifyPointRelativeToLine;
 
       // Point above the line should be positive (front)
       const pointAbove = new Vector2(0, 0);

@@ -25,6 +25,8 @@ export class BSPTree {
   public static readonly LEAF_LINE_THRESHOLD = 4;
   public static readonly MAX_TREE_DEPTH = 20;
   public static readonly EPSILON = 1e-8;
+  // Counter to generate unique intersection vertex ids per tree instance
+  private intersectionCounter = 0;
 
   private root: BSPNode | null = null;
   private allLines: DoomLineDef[] = [];
@@ -191,8 +193,8 @@ export class BSPTree {
     const sdy = qy - py;
 
     const denom = rdx * sdy - rdy * sdx;
-    if (denom === 0) {
-      // Parallel — no clean intersection to split on
+    if (Math.abs(denom) < BSPTree.EPSILON) {
+      // Parallel or nearly parallel — no clean intersection to split on
       return {};
     }
 
@@ -202,8 +204,11 @@ export class BSPTree {
     const ix = ax + t * rdx;
     const iy = ay + t * rdy;
 
-    // Create a new DoomVertex for the intersection
-    const interVertex = createDoomVertex(`${line.id}_i`, new Vector2(ix, iy));
+    // Create a new DoomVertex for the intersection with a stable unique id per tree
+    const interVertex = createDoomVertex(
+      `${line.id}_i${this.intersectionCounter++}`,
+      new Vector2(ix, iy)
+    );
 
     // Build front/back segments depending on which side each original endpoint lies
     const startSide = this.classifyPointRelativeToLine(line.startVertex.position, partition);
@@ -466,7 +471,8 @@ export class BSPTree {
     const o3 = orient(c, d, a);
     const o4 = orient(c, d, b);
 
-    if (o1 === 0 && o2 === 0 && o3 === 0 && o4 === 0) {
+    const eps = BSPTree.EPSILON;
+    if (Math.abs(o1) < eps && Math.abs(o2) < eps && Math.abs(o3) < eps && Math.abs(o4) < eps) {
       // Colinear case: treat as non-intersecting for LOS (conservative)
       return false;
     }

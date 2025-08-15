@@ -24,6 +24,8 @@ export interface RenderMetrics {
   renderedLines: number;
   bspTraversalTime: number;
   totalGeometry: number;
+  totalSectors: number;
+  totalLines: number;
 }
 
 export class SceneManager {
@@ -551,6 +553,8 @@ export class SceneManager {
       renderedLines,
       bspTraversalTime,
       totalGeometry: totalSectors + totalLines,
+      totalSectors,
+      totalLines,
     };
 
     this.lastMetrics = metrics;
@@ -585,13 +589,24 @@ export class SceneManager {
     console.log(
       `  Rendered lines: ${metrics.renderedLines} / ${metrics.renderedLines + metrics.culledLines}`
     );
-    if (metrics.totalGeometry === 0) {
-      console.log('  Culling efficiency: N/A (total geometry is zero)');
+    // Report sector and line culling efficiency separately — more meaningful units
+    if (metrics.totalSectors === 0) {
+      console.log('  Sector culling efficiency: N/A (total sectors is zero)');
     } else {
       console.log(
-        `  Culling efficiency: ${(
-          ((metrics.culledSectors + metrics.culledLines) / metrics.totalGeometry) * 100
+        `  Sector culling efficiency: ${(
+          (metrics.culledSectors / metrics.totalSectors) * 100
         ).toFixed(1)}%`
+      );
+    }
+
+    if (metrics.totalLines === 0) {
+      console.log('  Line culling efficiency: N/A (total lines is zero)');
+    } else {
+      console.log(
+        `  Line culling efficiency: ${((metrics.culledLines / metrics.totalLines) * 100).toFixed(
+          1
+        )}%`
       );
     }
   }
