@@ -1,0 +1,530 @@
+{
+  "name": "Phase 1 Demo Level",
+  "description": "Simple multi-sector demo with main room and smaller room",
+  "version": "1.0.0",
+  "vertices": [
+    { "id": "v1", "position": { "x": -6, "y": -6 } },
+    { "id": "v2", "position": { "x": 6, "y": -6 } },
+    { "id": "v3", "position": { "x": 6, "y": 6 } },
+    { "id": "v4", "position": { "x": -6, "y": 6 } },
+    { "id": "v5", "position": { "x": 6, "y": -2 } },
+    { "id": "v6", "position": { "x": 6, "y": 2 } },
+    { "id": "v7", "position": { "x": 10, "y": 2 } },
+    { "id": "v8", "position": { "x": 10, "y": -2 } }
+  ],
+  "sectors": [
+    {
+      "id": "main_room",
+      "floorHeight": 0,
+      "ceilingHeight": 4,
+      "floorTexture": "FLOOR_MAIN",
+      "ceilingTexture": "CEIL_MAIN",
+      "lightLevel": 200,
+      "vertices": ["v1", "v2", "v3", "v4"]
+    },
+    {
+      "id": "small_room",
+      "floorHeight": 0.5,
+      "ceilingHeight": 3,
+      "floorTexture": "FLOOR_SMALL",
+      "ceilingTexture": "CEIL_SMALL",
+      "lightLevel": 160,
+      "vertices": ["v5", "v8", "v7", "v6"]
+    }
+  ],
+  "lineDefs": [
+    {
+      "id": "l1",
+      "startVertex": "v1",
+      "endVertex": "v2",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "main_room_s1",
+        "sector": "main_room",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l2",
+      "startVertex": "v2",
+      "endVertex": "v5",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "main_room_s2",
+        "sector": "main_room",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l3",
+      "startVertex": "v5",
+      "endVertex": "v6",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "main_room_corridor_f",
+        "sector": "main_room",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "main_room_corridor_b",
+        "sector": "corridor",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l4",
+      "startVertex": "v6",
+      "endVertex": "v11",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "corridor_main_f",
+        "sector": "corridor",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "corridor_main_b",
+        "sector": "main_room",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l5",
+      "startVertex": "v11",
+      "endVertex": "v12",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "main_corridor_f2",
+        "sector": "main_room",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "main_corridor_b2",
+        "sector": "corridor",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l6",
+      "startVertex": "v12",
+      "endVertex": "v4",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "main_room_s6",
+        "sector": "main_room",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l7",
+      "startVertex": "v4",
+      "endVertex": "v1",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "main_room_s7",
+        "sector": "main_room",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l8",
+      "startVertex": "v5",
+      "endVertex": "v7",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "corridor_corridor_f",
+        "sector": "corridor",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "corridor_corridor_b",
+        "sector": "corridor",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l9",
+      "startVertex": "v7",
+      "endVertex": "v10",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "corridor_corridor2_f",
+        "sector": "corridor",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "corridor_corridor2_b",
+        "sector": "corridor",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l10",
+      "startVertex": "v10",
+      "endVertex": "v11",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "corridor_corridor3_f",
+        "sector": "corridor",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "corridor_corridor3_b",
+        "sector": "corridor",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l11_door",
+      "startVertex": "v7",
+      "endVertex": "v8",
+      "flags": {
+        "blocking": true,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "corridor_door_f",
+        "sector": "corridor",
+        "textureMiddle": "DOOR_WOOD",
+        "textureUpper": "-",
+        "textureLower": "WALL_LOWER",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": true,
+        "needsMiddleTexture": true
+      },
+      "backSide": {
+        "id": "corridor_door_b",
+        "sector": "door_room",
+        "textureMiddle": "DOOR_WOOD",
+        "textureUpper": "-",
+        "textureLower": "WALL_LOWER",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": true,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l12",
+      "startVertex": "v8",
+      "endVertex": "v9",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "door_room_s1",
+        "sector": "door_room",
+        "textureMiddle": "WALL_BRICK",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l13",
+      "startVertex": "v9",
+      "endVertex": "v10",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "door_room_s2",
+        "sector": "door_room",
+        "textureMiddle": "WALL_BRICK",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l14",
+      "startVertex": "v10",
+      "endVertex": "v7",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "door_corridor_f",
+        "sector": "door_room",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "WALL_LOWER",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": true,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "door_corridor_b",
+        "sector": "corridor",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    }
+  ],
+  "playerStart": {
+    "position": { "x": -2, "y": 2 },
+    "angle": 0,
+    "sector": "main_room"
+  }
+}

@@ -390,45 +390,172 @@ describe('SectorGeometry', () => {
       expect(result?.vertices[3].z).toBe(0);
     });
 
-    it('should return null for two-sided linedef if partial walls not implemented', () => {
+    it('should generate partial walls for sectors with different heights', () => {
+      // Create a taller back sector
+      const backSector: DoomSector = {
+        ...mockSector,
+        id: 'back-sector',
+        floorHeight: 32, // Higher floor
+        ceilingHeight: 96, // Lower ceiling
+      };
+
       const lineDef = {
         id: 'test-line-two-sided',
         startVertex: mockSector.vertices[0],
         endVertex: mockSector.vertices[1],
-        flags: { blocking: true, twoSided: true }, // Two-sided
+        flags: { blocking: true, twoSided: true },
         frontSide: {
           id: 'test-side-front',
-          sector: mockSector,
-          textureMiddle: 'WALL1',
-          textureUpper: '-',
-          textureLower: '-',
+          sector: mockSector, // Floor: 0, Ceiling: 128
+          textureMiddle: '-',
+          textureUpper: 'WALL_UPPER',
+          textureLower: 'WALL_LOWER',
           offsetX: 0,
           offsetY: 0,
-          needsUpperTexture: false,
-          needsLowerTexture: false,
-          needsMiddleTexture: true,
+          needsUpperTexture: true, // Back ceiling (96) < front ceiling (128)
+          needsLowerTexture: true, // Back floor (32) > front floor (0)
+          needsMiddleTexture: false,
         },
         backSide: {
-          // Minimal back side
           id: 'test-side-back',
-          sector: mockSector,
-          textureMiddle: 'WALL1',
+          sector: backSector, // Floor: 32, Ceiling: 96
+          textureMiddle: '-',
           textureUpper: '-',
           textureLower: '-',
           offsetX: 0,
           offsetY: 0,
           needsUpperTexture: false,
           needsLowerTexture: false,
-          needsMiddleTexture: true,
+          needsMiddleTexture: false,
         },
         length: 100,
         normal: new Vector2(0, 1),
       };
 
-      // Expect it to throw an error because generatePartialWalls is not implemented
-      expect(() => geometry.generateWallGeometry(lineDef)).toThrow(
-        'TODO: generatePartialWalls is not implemented'
-      );
+      const result = geometry.generateWallGeometry(lineDef);
+      expect(result).toBeDefined();
+      expect(result?.vertices).toBeDefined();
+      expect(result?.indices).toBeDefined();
+      expect(result?.uvs).toBeDefined();
+
+      // Should have 8 vertices (2 walls: lower + upper, 4 vertices each)
+      expect(result?.vertices.length).toBe(8);
+      expect(result?.indices.length).toBe(12); // 4 triangles (2 per wall)
+      expect(result?.uvs.length).toBe(8);
+
+      // Check lower wall vertices (front floor 0 to back floor 32)
+      expect(result?.vertices[0].y).toBe(0); // Front floor
+      expect(result?.vertices[2].y).toBe(32); // Back floor
+
+      // Check upper wall vertices (back ceiling 96 to front ceiling 128)
+      expect(result?.vertices[4].y).toBe(96); // Back ceiling
+      expect(result?.vertices[6].y).toBe(128); // Front ceiling
+    });
+
+    it('should generate middle wall when there is a gap between sectors', () => {
+      // Create a scenario where there's a gap (window/opening)
+      const backSector: DoomSector = {
+        ...mockSector,
+        id: 'back-sector',
+        floorHeight: 0, // Same floor level
+        ceilingHeight: 128, // Same ceiling level
+      };
+
+      const lineDef = {
+        id: 'test-line-window',
+        startVertex: mockSector.vertices[0],
+        endVertex: mockSector.vertices[1],
+        flags: { blocking: false, twoSided: true },
+        frontSide: {
+          id: 'test-side-front',
+          sector: mockSector,
+          textureMiddle: 'WINDOW',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: true, // Window/grating texture
+        },
+        backSide: {
+          id: 'test-side-back',
+          sector: backSector,
+          textureMiddle: '-',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: false,
+        },
+        length: 100,
+        normal: new Vector2(0, 1),
+      };
+
+      const result = geometry.generateWallGeometry(lineDef);
+      expect(result).toBeDefined();
+
+      // Should have 4 vertices for the middle wall
+      expect(result?.vertices.length).toBe(4);
+      expect(result?.indices.length).toBe(6); // 2 triangles
+      expect(result?.uvs.length).toBe(4);
+
+      // Check that vertices span the full height (since sectors have same heights)
+      expect(result?.vertices[0].y).toBe(0); // Floor level
+      expect(result?.vertices[2].y).toBe(128); // Ceiling level
+    });
+
+    it('should return empty geometry when no walls are needed', () => {
+      // Same height sectors with no texture requirements
+      const backSector: DoomSector = {
+        ...mockSector,
+        id: 'back-sector',
+        floorHeight: 0, // Same floor
+        ceilingHeight: 128, // Same ceiling
+      };
+
+      const lineDef = {
+        id: 'test-line-no-walls',
+        startVertex: mockSector.vertices[0],
+        endVertex: mockSector.vertices[1],
+        flags: { blocking: false, twoSided: true },
+        frontSide: {
+          id: 'test-side-front',
+          sector: mockSector,
+          textureMiddle: '-',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: false, // No textures needed
+        },
+        backSide: {
+          id: 'test-side-back',
+          sector: backSector,
+          textureMiddle: '-',
+          textureUpper: '-',
+          textureLower: '-',
+          offsetX: 0,
+          offsetY: 0,
+          needsUpperTexture: false,
+          needsLowerTexture: false,
+          needsMiddleTexture: false,
+        },
+        length: 100,
+        normal: new Vector2(0, 1),
+      };
+
+      const result = geometry.generateWallGeometry(lineDef);
+      expect(result).toBeDefined();
+
+      // Should return empty geometry when no walls are needed
+      expect(result?.vertices.length).toBe(0);
+      expect(result?.indices.length).toBe(0);
+      expect(result?.uvs.length).toBe(0);
     });
   });
 });

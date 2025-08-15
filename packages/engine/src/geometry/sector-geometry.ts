@@ -231,10 +231,9 @@ export class SectorGeometry {
       uvs.push(new Vector2(u, v));
     }
 
-    // Triangulate ceiling (fan triangulation, counter-clockwise for visibility from below)
-    // We need the normals to point downward but be visible from below
+    // Triangulate ceiling (fan triangulation from first vertex, clockwise for downward normal)
     for (let i = 1; i < this.sector.vertices.length - 1; i++) {
-      indices.push(0, i + 1, i); // Reversed order to make visible from below
+      indices.push(0, i, i + 1); // Consistent clockwise winding order
     }
 
     return { vertices, indices, uvs };
@@ -286,14 +285,134 @@ export class SectorGeometry {
   }
 
   /**
-   * @todo Implement upper/lower wall generation for sectors with different heights.
-   * This will be needed when we have adjacent sectors with different floor/ceiling heights.
-   * Currently, this method is a placeholder and will throw an error if called.
+   * Generates upper/lower wall geometry for sectors with different heights.
+   * This handles the DOOM-like rendering where adjacent sectors can have different
+   * floor/ceiling heights, requiring upper and lower wall segments.
    */
-  private generatePartialWalls(_lineDef: DoomLineDef): TriangulationResult {
-    throw new Error(
-      'TODO: generatePartialWalls is not implemented. This method should generate upper/lower wall geometry for sectors with different heights.'
-    );
+  private generatePartialWalls(lineDef: DoomLineDef): TriangulationResult {
+    if (!lineDef.frontSide || !lineDef.backSide) {
+      throw new Error('generatePartialWalls requires both front and back sides');
+    }
+
+    const frontSector = lineDef.frontSide.sector;
+    const backSector = lineDef.backSide.sector;
+    const start = lineDef.startVertex.position;
+    const end = lineDef.endVertex.position;
+
+    const vertices: Vector3[] = [];
+    const indices: number[] = [];
+    const uvs: Vector2[] = [];
+
+    // Calculate wall segments based on height differences
+    const frontFloor = frontSector.floorHeight;
+    const frontCeiling = frontSector.ceilingHeight;
+    const backFloor = backSector.floorHeight;
+    const backCeiling = backSector.ceilingHeight;
+
+    // Determine the visible wall segments
+    const lowerWallTop = Math.max(frontFloor, backFloor);
+    const upperWallBottom = Math.min(frontCeiling, backCeiling);
+
+    let vertexIndex = 0;
+
+    // Generate lower wall if back sector floor is higher than front sector floor
+    if (backFloor > frontFloor && lineDef.frontSide.needsLowerTexture) {
+      const lowerVertices = [
+        new Vector3(start.x, frontFloor, start.y),
+        new Vector3(end.x, frontFloor, end.y),
+        new Vector3(end.x, backFloor, end.y),
+        new Vector3(start.x, backFloor, start.y),
+      ];
+
+      const lowerUvs = [
+        new Vector2(0, 1), // bottom-left
+        new Vector2(1, 1), // bottom-right
+        new Vector2(1, 0), // top-right
+        new Vector2(0, 0), // top-left
+      ];
+
+      vertices.push(...lowerVertices);
+      uvs.push(...lowerUvs);
+
+      // Add indices for lower wall (2 triangles)
+      const baseIndex = vertexIndex;
+      indices.push(
+        baseIndex,
+        baseIndex + 2,
+        baseIndex + 1, // First triangle
+        baseIndex,
+        baseIndex + 3,
+        baseIndex + 2 // Second triangle
+      );
+
+      vertexIndex += 4;
+    }
+
+    // Generate upper wall if back sector ceiling is lower than front sector ceiling
+    if (backCeiling < frontCeiling && lineDef.frontSide.needsUpperTexture) {
+      const upperVertices = [
+        new Vector3(start.x, backCeiling, start.y),
+        new Vector3(end.x, backCeiling, end.y),
+        new Vector3(end.x, frontCeiling, end.y),
+        new Vector3(start.x, frontCeiling, start.y),
+      ];
+
+      const upperUvs = [
+        new Vector2(0, 1), // bottom-left
+        new Vector2(1, 1), // bottom-right
+        new Vector2(1, 0), // top-right
+        new Vector2(0, 0), // top-left
+      ];
+
+      vertices.push(...upperVertices);
+      uvs.push(...upperUvs);
+
+      // Add indices for upper wall (2 triangles)
+      const baseIndex = vertexIndex;
+      indices.push(
+        baseIndex,
+        baseIndex + 2,
+        baseIndex + 1, // First triangle
+        baseIndex,
+        baseIndex + 3,
+        baseIndex + 2 // Second triangle
+      );
+
+      vertexIndex += 4;
+    }
+
+    // Generate middle wall if there's a gap and middle texture is needed
+    if (lowerWallTop < upperWallBottom && lineDef.frontSide.needsMiddleTexture) {
+      const middleVertices = [
+        new Vector3(start.x, lowerWallTop, start.y),
+        new Vector3(end.x, lowerWallTop, end.y),
+        new Vector3(end.x, upperWallBottom, end.y),
+        new Vector3(start.x, upperWallBottom, start.y),
+      ];
+
+      const middleUvs = [
+        new Vector2(0, 1), // bottom-left
+        new Vector2(1, 1), // bottom-right
+        new Vector2(1, 0), // top-right
+        new Vector2(0, 0), // top-left
+      ];
+
+      vertices.push(...middleVertices);
+      uvs.push(...middleUvs);
+
+      // Add indices for middle wall (2 triangles)
+      const baseIndex = vertexIndex;
+      indices.push(
+        baseIndex,
+        baseIndex + 2,
+        baseIndex + 1, // First triangle
+        baseIndex,
+        baseIndex + 3,
+        baseIndex + 2 // Second triangle
+      );
+    }
+
+    return { vertices, indices, uvs };
   }
 
   /**
