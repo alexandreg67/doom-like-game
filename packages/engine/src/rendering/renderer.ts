@@ -9,7 +9,11 @@ export class Renderer {
 
   constructor(engine: Engine, preferWebGPU = true) {
     this.engine = engine;
-    this.canvas = engine.getRenderingCanvas()!;
+    const canvas = engine.getRenderingCanvas();
+    if (!canvas) {
+      throw new Error('Rendering canvas is not available from engine');
+    }
+    this.canvas = canvas;
 
     if (preferWebGPU && this.isWebGPUSupported()) {
       this.activeRenderer = new WebGPURenderer();

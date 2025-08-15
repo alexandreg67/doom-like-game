@@ -13,6 +13,7 @@ import {
   VertexData,
 } from '@babylonjs/core';
 import { AssetLoader } from '../assets/asset-loader';
+import { TextureManager } from '../assets/texture-manager';
 import demoLevelData from '../fixtures/demo_level_simple.json';
 import { BSPTree } from '../geometry/bsp-tree';
 import type { BSPNode, DoomLineDef, DoomSector, DoomVertex } from '../geometry/doom-geometry';
@@ -35,6 +36,7 @@ export class SceneManager {
   private engine: Engine;
   private currentScene: Scene | null = null;
   private assetLoader: AssetLoader;
+  private textureManager: TextureManager | null = null;
   private bspTree: BSPTree | null = null;
   private _debugBSP = false; // Toggle for BSP debug visualization
   private enableMetrics = false; // Toggle for performance metrics
@@ -52,9 +54,15 @@ export class SceneManager {
     });
   }
 
-  public createDefaultScene(): Scene {
+  public async createDefaultScene(): Promise<Scene> {
     console.log('[ENGINE] Creating Phase 1 demo scene...');
     const scene = new Scene(this.engine);
+
+    // Initialize texture manager for this scene
+    this.textureManager = new TextureManager(scene, {
+      maxEntries: 200,
+      ttlMs: 5 * 60 * 1000, // 5 minutes
+    });
 
     // Create camera - positioned inside main room looking towards door
     const camera = new FreeCamera('camera', new Vector3(0, 1.7, 0), scene);
@@ -97,7 +105,7 @@ export class SceneManager {
     directionalLight.diffuse = new Color3(1, 1, 0.9);
 
     // Load the demo level
-    this.loadDemoLevel(scene);
+    await this.loadDemoLevel(scene);
 
     // Setup keyboard interaction for door
     this.setupKeyboardInteraction(scene);
@@ -109,7 +117,7 @@ export class SceneManager {
   /**
    * Loads the Phase 1 demo level with multiple sectors
    */
-  private loadDemoLevel(scene: Scene): void {
+  private async loadDemoLevel(scene: Scene): Promise<void> {
     console.log('[ENGINE] Loading Phase 1 demo level...');
 
     try {
@@ -121,7 +129,7 @@ export class SceneManager {
 
       // Create meshes for all sectors
       const sectorsArray = Array.from(this.currentLevel.sectors.values());
-      this.createSectorMeshes(sectorsArray, scene);
+      await this.createSectorMeshes(sectorsArray, scene);
 
       // Build BSP tree for culling
       this.bspTree = new BSPTree(sectorsArray);
@@ -167,11 +175,17 @@ export class SceneManager {
     };
 
     // Create simplified LineDefs for fallback
+    const startVertex = vertices[0];
+    const endVertex = vertices[1];
+    if (!startVertex || !endVertex) {
+      throw new Error('Invalid fallback vertices: missing start or end vertex');
+    }
+
     const lineDefs: DoomLineDef[] = [
       {
         id: 'l1',
-        startVertex: vertices[0]!,
-        endVertex: vertices[1]!,
+        startVertex,
+        endVertex,
         flags: {
           blocking: true,
           twoSided: false,
@@ -250,16 +264,66 @@ export class SceneManager {
   /**
    * Creates meshes for multiple sectors
    */
-  private createSectorMeshes(sectors: DoomSector[], scene: Scene): void {
+  private async createSectorMeshes(sectors: DoomSector[], scene: Scene): Promise<void> {
     for (const sector of sectors) {
-      this.createSectorMesh(sector, scene);
+      await this.createSectorMesh(sector, scene);
     }
+  }
+
+  /**
+   * Creates a material with texture support, falling back to solid color if texture is not available
+   */
+  private async createMaterialWithTexture(
+    name: string,
+    textureName: string,
+    fallbackColor: Color3,
+    scene: Scene
+  ): Promise<StandardMaterial> {
+    const material = new StandardMaterial(name, scene);
+
+    if (this.textureManager) {
+      try {
+        // Try to load the texture
+        const textureHandle = await this.textureManager.load(`/textures/${textureName}.jpg`, {
+          wrapU: 'repeat',
+          wrapV: 'repeat',
+          sampling: 'linear',
+          fallback: '/textures/default.jpg',
+        });
+
+        if (textureHandle.texture) {
+          material.diffuseTexture = textureHandle.texture;
+          console.log(`[ENGINE] Applied texture ${textureName} to material ${name}`);
+        } else {
+          material.diffuseColor = fallbackColor;
+          console.warn(
+            `[ENGINE] Texture loaded but invalid for ${textureName}, using fallback color.`
+          );
+        }
+      } catch (error) {
+        console.warn(
+          `[ENGINE] Failed to load texture ${textureName}, using fallback color:`,
+          error
+        );
+        material.diffuseColor = fallbackColor;
+      }
+    } else {
+      // No texture manager, use solid color
+      material.diffuseColor = fallbackColor;
+    }
+
+    // Common material settings
+    material.alpha = 1.0;
+    material.backFaceCulling = false;
+    material.ambientColor = material.diffuseColor?.scale(0.3) || fallbackColor.scale(0.3);
+
+    return material;
   }
 
   /**
    * Creates a mesh for a sector (floor, ceiling, and walls)
    */
-  private createSectorMesh(sector: DoomSector, scene: Scene): void {
+  private async createSectorMesh(sector: DoomSector, scene: Scene): Promise<void> {
     const sectorGeom = new SectorGeometry(sector);
 
     // Create floor mesh
@@ -304,47 +368,56 @@ export class SceneManager {
       `[ENGINE] Ceiling mesh for ${sector.id}: ${ceilingGeometry.vertices.length} vertices, ${ceilingGeometry.indices.length} indices`
     );
 
-    // Create materials with sector-specific colors
-    const floorMaterial = new StandardMaterial(`${sector.meshId}_floor_mat`, scene);
-    if (sector.id === 'main_room') {
-      floorMaterial.diffuseColor = new Color3(0.6, 0.4, 0.2); // Brown
-    } else if (sector.id === 'side_room') {
-      floorMaterial.diffuseColor = new Color3(0.3, 0.5, 0.7); // Blue
-    } else {
-      floorMaterial.diffuseColor = new Color3(0.6, 0.4, 0.2); // Default brown
-    }
+    // Create materials with texture support and fallback colors
+    const floorTextureName =
+      sector.floorTexture ||
+      (sector.id === 'main_room'
+        ? 'wood_floor'
+        : sector.id === 'side_room'
+          ? 'stone_floor'
+          : 'concrete_floor');
+    const floorFallbackColor =
+      sector.id === 'main_room'
+        ? new Color3(0.6, 0.4, 0.2)
+        : sector.id === 'side_room'
+          ? new Color3(0.3, 0.5, 0.7)
+          : new Color3(0.6, 0.4, 0.2);
 
-    const ceilingMaterial = new StandardMaterial(`${sector.meshId}_ceiling_mat`, scene);
-    ceilingMaterial.diffuseColor = new Color3(0.8, 0.8, 0.9);
+    const ceilingTextureName = sector.ceilingTexture || 'concrete_ceiling';
+    const ceilingFallbackColor = new Color3(0.8, 0.8, 0.9);
 
-    const wallMaterial = new StandardMaterial(`${sector.meshId}_wall_mat`, scene);
-    if (sector.id === 'side_room') {
-      wallMaterial.diffuseColor = new Color3(0.8, 0.6, 0.4); // Brick color
-    } else {
-      wallMaterial.diffuseColor = new Color3(0.7, 0.7, 0.7); // Stone color
-    }
+    const wallTextureName = sector.id === 'side_room' ? 'brick_wall' : 'stone_wall';
+    const wallFallbackColor =
+      sector.id === 'side_room' ? new Color3(0.8, 0.6, 0.4) : new Color3(0.7, 0.7, 0.7);
+
+    // Create materials using our texture system
+    const floorMaterial = await this.createMaterialWithTexture(
+      `${sector.meshId}_floor_mat`,
+      floorTextureName,
+      floorFallbackColor,
+      scene
+    );
+
+    const ceilingMaterial = await this.createMaterialWithTexture(
+      `${sector.meshId}_ceiling_mat`,
+      ceilingTextureName,
+      ceilingFallbackColor,
+      scene
+    );
+
+    const wallMaterial = await this.createMaterialWithTexture(
+      `${sector.meshId}_wall_mat`,
+      wallTextureName,
+      wallFallbackColor,
+      scene
+    );
 
     floorMesh.material = floorMaterial;
     ceilingMesh.material = ceilingMaterial;
 
     console.log(
-      `[ENGINE] Applied materials to ${sector.id}: floor=${floorMaterial.diffuseColor}, ceiling=${ceilingMaterial.diffuseColor}, wall=${wallMaterial.diffuseColor}`
+      `[ENGINE] Applied materials to ${sector.id}: floor=${floorTextureName}, ceiling=${ceilingTextureName}, wall=${wallTextureName}`
     );
-
-    // Make sure materials are not transparent and have proper lighting
-    floorMaterial.alpha = 1.0;
-    ceilingMaterial.alpha = 1.0;
-    wallMaterial.alpha = 1.0;
-
-    // Enable backface culling for better performance but make sure normals are correct
-    floorMaterial.backFaceCulling = false;
-    ceilingMaterial.backFaceCulling = false;
-    wallMaterial.backFaceCulling = false;
-
-    // Make materials more responsive to light
-    floorMaterial.ambientColor = floorMaterial.diffuseColor.scale(0.3);
-    ceilingMaterial.ambientColor = ceilingMaterial.diffuseColor.scale(0.3);
-    wallMaterial.ambientColor = wallMaterial.diffuseColor.scale(0.3);
 
     // Optimize static geometry (floors and ceilings are typically static in Phase 1)
     // Note: Don't freeze matrices for walls that might be animated (doors, moving platforms)
@@ -364,8 +437,12 @@ export class SceneManager {
 
         // Use different material for door
         if (lineDef.id === 'l3_door') {
-          const doorMaterial = new StandardMaterial('door_material', scene);
-          doorMaterial.diffuseColor = new Color3(0.6, 0.3, 0.1); // Wood color
+          const doorMaterial = await this.createMaterialWithTexture(
+            'door_material',
+            'wood_door',
+            new Color3(0.6, 0.3, 0.1), // Wood color fallback
+            scene
+          );
           wallMesh.material = doorMaterial;
           // Tag for easy identification
           wallMesh.metadata = { isDoor: true, lineDefId: lineDef.id };
