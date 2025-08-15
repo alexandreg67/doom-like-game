@@ -12,13 +12,28 @@ import {
   VertexData,
 } from '@babylonjs/core';
 import { AssetLoader } from '../assets/asset-loader';
+import { BSPTree } from '../geometry/bsp-tree';
 import type { DoomLineDef, DoomSector, DoomVertex } from '../geometry/doom-geometry';
 import { SectorGeometry } from '../geometry/sector-geometry';
+
+export interface RenderMetrics {
+  frameTime: number;
+  culledSectors: number;
+  renderedSectors: number;
+  culledLines: number;
+  renderedLines: number;
+  bspTraversalTime: number;
+  totalGeometry: number;
+}
 
 export class SceneManager {
   private engine: Engine;
   private currentScene: Scene | null = null;
   private assetLoader: AssetLoader;
+  private bspTree: BSPTree | null = null;
+  private _debugBSP = false; // Toggle for BSP debug visualization
+  private enableMetrics = false; // Toggle for performance metrics
+  private lastMetrics: RenderMetrics | null = null;
 
   constructor(engine: Engine) {
     this.engine = engine;
@@ -201,6 +216,15 @@ export class SceneManager {
     ];
     sector.lineDefs = lineDefs;
 
+    // Build BSP Tree for culling optimization
+    console.log('[ENGINE] Building BSP tree for sector culling...');
+    const sectors = [sector]; // For now, single sector
+    this.bspTree = new BSPTree(sectors);
+    const bspStats = this.bspTree.getStats();
+    console.log(
+      `[ENGINE] BSP tree built: ${bspStats.nodes} nodes, ${bspStats.leafs} leafs, depth ${bspStats.maxDepth}`
+    );
+
     // Create geometry from the sector data
     const sectorGeometry = new SectorGeometry(sector);
 
@@ -333,6 +357,231 @@ export class SceneManager {
     console.log('[ENGINE] Default scene created successfully');
     this.currentScene = scene;
     return scene;
+  }
+
+  /**
+   * Enables or disables BSP debug visualization
+   */
+  public setDebugBSP(enabled: boolean): void {
+    this._debugBSP = enabled;
+    console.log(`[ENGINE] BSP debug visualization ${enabled ? 'enabled' : 'disabled'}`);
+
+    if (this.currentScene && this.bspTree) {
+      if (enabled) {
+        this.createBSPDebugWireframe();
+      } else {
+        this.removeBSPDebugWireframe();
+      }
+    }
+  }
+
+  /**
+   * Returns whether BSP debug visualization is enabled
+   */
+  public isDebugBSPEnabled(): boolean {
+    return this._debugBSP;
+  }
+
+  /**
+   * Creates wireframe visualization of the BSP tree partitions
+   */
+  private createBSPDebugWireframe(): void {
+    if (!this.currentScene || !this.bspTree) return;
+
+    // Remove existing debug wireframes
+    this.removeBSPDebugWireframe();
+
+    const root = this.bspTree.getRoot();
+    if (root) {
+      this.createNodeWireframe(root, 0);
+    }
+  }
+
+  /**
+   * Recursively creates wireframe for BSP nodes
+   */
+  private createNodeWireframe(node: any, depth: number): void {
+    if (!this.currentScene) return;
+
+    if (!node.isLeaf && node.splitLine) {
+      const line = node.splitLine;
+      const start = line.startVertex.position;
+      const end = line.endVertex.position;
+
+      // Create line mesh for the partition
+      const points = [
+        new Vector3(start.x, 0, start.y),
+        new Vector3(start.x, 4, start.y), // Extend to ceiling height
+        new Vector3(end.x, 4, end.y),
+        new Vector3(end.x, 0, end.y),
+        new Vector3(start.x, 0, start.y), // Close the line
+      ];
+
+      const lineMesh = MeshBuilder.CreateLines(
+        `bsp_debug_${line.id}`,
+        { points },
+        this.currentScene
+      );
+
+      // Color based on depth for better visualization
+      const colors = [
+        new Color3(1, 0, 0), // Red
+        new Color3(0, 1, 0), // Green
+        new Color3(0, 0, 1), // Blue
+        new Color3(1, 1, 0), // Yellow
+        new Color3(1, 0, 1), // Magenta
+        new Color3(0, 1, 1), // Cyan
+      ];
+
+      const material = new StandardMaterial(`bsp_debug_mat_${line.id}`, this.currentScene);
+      material.emissiveColor = colors[depth % colors.length] || new Color3(1, 1, 1);
+      material.disableLighting = true;
+      lineMesh.material = material;
+
+      // Tag for easy removal
+      lineMesh.metadata = { isBSPDebug: true };
+
+      // Recursively create wireframes for children
+      if (node.frontChild) {
+        this.createNodeWireframe(node.frontChild, depth + 1);
+      }
+      if (node.backChild) {
+        this.createNodeWireframe(node.backChild, depth + 1);
+      }
+    }
+  }
+
+  /**
+   * Removes all BSP debug wireframes
+   */
+  private removeBSPDebugWireframe(): void {
+    if (!this.currentScene) return;
+
+    const meshesToRemove = this.currentScene.meshes.filter((mesh) => mesh.metadata?.isBSPDebug);
+
+    for (const mesh of meshesToRemove) {
+      mesh.dispose();
+    }
+  }
+
+  /**
+   * Performs BSP-based culling and returns visible geometry
+   */
+  public performBSPCulling(cameraPosition: Vector3): {
+    visibleSectors: number;
+    visibleLines: number;
+    totalSectors: number;
+    totalLines: number;
+  } {
+    if (!this.bspTree) {
+      return {
+        visibleSectors: 0,
+        visibleLines: 0,
+        totalSectors: 0,
+        totalLines: 0,
+      };
+    }
+
+    const traversalResult = this.bspTree.traverseTree(cameraPosition);
+
+    return {
+      visibleSectors: traversalResult.visibleSectors.length,
+      visibleLines: traversalResult.visibleLines.length,
+      totalSectors: 1, // Single sector for now
+      totalLines: 4, // Square sector has 4 lines
+    };
+  }
+
+  /**
+   * Enables or disables performance metrics collection
+   */
+  public setMetricsEnabled(enabled: boolean): void {
+    this.enableMetrics = enabled;
+    console.log(`[ENGINE] Performance metrics ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Collects performance metrics for the current frame
+   */
+  public collectFrameMetrics(): RenderMetrics | null {
+    if (!this.enableMetrics || !this.currentScene || !this.bspTree) {
+      return null;
+    }
+
+    const frameStartTime = performance.now();
+
+    // Get camera position
+    const camera = this.currentScene.activeCamera;
+    if (!camera) {
+      return null;
+    }
+
+    const cameraPosition = camera.position;
+
+    // Measure BSP traversal time
+    const bspStartTime = performance.now();
+    const traversalResult = this.bspTree.traverseTree(cameraPosition);
+    const bspEndTime = performance.now();
+    const bspTraversalTime = bspEndTime - bspStartTime;
+
+    // Calculate geometry statistics
+    const totalSectors = 1; // Single sector for now
+    const totalLines = 4; // Square sector has 4 lines
+    const renderedSectors = traversalResult.visibleSectors.length;
+    const uniqueVisibleLines = Array.from(
+      new Set(traversalResult.visibleLines.map((line) => line.id))
+    );
+    const renderedLines = uniqueVisibleLines.length;
+
+    const culledSectors = totalSectors - renderedSectors;
+    const culledLines = totalLines - renderedLines;
+
+    const frameEndTime = performance.now();
+    const frameTime = frameEndTime - frameStartTime;
+
+    const metrics: RenderMetrics = {
+      frameTime,
+      culledSectors: Math.max(0, culledSectors),
+      renderedSectors,
+      culledLines: Math.max(0, culledLines),
+      renderedLines,
+      bspTraversalTime,
+      totalGeometry: totalSectors + totalLines,
+    };
+
+    this.lastMetrics = metrics;
+    return metrics;
+  }
+
+  /**
+   * Returns the last collected metrics
+   */
+  public getLastMetrics(): RenderMetrics | null {
+    return this.lastMetrics;
+  }
+
+  /**
+   * Logs current performance metrics to console
+   */
+  public logMetrics(): void {
+    const metrics = this.collectFrameMetrics();
+    if (!metrics) {
+      console.log('[ENGINE] Metrics not available (disabled or no BSP tree)');
+      return;
+    }
+
+    console.log('[ENGINE] Performance Metrics:');
+    console.log(`  Frame time: ${metrics.frameTime.toFixed(3)}ms`);
+    console.log(`  BSP traversal: ${metrics.bspTraversalTime.toFixed(3)}ms`);
+    console.log(
+      `  Rendered sectors: ${metrics.renderedSectors} / ${metrics.renderedSectors + metrics.culledSectors}`
+    );
+    console.log(
+      `  Rendered lines: ${metrics.renderedLines} / ${metrics.renderedLines + metrics.culledLines}`
+    );
+    console.log(
+      `  Culling efficiency: ${(((metrics.culledSectors + metrics.culledLines) / metrics.totalGeometry) * 100).toFixed(1)}%`
+    );
   }
 
   public render(): void {
