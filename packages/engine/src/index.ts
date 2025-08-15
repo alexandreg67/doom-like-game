@@ -3,8 +3,13 @@ export { WebGPURenderer } from './rendering/webgpu-renderer';
 export { WebGLRenderer } from './rendering/webgl-renderer';
 export { SceneManager } from './core/scene-manager';
 export { AssetLoader } from './assets/asset-loader';
+export { TextureManager } from './assets/texture-manager';
 export { SectorGeometry } from './geometry/sector-geometry';
-export { parseLevel, loadLevelFromJSON, loadLevelFromURL } from './geometry/level-loader';
+export {
+  parseLevel,
+  loadLevelFromJSON,
+  loadLevelFromURL,
+} from './geometry/level-loader';
 
 export type { EngineConfig, RenderConfig } from './types';
 export type {

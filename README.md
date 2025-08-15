@@ -18,7 +18,11 @@
 - **📱 Cross-Platform**: Runs on desktop and mobile browsers
 - **🎵 3D Audio**: Immersive spatial sound system
 
-## 🚀 Quick Start
+## � Phase 2 — Améliorations prévues
+
+La Phase 2 vise à enrichir l'expérience visuelle et technique du moteur : textures, éclairage dynamique, collisions, audio 3D et outils. Voir `PHASE2_ROADMAP.md` pour la feuille de route détaillée et `docs/texture-system.md` pour la spécification du système de textures.
+
+## �🚀 Quick Start
 
 ### Prerequisites
 
@@ -75,16 +79,16 @@ tools/               # Build scripts and utilities
 
 ## 🎮 Controls
 
-| Action | Keyboard | Mouse | Gamepad |
-|--------|----------|-------|---------|
-| Move Forward | W | - | Left Stick Up |
-| Move Backward | S | - | Left Stick Down |
-| Strafe Left | A | - | Left Stick Left |
-| Strafe Right | D | - | Left Stick Right |
-| Look Around | - | Move | Right Stick |
-| Fire | Space | Left Click | Right Trigger |
-| Open Doors | E | - | A Button |
-| Menu | Esc | - | Start Button |
+| Action        | Keyboard | Mouse      | Gamepad          |
+| ------------- | -------- | ---------- | ---------------- |
+| Move Forward  | W        | -          | Left Stick Up    |
+| Move Backward | S        | -          | Left Stick Down  |
+| Strafe Left   | A        | -          | Left Stick Left  |
+| Strafe Right  | D        | -          | Left Stick Right |
+| Look Around   | -        | Move       | Right Stick      |
+| Fire          | Space    | Left Click | Right Trigger    |
+| Open Doors    | E        | -          | A Button         |
+| Menu          | Esc      | -          | Start Button     |
 
 ## 🛠️ Development
 
@@ -156,12 +160,12 @@ add_header Content-Security-Policy "script-src 'self' 'wasm-unsafe-eval'";
 
 ## 🌐 Browser Support
 
-| Browser | Version | WebGPU | WebGL2 | Status |
-|---------|---------|--------|--------|--------|
-| Chrome | 94+ | ✅ | ✅ | Full Support |
-| Firefox | 85+ | 🚧 | ✅ | WebGL2 Only |
-| Safari | 14+ | 🚧 | ✅ | WebGL2 Only |
-| Edge | 94+ | ✅ | ✅ | Full Support |
+| Browser | Version | WebGPU | WebGL2 | Status       |
+| ------- | ------- | ------ | ------ | ------------ |
+| Chrome  | 94+     | ✅     | ✅     | Full Support |
+| Firefox | 85+     | 🚧     | ✅     | WebGL2 Only  |
+| Safari  | 14+     | 🚧     | ✅     | WebGL2 Only  |
+| Edge    | 94+     | ✅     | ✅     | Full Support |
 
 ## 📊 Performance
 
@@ -206,7 +210,7 @@ We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) 
 ### Areas for Contribution
 
 - 🎮 **Gameplay**: New weapons, enemies, power-ups
-- 🎨 **Graphics**: Shaders, visual effects, UI improvements  
+- 🎨 **Graphics**: Shaders, visual effects, UI improvements
 - 🎵 **Audio**: Sound effects, music, 3D audio enhancements
 - 🗺️ **Maps**: Level design and editor improvements
 - 🧪 **Testing**: Browser compatibility and performance
@@ -217,11 +221,13 @@ We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) 
 This project is **inspired by DOOM** but contains **no copyrighted assets** from id Software. All graphics, sounds, and maps are original creations or open-source resources.
 
 ### What We Use
+
 - ✅ Game mechanics (public domain)
 - ✅ Technical concepts (BSP, WAD format structure)
 - ✅ Original assets and levels
 
 ### What We Don't Use
+
 - ❌ Original DOOM assets (sprites, textures, sounds)
 - ❌ Original level data or maps
 - ❌ Copyrighted music or sound effects
