@@ -67,15 +67,15 @@ export class BSPTree {
       isLeaf: false,
       splitLine: partitionLine,
     };
-    
+
     if (frontChild) {
       node.frontChild = frontChild;
     }
-    
+
     if (backChild) {
       node.backChild = backChild;
     }
-    
+
     return node;
   }
 
