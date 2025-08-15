@@ -52,6 +52,22 @@ Progression Sprint 1 — Textures
 
 - [>] Issue #13 (Atlas builder) : en cours — ajout d'un packer d'atlas simple (shelf packer) dans `packages/engine/src/assets/atlas-builder.ts` et tests unitaires.
 
+Progression Sprint 2 — Éclairage
+
+- [x] **Système d'éclairage de base** : Implémentation complète du `LightManager`, `SectorLightingManager` et `FogManager`
+- [x] **Interface de debug** : `LightingDebugUI` avec contrôles en temps réel (F1/F2)
+- [x] **Métriques de performance** : Tracking des lumières actives, shadow maps, temps de culling
+- [x] **Gestion des ombres** : Support des shadow maps avec métriques précises
+- [x] **Système de brouillard** : Gestion des transitions et effets atmosphériques
+- [x] **Améliorations qualité code** :
+  - Correction du décrément des métriques shadow maps lors de la suppression
+  - Conversion radians/degrés appropriée dans l'UI de debug
+  - Délégation de la gestion du brouillard au `FogManager` (suppression de duplication)
+  - Évitement du spam de logs pour les transitions de brouillard
+  - Corrections de linting avec template literals
+- [x] **Architecture propre** : Séparation claire des responsabilités entre les managers
+- [x] **TypeScript strict** : Types stricts pour toutes les configurations d'éclairage
+
 Découpage par sprints (rappel rapide)
 
 - Sprint 1 — Textures (infrastructure, integration, mapping UV)
@@ -68,11 +84,33 @@ Notes et décisions d'architecture (à documenter en ADR)
 - Asset loader existant (`asset-loader.ts`) s'étendra pour support atlas et priorités
 - Eviter tout asset propriétaire DOOM — user assets open-source ou créations originales
 
+État actuel du projet (Mise à jour du 15/08/2025)
+
+**Sprint 2 - Éclairage : ✅ COMPLÉTÉ**
+Le système d'éclairage est maintenant entièrement fonctionnel avec :
+- Architecture solide et extensible
+- Interface de debug complète
+- Métriques de performance intégrées
+- Code de qualité production (strict TypeScript, pas de duplication)
+- Tests et validation en place
+
 Prochaines actions proposées
 
+**Priorité immédiate :**
+1. **Finaliser Sprint 1 (Textures)** :
+   - Compléter l'atlas builder (#13)
+   - Intégration du TextureManager avec le système d'éclairage
+   - Tests d'intégration texture + lighting
+
+2. **Commencer Sprint 3 (Collisions)** :
+   - Design du système de collision
+   - Implémentation du contrôleur joueur
+   - Intégration avec le moteur de rendu
+
+**Actions administratives :**
 1. Créer milestone "Phase 2" et assigner les issues créées
-2. Ouvrir PR `feature/phase2-start` -> `develop` contenant documentation (PHASE2_ROADMAP, docs/texture-system, ADR) et prototype `TextureManager` pour revue
-3. Après PR merge: découper tâches secondaires et assigner tickets enfants (atlas, UV utils, shadow mapping, collision mesh gen)
+2. Mettre à jour les issues GitHub avec le statut des éclairages (fermer #9)
+3. Documenter les décisions d'architecture dans des ADR
 
 ---
 
