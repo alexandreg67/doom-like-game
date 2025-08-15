@@ -2,16 +2,7 @@ import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import type { Scene } from '@babylonjs/core/scene';
 import { logger } from '../utils/logger';
 import type { AtlasResult, Placement } from './atlas-builder';
-
-// Inline placementToUV to avoid transient module resolution issues during editing
-export type UVRect = { u0: number; v0: number; u1: number; v1: number };
-function placementToUV(p: Placement, atlasW: number, atlasH: number): UVRect {
-  const u0 = p.x / atlasW;
-  const v0 = p.y / atlasH;
-  const u1 = (p.x + p.width) / atlasW;
-  const v1 = (p.y + p.height) / atlasH;
-  return { u0, v0, u1, v1 };
-}
+import { placementToUV } from './uv-mapping';
 
 function isPromise(v: unknown): v is Promise<unknown> {
   return (
@@ -49,7 +40,7 @@ export class TextureManager {
   private ttlMs: number;
 
   constructor(
-    private scene: unknown,
+    private scene: Scene | unknown,
     opts?: { maxEntries?: number; ttlMs?: number }
   ) {
     this.maxEntries = opts?.maxEntries ?? 200;
@@ -75,7 +66,7 @@ export class TextureManager {
       try {
         const tex = new Texture(
           path,
-          this.scene as unknown as Scene,
+          this.scene as Scene,
           true,
           false,
           Texture.TRILINEAR_SAMPLINGMODE,
@@ -184,7 +175,7 @@ export class TextureManager {
     try {
       const handle = await texP;
       const uv = placementToUV(placement, atlas.width, atlas.height);
-      return { ...(handle as TextureHandle), uv } as TextureHandle & { uv: UVRect };
+      return { ...handle, uv };
     } catch (err) {
       logger.error(`Failed to load atlas image for ${atlasName}:`, err);
       return undefined;
@@ -198,7 +189,9 @@ export class TextureManager {
       e.promise
         .then(async (h) => {
           try {
-            const disposable = h.texture as unknown as { dispose?: () => void | Promise<void> };
+            const disposable = h.texture as unknown as {
+              dispose?: () => void | Promise<void>;
+            };
             const res = disposable.dispose?.();
             if (isPromise(res)) await res;
           } catch (err) {
