@@ -342,10 +342,14 @@ export class SceneManager {
     wallMaterial.backFaceCulling = false;
 
     // Make materials more responsive to light
-    // floorMaterial.diffuseColor = floorMaterial.diffuseColor; // Already set above
     floorMaterial.ambientColor = floorMaterial.diffuseColor.scale(0.3);
     ceilingMaterial.ambientColor = ceilingMaterial.diffuseColor.scale(0.3);
     wallMaterial.ambientColor = wallMaterial.diffuseColor.scale(0.3);
+
+    // Optimize static geometry (floors and ceilings are typically static in Phase 1)
+    // Note: Don't freeze matrices for walls that might be animated (doors, moving platforms)
+    floorMesh.freezeWorldMatrix();
+    ceilingMesh.freezeWorldMatrix();
 
     // Create wall meshes for each LineDef
     for (const lineDef of sector.lineDefs) {
