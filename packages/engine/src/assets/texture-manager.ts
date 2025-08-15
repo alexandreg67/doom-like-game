@@ -1,9 +1,9 @@
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import type { Scene } from '@babylonjs/core/scene';
+import { TEXTURE_DATA_URLS } from '../fixtures/textures/texture-generator';
 import { logger } from '../utils/logger';
 import type { AtlasResult, Placement } from './atlas-builder';
 import { placementToUV } from './uv-mapping';
-import { TEXTURE_DATA_URLS } from '../fixtures/textures/texture-generator';
 
 function isPromise(v: unknown): v is Promise<unknown> {
   return (
@@ -68,9 +68,9 @@ export class TextureManager {
         // Check if this is a known procedural texture first
         const textureName = path.replace('/textures/', '').replace('.jpg', '');
         const dataUrl = TEXTURE_DATA_URLS[textureName as keyof typeof TEXTURE_DATA_URLS];
-        
+
         const actualPath = dataUrl || path;
-        
+
         const tex = new Texture(
           actualPath,
           this.scene as Scene,

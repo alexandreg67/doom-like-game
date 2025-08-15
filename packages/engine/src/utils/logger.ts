@@ -1,14 +1,14 @@
 export const logger = {
-  info: (message?: any, ...optionalParams: any[]) => {
+  info: (message?: string, ...optionalParams: unknown[]) => {
     // simple wrapper - can be replaced by structured logger later
     // eslint-disable-next-line no-console
     console.info(message, ...optionalParams);
   },
-  warn: (message?: any, ...optionalParams: any[]) => {
+  warn: (message?: string, ...optionalParams: unknown[]) => {
     // eslint-disable-next-line no-console
     console.warn(message, ...optionalParams);
   },
-  error: (message?: any, ...optionalParams: any[]) => {
+  error: (message?: string, ...optionalParams: unknown[]) => {
     // eslint-disable-next-line no-console
     console.error(message, ...optionalParams);
   },

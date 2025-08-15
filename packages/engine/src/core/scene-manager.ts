@@ -274,7 +274,7 @@ export class SceneManager {
     scene: Scene
   ): Promise<StandardMaterial> {
     const material = new StandardMaterial(name, scene);
-    
+
     if (this.textureManager) {
       try {
         // Try to load the texture
@@ -282,13 +282,16 @@ export class SceneManager {
           wrapU: 'repeat',
           wrapV: 'repeat',
           sampling: 'linear',
-          fallback: '/textures/default.jpg'
+          fallback: '/textures/default.jpg',
         });
-        
+
         material.diffuseTexture = textureHandle.texture;
         console.log(`[ENGINE] Applied texture ${textureName} to material ${name}`);
       } catch (error) {
-        console.warn(`[ENGINE] Failed to load texture ${textureName}, using fallback color:`, error);
+        console.warn(
+          `[ENGINE] Failed to load texture ${textureName}, using fallback color:`,
+          error
+        );
         material.diffuseColor = fallbackColor;
       }
     } else {
@@ -300,7 +303,7 @@ export class SceneManager {
     material.alpha = 1.0;
     material.backFaceCulling = false;
     material.ambientColor = material.diffuseColor?.scale(0.3) || fallbackColor.scale(0.3);
-    
+
     return material;
   }
 
@@ -353,14 +356,26 @@ export class SceneManager {
     );
 
     // Create materials with texture support and fallback colors
-    const floorTextureName = sector.floorTexture || (sector.id === 'main_room' ? 'wood_floor' : sector.id === 'side_room' ? 'stone_floor' : 'concrete_floor');
-    const floorFallbackColor = sector.id === 'main_room' ? new Color3(0.6, 0.4, 0.2) : sector.id === 'side_room' ? new Color3(0.3, 0.5, 0.7) : new Color3(0.6, 0.4, 0.2);
-    
+    const floorTextureName =
+      sector.floorTexture ||
+      (sector.id === 'main_room'
+        ? 'wood_floor'
+        : sector.id === 'side_room'
+          ? 'stone_floor'
+          : 'concrete_floor');
+    const floorFallbackColor =
+      sector.id === 'main_room'
+        ? new Color3(0.6, 0.4, 0.2)
+        : sector.id === 'side_room'
+          ? new Color3(0.3, 0.5, 0.7)
+          : new Color3(0.6, 0.4, 0.2);
+
     const ceilingTextureName = sector.ceilingTexture || 'concrete_ceiling';
     const ceilingFallbackColor = new Color3(0.8, 0.8, 0.9);
-    
+
     const wallTextureName = sector.id === 'side_room' ? 'brick_wall' : 'stone_wall';
-    const wallFallbackColor = sector.id === 'side_room' ? new Color3(0.8, 0.6, 0.4) : new Color3(0.7, 0.7, 0.7);
+    const wallFallbackColor =
+      sector.id === 'side_room' ? new Color3(0.8, 0.6, 0.4) : new Color3(0.7, 0.7, 0.7);
 
     // Create materials using our texture system
     const floorMaterial = await this.createMaterialWithTexture(
@@ -369,14 +384,14 @@ export class SceneManager {
       floorFallbackColor,
       scene
     );
-    
+
     const ceilingMaterial = await this.createMaterialWithTexture(
       `${sector.meshId}_ceiling_mat`,
       ceilingTextureName,
       ceilingFallbackColor,
       scene
     );
-    
+
     const wallMaterial = await this.createMaterialWithTexture(
       `${sector.meshId}_wall_mat`,
       wallTextureName,

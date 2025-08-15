@@ -29,7 +29,7 @@ vi.mock('@babylonjs/core/Materials/Textures/texture', () => {
 describe('TextureManager (prototype)', () => {
   it('load retourne une Promise qui résout un handle', async () => {
     const fakeScene = {};
-    const manager = new TextureManager(fakeScene as unknown as any);
+    const manager = new TextureManager(fakeScene as unknown);
     const handle = await manager.load('/textures/fake.png');
     expect(handle).toHaveProperty('path', '/textures/fake.png');
     expect(handle).toHaveProperty('texture');
@@ -37,7 +37,7 @@ describe('TextureManager (prototype)', () => {
 
   it('preload résout plusieurs textures', async () => {
     const fakeScene = {};
-    const manager = new TextureManager(fakeScene as unknown as any);
+    const manager = new TextureManager(fakeScene as unknown);
     const handles = await manager.preload(['/textures/a.png', '/textures/b.png']);
     expect(handles).toHaveLength(2);
   });

@@ -3,6 +3,7 @@ import {
   Mesh,
   type Scene,
   StandardMaterial,
+  type Vector2,
   type Vector3,
   VertexData,
 } from '@babylonjs/core';
@@ -125,7 +126,7 @@ export class SectorRenderer {
    */
   private createMesh(
     name: string,
-    result: { vertices: Vector3[]; indices: number[]; uvs: any[] },
+    result: { vertices: Vector3[]; indices: number[]; uvs: Vector2[] },
     material: StandardMaterial
   ): Mesh {
     const mesh = new Mesh(name, this.scene);

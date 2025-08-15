@@ -25,7 +25,7 @@ vi.mock('@babylonjs/core/Materials/Textures/texture', () => {
 
 describe('TextureManager eviction and TTL', () => {
   it('evicts least recently used when over capacity', async () => {
-    const mgr = new TextureManager({} as unknown as any, {
+    const mgr = new TextureManager({} as unknown, {
       maxEntries: 2,
       ttlMs: 10000,
     });
@@ -44,7 +44,7 @@ describe('TextureManager eviction and TTL', () => {
   });
 
   it('respects TTL and removes expired entries', async () => {
-    const mgr = new TextureManager({} as unknown as any, {
+    const mgr = new TextureManager({} as unknown, {
       maxEntries: 10,
       ttlMs: 10,
     });

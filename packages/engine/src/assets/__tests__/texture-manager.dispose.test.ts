@@ -36,7 +36,7 @@ import { logger } from '../../utils/logger';
 
 describe('TextureManager dispose handling', () => {
   it('handles dispose rejection gracefully and logs error', async () => {
-    const mgr = new TextureManager({} as unknown as any, {
+    const mgr = new TextureManager({} as unknown, {
       maxEntries: 10,
       ttlMs: 10000,
     });

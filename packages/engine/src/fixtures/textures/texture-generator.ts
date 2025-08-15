@@ -20,12 +20,12 @@ export function generateTexture(
   options: GenerateTextureOptions = {}
 ): string {
   const { size = 256, color1 = '#8B4513', color2 = '#DEB887', scale = 8 } = options;
-  
+
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
-  
+
   if (!ctx) {
     throw new Error('Could not get 2D context from canvas');
   }
@@ -64,7 +64,7 @@ function generateCheckerboard(
   scale: number
 ) {
   const squareSize = size / scale;
-  
+
   for (let x = 0; x < scale; x++) {
     for (let y = 0; y < scale; y++) {
       ctx.fillStyle = (x + y) % 2 === 0 ? color1 : color2;
@@ -77,25 +77,20 @@ function generateBrick(ctx: CanvasRenderingContext2D, size: number, scale: numbe
   const brickWidth = size / scale;
   const brickHeight = brickWidth / 2;
   const mortarWidth = 2;
-  
+
   // Background (mortar)
   ctx.fillStyle = '#A0A0A0';
   ctx.fillRect(0, 0, size, size);
-  
+
   // Bricks
   ctx.fillStyle = '#8B4513';
-  
+
   for (let y = 0; y < size; y += brickHeight + mortarWidth) {
     const isOddRow = Math.floor(y / (brickHeight + mortarWidth)) % 2 === 1;
     const xOffset = isOddRow ? brickWidth / 2 : 0;
-    
+
     for (let x = -brickWidth; x < size; x += brickWidth + mortarWidth) {
-      ctx.fillRect(
-        x + xOffset,
-        y,
-        brickWidth - mortarWidth,
-        brickHeight
-      );
+      ctx.fillRect(x + xOffset, y, brickWidth - mortarWidth, brickHeight);
     }
   }
 }
@@ -104,20 +99,20 @@ function generateStone(ctx: CanvasRenderingContext2D, size: number) {
   // Base stone color
   ctx.fillStyle = '#696969';
   ctx.fillRect(0, 0, size, size);
-  
+
   // Add noise for texture
   const imageData = ctx.getImageData(0, 0, size, size);
   const data = imageData.data;
-  
+
   for (let i = 0; i < data.length; i += 4) {
     const noise = (Math.random() - 0.5) * 60;
-    data[i] = Math.max(0, Math.min(255, (data[i] || 0) + noise));     // R
+    data[i] = Math.max(0, Math.min(255, (data[i] || 0) + noise)); // R
     data[i + 1] = Math.max(0, Math.min(255, (data[i + 1] || 0) + noise)); // G
     data[i + 2] = Math.max(0, Math.min(255, (data[i + 2] || 0) + noise)); // B
   }
-  
+
   ctx.putImageData(imageData, 0, 0);
-  
+
   // Add some darker lines for stone joints
   ctx.strokeStyle = '#505050';
   ctx.lineWidth = 1;
@@ -126,7 +121,7 @@ function generateStone(ctx: CanvasRenderingContext2D, size: number) {
     ctx.moveTo(Math.random() * size, 0);
     ctx.lineTo(Math.random() * size, size);
     ctx.stroke();
-    
+
     ctx.beginPath();
     ctx.moveTo(0, Math.random() * size);
     ctx.lineTo(size, Math.random() * size);
@@ -141,10 +136,10 @@ function generateWood(ctx: CanvasRenderingContext2D, size: number) {
   gradient.addColorStop(0.3, '#A0522D');
   gradient.addColorStop(0.6, '#8B4513');
   gradient.addColorStop(1, '#654321');
-  
+
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, size, size);
-  
+
   // Add wood grain lines
   ctx.strokeStyle = '#654321';
   ctx.lineWidth = 1;
@@ -163,10 +158,10 @@ function generateMetal(ctx: CanvasRenderingContext2D, size: number) {
   gradient.addColorStop(0, '#C0C0C0');
   gradient.addColorStop(0.5, '#A8A8A8');
   gradient.addColorStop(1, '#808080');
-  
+
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, size, size);
-  
+
   // Add scratches and imperfections
   ctx.strokeStyle = '#909090';
   ctx.lineWidth = 1;
@@ -182,31 +177,25 @@ function generateConcrete(ctx: CanvasRenderingContext2D, size: number) {
   // Base concrete color
   ctx.fillStyle = '#D3D3D3';
   ctx.fillRect(0, 0, size, size);
-  
+
   // Add texture with noise
   const imageData = ctx.getImageData(0, 0, size, size);
   const data = imageData.data;
-  
+
   for (let i = 0; i < data.length; i += 4) {
     const noise = (Math.random() - 0.5) * 40;
-    data[i] = Math.max(0, Math.min(255, (data[i] || 0) + noise));     // R
+    data[i] = Math.max(0, Math.min(255, (data[i] || 0) + noise)); // R
     data[i + 1] = Math.max(0, Math.min(255, (data[i + 1] || 0) + noise)); // G
     data[i + 2] = Math.max(0, Math.min(255, (data[i + 2] || 0) + noise)); // B
   }
-  
+
   ctx.putImageData(imageData, 0, 0);
-  
+
   // Add some spots and stains
   ctx.fillStyle = '#A0A0A0';
   for (let i = 0; i < 15; i++) {
     ctx.beginPath();
-    ctx.arc(
-      Math.random() * size,
-      Math.random() * size,
-      Math.random() * 8 + 2,
-      0,
-      2 * Math.PI
-    );
+    ctx.arc(Math.random() * size, Math.random() * size, Math.random() * 8 + 2, 0, 2 * Math.PI);
     ctx.fill();
   }
 }
@@ -217,7 +206,7 @@ function generateConcrete(ctx: CanvasRenderingContext2D, size: number) {
  */
 export const TEXTURE_DATA_URLS = (() => {
   // Check if we're in a browser environment
-  if (typeof document !== 'undefined' && document.createElement) {
+  if (typeof document !== 'undefined' && typeof document.createElement === 'function') {
     try {
       return {
         default: generateTexture('checkerboard', { color1: '#808080', color2: '#A0A0A0' }),
@@ -233,10 +222,11 @@ export const TEXTURE_DATA_URLS = (() => {
       console.warn('[TextureGenerator] Canvas not available, using fallback data URLs');
     }
   }
-  
+
   // Fallback static data URLs for test environment
-  const fallbackDataUrl = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAALCAABAAEBAREA/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/wD';
-  
+  const fallbackDataUrl =
+    'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAALCAABAAEBAREA/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/wD';
+
   return {
     default: fallbackDataUrl,
     wood_floor: fallbackDataUrl,

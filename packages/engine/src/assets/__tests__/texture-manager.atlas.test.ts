@@ -12,8 +12,8 @@ const dummyAtlas = {
 
 describe('TextureManager atlas integration', () => {
   it('registers atlas and returns uv for placement', () => {
-    const mgr = new TextureManager({} as unknown as any);
-    mgr.registerAtlas('demo', dummyAtlas as unknown as any);
+    const mgr = new TextureManager({} as unknown);
+    mgr.registerAtlas('demo', dummyAtlas as unknown);
     const uv = mgr.getUV('demo', 'tile_b');
     expect(uv).toBeDefined();
     expect(uv?.u0).toBeGreaterThan(0);
