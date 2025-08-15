@@ -291,8 +291,15 @@ export class SceneManager {
           fallback: '/textures/default.jpg',
         });
 
-        material.diffuseTexture = textureHandle.texture;
-        console.log(`[ENGINE] Applied texture ${textureName} to material ${name}`);
+        if (textureHandle.texture) {
+          material.diffuseTexture = textureHandle.texture;
+          console.log(`[ENGINE] Applied texture ${textureName} to material ${name}`);
+        } else {
+          material.diffuseColor = fallbackColor;
+          console.warn(
+            `[ENGINE] Texture loaded but invalid for ${textureName}, using fallback color.`
+          );
+        }
       } catch (error) {
         console.warn(
           `[ENGINE] Failed to load texture ${textureName}, using fallback color:`,

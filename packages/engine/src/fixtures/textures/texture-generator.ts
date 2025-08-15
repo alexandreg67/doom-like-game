@@ -3,6 +3,8 @@
  * Creates simple patterns that can be used as placeholder textures.
  */
 
+import { logger } from '../../utils/logger';
+
 export type TexturePattern = 'checkerboard' | 'brick' | 'stone' | 'wood' | 'metal' | 'concrete';
 
 export interface GenerateTextureOptions {
@@ -19,6 +21,12 @@ export function generateTexture(
   pattern: TexturePattern,
   options: GenerateTextureOptions = {}
 ): string {
+  if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
+    throw new Error(
+      'generateTexture requires a browser environment with a global document object.'
+    );
+  }
+
   const { size = 256, color1 = '#8B4513', color2 = '#DEB887', scale = 8 } = options;
 
   const canvas = document.createElement('canvas');
@@ -209,17 +217,26 @@ export const TEXTURE_DATA_URLS = (() => {
   if (typeof document !== 'undefined' && typeof document.createElement === 'function') {
     try {
       return {
-        default: generateTexture('checkerboard', { color1: '#808080', color2: '#A0A0A0' }),
+        default: generateTexture('checkerboard', {
+          color1: '#808080',
+          color2: '#A0A0A0',
+        }),
         wood_floor: generateTexture('wood'),
         stone_floor: generateTexture('stone'),
         concrete_floor: generateTexture('concrete'),
-        concrete_ceiling: generateTexture('concrete', { color1: '#F0F0F0', color2: '#E0E0E0' }),
+        concrete_ceiling: generateTexture('concrete', {
+          color1: '#F0F0F0',
+          color2: '#E0E0E0',
+        }),
         brick_wall: generateTexture('brick'),
         stone_wall: generateTexture('stone'),
-        wood_door: generateTexture('wood', { color1: '#8B4513', color2: '#A0522D' }),
+        wood_door: generateTexture('wood', {
+          color1: '#8B4513',
+          color2: '#A0522D',
+        }),
       };
     } catch (_error) {
-      console.warn('[TextureGenerator] Canvas not available, using fallback data URLs');
+      logger.warn('[TextureGenerator] Canvas not available, using fallback data URLs');
     }
   }
 
