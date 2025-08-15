@@ -23,9 +23,13 @@ describe('BSPTree Performance Benchmarks', () => {
 
     // Create vertices
     for (let i = 0; i < points.length; i++) {
+      const point = points[i];
+      if (!point) {
+        throw new Error(`Point at index ${i} is undefined`);
+      }
       vertices.push({
         id: `${id}_v${i}`,
-        position: new Vector2(points[i]!.x, points[i]!.y),
+        position: new Vector2(point.x, point.y),
       });
     }
 
@@ -44,8 +48,12 @@ describe('BSPTree Performance Benchmarks', () => {
 
     // Create line definitions connecting vertices
     for (let i = 0; i < vertices.length; i++) {
-      const startVertex = vertices[i]!;
-      const endVertex = vertices[(i + 1) % vertices.length]!;
+      const startVertex = vertices[i];
+      const endVertex = vertices[(i + 1) % vertices.length];
+
+      if (!startVertex || !endVertex) {
+        throw new Error(`Vertex at index ${i} or ${(i + 1) % vertices.length} is undefined`);
+      }
 
       const dx = endVertex.position.x - startVertex.position.x;
       const dy = endVertex.position.y - startVertex.position.y;
@@ -133,7 +141,7 @@ describe('BSPTree Performance Benchmarks', () => {
       const constructionTime = endTime - startTime;
       const stats = bspTree.getStats();
 
-      console.log(`[BENCHMARK] Single sector BSP construction:`);
+      console.log('[BENCHMARK] Single sector BSP construction:');
       console.log(`  Construction time: ${constructionTime.toFixed(2)}ms`);
       console.log(`  Nodes: ${stats.nodes}, Leafs: ${stats.leafs}, Max depth: ${stats.maxDepth}`);
 
@@ -164,7 +172,7 @@ describe('BSPTree Performance Benchmarks', () => {
         });
       }
 
-      console.log(`[BENCHMARK] Multi-sector BSP construction scaling:`);
+      console.log('[BENCHMARK] Multi-sector BSP construction scaling:');
       for (const result of results) {
         console.log(
           `  ${result.sectors} sectors: ${result.time.toFixed(2)}ms, ${result.nodes} nodes`
@@ -172,8 +180,15 @@ describe('BSPTree Performance Benchmarks', () => {
       }
 
       // Check that scaling is reasonable (not exponential)
-      const timeRatio = results[results.length - 1]!.time / results[0]!.time;
-      const sectorRatio = results[results.length - 1]!.sectors / results[0]!.sectors;
+      const lastResult = results[results.length - 1];
+      const firstResult = results[0];
+
+      if (!lastResult || !firstResult) {
+        throw new Error('Results array must have at least one result');
+      }
+
+      const timeRatio = lastResult.time / firstResult.time;
+      const sectorRatio = lastResult.sectors / firstResult.sectors;
 
       expect(timeRatio).toBeLessThan(sectorRatio * 50); // Should scale reasonably (not exponential)
     });
@@ -208,7 +223,7 @@ describe('BSPTree Performance Benchmarks', () => {
 
       const avgTraversalTime = traversalTimes.reduce((a, b) => a + b, 0) / traversalTimes.length;
 
-      console.log(`[BENCHMARK] BSP traversal performance:`);
+      console.log('[BENCHMARK] BSP traversal performance:');
       console.log(`  Average traversal time: ${avgTraversalTime.toFixed(4)}ms`);
       console.log(`  Individual times: ${traversalTimes.map((t) => t.toFixed(4)).join(', ')}ms`);
 
@@ -232,7 +247,7 @@ describe('BSPTree Performance Benchmarks', () => {
       const uniqueVisibleLines = Array.from(new Set(result.visibleLines.map((line) => line.id)));
       const cullingRatio = 1 - uniqueVisibleLines.length / totalLines;
 
-      console.log(`[BENCHMARK] BSP culling effectiveness:`);
+      console.log('[BENCHMARK] BSP culling effectiveness:');
       console.log(`  Total lines: ${totalLines}`);
       console.log(
         `  Visible lines: ${result.visibleLines.length} (${uniqueVisibleLines.length} unique)`
@@ -276,7 +291,7 @@ describe('BSPTree Performance Benchmarks', () => {
       const totalTime = endTime - startTime;
       const avgTimePerTest = totalTime / (100 * testPoints.length);
 
-      console.log(`[BENCHMARK] Visibility testing performance:`);
+      console.log('[BENCHMARK] Visibility testing performance:');
       console.log(`  Total visibility tests: ${100 * testPoints.length}`);
       console.log(`  Total time: ${totalTime.toFixed(2)}ms`);
       console.log(`  Average time per test: ${avgTimePerTest.toFixed(4)}ms`);
@@ -300,7 +315,7 @@ describe('BSPTree Performance Benchmarks', () => {
       const smallStats = smallBSP.getStats();
       const largeStats = largeBSP.getStats();
 
-      console.log(`[BENCHMARK] Memory usage analysis:`);
+      console.log('[BENCHMARK] Memory usage analysis:');
       console.log(
         `  Small scene (5 sectors): ${smallStats.nodes} nodes, depth ${smallStats.maxDepth}`
       );

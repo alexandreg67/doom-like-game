@@ -13,7 +13,7 @@ import {
 } from '@babylonjs/core';
 import { AssetLoader } from '../assets/asset-loader';
 import { BSPTree } from '../geometry/bsp-tree';
-import type { DoomLineDef, DoomSector, DoomVertex } from '../geometry/doom-geometry';
+import type { BSPNode, DoomLineDef, DoomSector, DoomVertex } from '../geometry/doom-geometry';
 import { SectorGeometry } from '../geometry/sector-geometry';
 
 export interface RenderMetrics {
@@ -85,10 +85,14 @@ export class SceneManager {
     };
 
     // Define the walls (LineDefs) of the sector
-    const v1 = vertices[0]!;
-    const v2 = vertices[1]!;
-    const v3 = vertices[2]!;
-    const v4 = vertices[3]!;
+    const v1 = vertices[0];
+    const v2 = vertices[1];
+    const v3 = vertices[2];
+    const v4 = vertices[3];
+
+    if (!v1 || !v2 || !v3 || !v4) {
+      throw new Error('Invalid vertices array - missing required vertices');
+    }
 
     // Note: A circular dependency exists where LineDefs need a Sector and vice-versa.
     // We define the sector first, then the linedefs, then assign them back to the sector.
@@ -400,7 +404,7 @@ export class SceneManager {
   /**
    * Recursively creates wireframe for BSP nodes
    */
-  private createNodeWireframe(node: any, depth: number): void {
+  private createNodeWireframe(node: BSPNode, depth: number): void {
     if (!this.currentScene) return;
 
     if (!node.isLeaf && node.splitLine) {

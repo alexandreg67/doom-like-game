@@ -27,8 +27,12 @@ describe('UV Mapping Tests', () => {
   };
 
   const createTestLineDef = (sector: DoomSector): DoomLineDef => {
-    const v1 = sector.vertices[0]!;
-    const v2 = sector.vertices[1]!;
+    const v1 = sector.vertices[0];
+    const v2 = sector.vertices[1];
+
+    if (!v1 || !v2) {
+      throw new Error('Test sector must have at least 2 vertices');
+    }
 
     return {
       id: 'l1',

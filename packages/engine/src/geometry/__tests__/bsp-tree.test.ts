@@ -31,11 +31,16 @@ describe('BSPTree', () => {
       meshId: 'test_mesh',
     };
 
+    // Validate vertices array before use
+    if (testVertices.length < 4) {
+      throw new Error('Test vertices array must have at least 4 vertices');
+    }
+
     testLineDefs = [
       {
         id: 'l1',
-        startVertex: testVertices[0]!, // v1
-        endVertex: testVertices[1]!, // v2
+        startVertex: testVertices[0], // v1
+        endVertex: testVertices[1], // v2
         flags: {
           blocking: true,
           twoSided: false,
@@ -64,8 +69,8 @@ describe('BSPTree', () => {
       },
       {
         id: 'l2',
-        startVertex: testVertices[1]!, // v2
-        endVertex: testVertices[2]!, // v3
+        startVertex: testVertices[1], // v2
+        endVertex: testVertices[2], // v3
         flags: {
           blocking: true,
           twoSided: false,
@@ -94,8 +99,8 @@ describe('BSPTree', () => {
       },
       {
         id: 'l3',
-        startVertex: testVertices[2]!, // v3
-        endVertex: testVertices[3]!, // v4
+        startVertex: testVertices[2], // v3
+        endVertex: testVertices[3], // v4
         flags: {
           blocking: true,
           twoSided: false,
@@ -124,8 +129,8 @@ describe('BSPTree', () => {
       },
       {
         id: 'l4',
-        startVertex: testVertices[3]!, // v4
-        endVertex: testVertices[0]!, // v1
+        startVertex: testVertices[3], // v4
+        endVertex: testVertices[0], // v1
         flags: {
           blocking: true,
           twoSided: false,
@@ -176,13 +181,17 @@ describe('BSPTree', () => {
   describe('buildTree', () => {
     it('should create leaf node for small number of lines', () => {
       const bspTree = new BSPTree([]);
-      const lines = [testLineDefs[0]!]; // Single line
+      const firstLine = testLineDefs[0];
+      if (!firstLine) {
+        throw new Error('Test line definitions must have at least one line');
+      }
+      const lines = [firstLine]; // Single line
 
       const root = bspTree.buildTree(lines, [testSector]);
 
       expect(root).toBeDefined();
-      expect(root!.isLeaf).toBe(true);
-      expect(root!.sectors).toHaveLength(1);
+      expect(root?.isLeaf).toBe(true);
+      expect(root?.sectors).toHaveLength(1);
     });
 
     it('should create internal nodes for larger line sets', () => {
@@ -192,8 +201,8 @@ describe('BSPTree', () => {
 
       expect(root).toBeDefined();
       // With 4 lines, should create internal nodes
-      if (!root!.isLeaf) {
-        expect(root!.splitLine).toBeDefined();
+      if (root && !root.isLeaf) {
+        expect(root.splitLine).toBeDefined();
       }
     });
 
@@ -203,7 +212,7 @@ describe('BSPTree', () => {
       const root = bspTree.buildTree(testLineDefs, [testSector], 25); // Exceed max depth
 
       expect(root).toBeDefined();
-      expect(root!.isLeaf).toBe(true);
+      expect(root?.isLeaf).toBe(true);
     });
   });
 
@@ -291,9 +300,13 @@ describe('BSPTree', () => {
       const bspTree = new BSPTree([testSector]);
 
       // Test with the bottom line (l1: from (-5,-5) to (5,-5))
-      const line = testLineDefs[0]!;
+      const line = testLineDefs[0];
+      if (!line) {
+        throw new Error('Test line definitions must have at least one line');
+      }
 
       // Use private method reflection for testing (not ideal but necessary for internal logic testing)
+      // biome-ignore lint/suspicious/noExplicitAny: Testing private method requires any
       const classifyMethod = (bspTree as any).classifyPointRelativeToLine;
 
       // Point above the line should be positive (front)
@@ -338,8 +351,8 @@ describe('BSPTree', () => {
       const triangleLines: DoomLineDef[] = [
         {
           id: 'tl1',
-          startVertex: triangleVertices[0]!,
-          endVertex: triangleVertices[1]!,
+          startVertex: triangleVertices[0],
+          endVertex: triangleVertices[1],
           flags: {
             blocking: true,
             twoSided: false,
@@ -374,8 +387,8 @@ describe('BSPTree', () => {
       const degenerateLines: DoomLineDef[] = [
         {
           id: 'dl1',
-          startVertex: degenerateVertices[0]!,
-          endVertex: degenerateVertices[1]!,
+          startVertex: degenerateVertices[0],
+          endVertex: degenerateVertices[1],
           flags: {
             blocking: true,
             twoSided: false,
