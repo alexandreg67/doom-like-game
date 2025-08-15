@@ -489,12 +489,13 @@ export class SceneManager {
     }
 
     const traversalResult = this.bspTree.traverseTree(cameraPosition);
-
+    const totalSectors = this.bspTree.getTotalSectors?.() ?? 0;
+    const totalLines = this.bspTree.getTotalLines?.() ?? 0;
     return {
       visibleSectors: traversalResult.visibleSectors.length,
       visibleLines: traversalResult.visibleLines.length,
-      totalSectors: 1, // Single sector for now
-      totalLines: 4, // Square sector has 4 lines
+      totalSectors,
+      totalLines,
     };
   }
 
@@ -531,8 +532,8 @@ export class SceneManager {
     const bspTraversalTime = bspEndTime - bspStartTime;
 
     // Calculate geometry statistics
-    const totalSectors = 1; // Single sector for now
-    const totalLines = 4; // Square sector has 4 lines
+    const totalSectors = this.bspTree.getTotalSectors?.() ?? 0;
+    const totalLines = this.bspTree.getTotalLines?.() ?? 0;
     const renderedSectors = traversalResult.visibleSectors.length;
     const uniqueVisibleLines = Array.from(
       new Set(traversalResult.visibleLines.map((line) => line.id))

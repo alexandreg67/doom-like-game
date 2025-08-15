@@ -28,9 +28,14 @@ export class BSPTree {
 
   private root: BSPNode | null = null;
   private allLines: DoomLineDef[] = [];
+  private totalSectorsCount = 0;
+  private totalLinesCount = 0;
 
   constructor(sectors: DoomSector[]) {
     this.allLines = sectors.flatMap((sector) => sector.lineDefs);
+    this.totalSectorsCount = sectors.length;
+    // Use unique line IDs to avoid double counting if lines are shared or split.
+    this.totalLinesCount = new Set(this.allLines.map((l) => l.id)).size;
     this.root = this.buildTree(this.allLines, sectors);
   }
 
@@ -159,8 +164,6 @@ export class BSPTree {
       splitLine: partitionLine,
     };
   }
-
-  // splitLineAtPartition is delegated to geometry-utils.splitLineByPartition
 
   /**
    * Classifies a line relative to a partition line
@@ -356,8 +359,6 @@ export class BSPTree {
     return true;
   }
 
-  // segmentsIntersect is provided by geometry-utils
-
   /**
    * Returns the root node of the BSP tree
    */
@@ -392,5 +393,16 @@ export class BSPTree {
     traverse(this.root, 0);
 
     return { nodes: nodeCount, leafs: leafCount, maxDepth };
+  }
+
+  /**
+   * Returns the total counts of sectors and unique lines used to build this BSP
+   */
+  public getTotalSectors(): number {
+    return this.totalSectorsCount;
+  }
+
+  public getTotalLines(): number {
+    return this.totalLinesCount;
   }
 }
