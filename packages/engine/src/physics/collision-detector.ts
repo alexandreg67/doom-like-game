@@ -2,6 +2,7 @@ import { Vector2 } from '@babylonjs/core';
 import type { DoomLineDef, DoomSector } from '../geometry/doom-geometry';
 import { Logger } from '../utils/logger';
 import type { CollisionGeometry, CollisionResult } from './types';
+import { PHYSICS_CONSTANTS } from './types';
 
 export class CollisionDetector {
   private geometry: CollisionGeometry | null = null;
@@ -134,7 +135,9 @@ export class CollisionDetector {
     // Calculate collision response
     const penetration = radius - distanceToLine;
     const collisionNormal =
-      distanceToLine > 0.001 ? startPos.subtract(closestPoint).normalize() : lineNormal;
+      distanceToLine > PHYSICS_CONSTANTS.COLLISION_NORMAL_EPSILON
+        ? startPos.subtract(closestPoint).normalize()
+        : lineNormal;
 
     const correction = collisionNormal.scale(penetration);
 

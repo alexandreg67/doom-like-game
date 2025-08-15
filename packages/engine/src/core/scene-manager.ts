@@ -24,7 +24,12 @@ import {
   type LightingSystemConfig,
   SectorLightingManager,
 } from '../lighting';
-import { type CollisionGeometry, type MovementInput, PhysicsController } from '../physics';
+import {
+  type CollisionGeometry,
+  type MovementInput,
+  PHYSICS_CONSTANTS,
+  PhysicsController,
+} from '../physics';
 import { Logger } from '../utils/logger';
 
 export interface RenderMetrics {
@@ -57,6 +62,19 @@ export class SceneManager {
   private sectorLightingManager: SectorLightingManager | null = null;
   private fogManager: FogManager | null = null;
   private lightingDebugUI: LightingDebugUI | null = null;
+
+  /**
+   * Physics configuration for the game
+   */
+  private static readonly PHYSICS_CONFIG = {
+    gravity: -9.81,
+    jumpForce: 4.5,
+    walkSpeed: 5.0,
+    sprintSpeed: 8.0,
+    friction: 0.995, // Very high friction for immediate stop
+    airControl: 0.3,
+    maxVelocity: 15.0, // Increased max velocity
+  } as const;
 
   // Physics system
   private physicsController: PhysicsController | null = null;
@@ -1004,15 +1022,7 @@ export class SceneManager {
       startPosition.y = floorHeight + 1.7; // Player height above floor
       Logger.info(`[PHYSICS] Starting position: floor=${floorHeight}, player Y=${startPosition.y}`);
 
-      this.physicsController = new PhysicsController(startPosition, {
-        gravity: -9.81,
-        jumpForce: 4.5,
-        walkSpeed: 5.0, // Increased from 2.5 to 5.0
-        sprintSpeed: 8.0, // Increased from 4.0 to 8.0
-        friction: 0.995, // Very high friction for immediate stop
-        airControl: 0.3,
-        maxVelocity: 15.0, // Increased max velocity too
-      });
+      this.physicsController = new PhysicsController(startPosition, SceneManager.PHYSICS_CONFIG);
 
       Logger.info('[PHYSICS] PhysicsController created at position:', this.camera.position);
 
@@ -1117,7 +1127,7 @@ export class SceneManager {
       // Update camera position to match physics controller
       const newPosition = this.physicsController.getPosition();
       // Add camera height offset (eyes are above feet)
-      const cameraHeight = 1.6; // Camera at eye level
+      const cameraHeight = PHYSICS_CONSTANTS.CAMERA_EYE_HEIGHT; // Camera at eye level
       this.camera.position.x = newPosition.x;
       this.camera.position.y = newPosition.y + cameraHeight;
       this.camera.position.z = newPosition.z;

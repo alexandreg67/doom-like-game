@@ -1,6 +1,31 @@
 import type { Vector2, Vector3 } from '@babylonjs/core';
 import type { DoomLineDef, DoomSector } from '../geometry/doom-geometry';
 
+// Physics constants
+export const PHYSICS_CONSTANTS = {
+  /** Threshold for ground detection (player considered grounded if within this distance of floor) */
+  GROUND_DETECTION_THRESHOLD: 0.1,
+  /** Epsilon for collision normal calculation to avoid division by zero */
+  COLLISION_NORMAL_EPSILON: 0.001,
+  /** Camera height offset above player feet (eye level) */
+  CAMERA_EYE_HEIGHT: 1.6,
+  /** Player height for collision calculations */
+  PLAYER_HEIGHT: 1.8,
+  /** Player radius for collision detection */
+  PLAYER_RADIUS: 0.3,
+} as const;
+
+// Default physics configuration
+export const DEFAULT_PHYSICS_CONFIG: PhysicsConfig = {
+  gravity: -9.81,
+  jumpForce: 4.5,
+  walkSpeed: 5.0,
+  sprintSpeed: 8.0,
+  friction: 0.995, // Very high friction for immediate stop
+  airControl: 0.3,
+  maxVelocity: 15.0,
+} as const;
+
 export interface CollisionBox {
   min: Vector2;
   max: Vector2;

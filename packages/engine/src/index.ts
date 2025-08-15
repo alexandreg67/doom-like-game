@@ -18,7 +18,12 @@ export {
 } from './lighting';
 
 // Physics system
-export { CollisionDetector, PhysicsController } from './physics';
+export {
+  CollisionDetector,
+  PhysicsController,
+  DEFAULT_PHYSICS_CONFIG,
+  PHYSICS_CONSTANTS,
+} from './physics';
 
 export type {
   MovementInput,

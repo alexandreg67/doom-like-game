@@ -11,7 +11,7 @@ const MockCollisionDetector = vi.mocked(CollisionDetector);
 
 describe('PhysicsController', () => {
   let controller: PhysicsController;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: Mock object for tests
   let mockCollisionDetector: any;
   let config: PhysicsConfig;
 

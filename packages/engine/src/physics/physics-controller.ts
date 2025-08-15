@@ -10,6 +10,7 @@ import type {
   PhysicsMetrics,
   PlayerController,
 } from './types';
+import { DEFAULT_PHYSICS_CONFIG, PHYSICS_CONSTANTS } from './types';
 
 export class PhysicsController {
   private collisionDetector: CollisionDetector;
@@ -30,21 +31,15 @@ export class PhysicsController {
     this.collisionDetector = new CollisionDetector();
 
     this.config = {
-      gravity: -9.81,
-      jumpForce: 4.5,
-      walkSpeed: 2.5,
-      sprintSpeed: 4.0,
-      friction: 0.8,
-      airControl: 0.3,
-      maxVelocity: 10.0,
+      ...DEFAULT_PHYSICS_CONFIG,
       ...config,
     };
 
     this.player = {
       position: initialPosition.clone(),
       velocity: Vector3.Zero(),
-      radius: 0.3, // 30cm radius for collision
-      height: 1.8, // 1.8m tall
+      radius: PHYSICS_CONSTANTS.PLAYER_RADIUS,
+      height: PHYSICS_CONSTANTS.PLAYER_HEIGHT,
       groundHeight: 0,
       isOnGround: false,
     };
@@ -64,7 +59,9 @@ export class PhysicsController {
 
     if (this.currentSector) {
       this.player.groundHeight = this.currentSector.floorHeight;
-      this.player.isOnGround = Math.abs(this.player.position.y - this.player.groundHeight) < 0.1;
+      this.player.isOnGround =
+        Math.abs(this.player.position.y - this.player.groundHeight) <
+        PHYSICS_CONSTANTS.GROUND_DETECTION_THRESHOLD;
       Logger.info(`[PHYSICS] Player in sector: ${this.currentSector.id}`);
     }
   }
@@ -239,7 +236,10 @@ export class PhysicsController {
     else {
       this.player.position.y = newY;
       // Only set isOnGround to false if we're actually moving away from the ground
-      if (this.player.velocity.y > 0 || newY > floorY + 0.01) {
+      if (
+        this.player.velocity.y > 0 ||
+        newY > floorY + PHYSICS_CONSTANTS.GROUND_DETECTION_THRESHOLD
+      ) {
         this.player.isOnGround = false;
       }
     }
