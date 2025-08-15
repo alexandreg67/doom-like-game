@@ -5,6 +5,8 @@ import type { FogConfig, FogSystemState } from './types';
 export class FogManager {
   private scene: Scene;
   private fogState: FogSystemState = {
+    currentFog: undefined,
+    targetFog: undefined,
     transitionProgress: 0,
     transitionDuration: 1000,
   };
@@ -34,7 +36,14 @@ export class FogManager {
       return;
     }
 
-    this.fogState.transitionProgress += deltaTime / this.fogState.transitionDuration;
+    if (this.fogState.transitionDuration <= 0) {
+      Logger.warn(
+        '[FOG] Transition duration is zero or negative; completing transition immediately.'
+      );
+      this.fogState.transitionProgress = 1;
+    } else {
+      this.fogState.transitionProgress += deltaTime / this.fogState.transitionDuration;
+    }
 
     if (this.fogState.transitionProgress >= 1) {
       this.completeFogTransition();
@@ -123,10 +132,21 @@ export class FogManager {
     if (!currentFog) {
       const alpha = transitionProgress;
       const interpolatedConfig: FogConfig = {
-        ...targetFog,
+        enabled: targetFog.enabled,
+        mode: targetFog.mode,
         color: targetFog.color.scale(alpha),
-        density: targetFog.density ? targetFog.density * alpha : undefined,
       };
+
+      // Only add optional properties if they exist in the target
+      if (targetFog.density !== undefined) {
+        interpolatedConfig.density = targetFog.density * alpha;
+      }
+      if (targetFog.start !== undefined) {
+        interpolatedConfig.start = targetFog.start;
+      }
+      if (targetFog.end !== undefined) {
+        interpolatedConfig.end = targetFog.end;
+      }
       this.applyFogImmediate(interpolatedConfig);
       return;
     }
@@ -145,19 +165,26 @@ export class FogManager {
     };
 
     if (targetFog.mode === 'linear') {
-      interpolatedConfig.start =
-        currentFog.start && targetFog.start
-          ? currentFog.start + (targetFog.start - currentFog.start) * transitionProgress
-          : targetFog.start;
-      interpolatedConfig.end =
-        currentFog.end && targetFog.end
-          ? currentFog.end + (targetFog.end - currentFog.end) * transitionProgress
-          : targetFog.end;
+      if (currentFog.start !== undefined && targetFog.start !== undefined) {
+        interpolatedConfig.start =
+          currentFog.start + (targetFog.start - currentFog.start) * transitionProgress;
+      } else if (targetFog.start !== undefined) {
+        interpolatedConfig.start = targetFog.start;
+      }
+
+      if (currentFog.end !== undefined && targetFog.end !== undefined) {
+        interpolatedConfig.end =
+          currentFog.end + (targetFog.end - currentFog.end) * transitionProgress;
+      } else if (targetFog.end !== undefined) {
+        interpolatedConfig.end = targetFog.end;
+      }
     } else {
-      interpolatedConfig.density =
-        currentFog.density && targetFog.density
-          ? currentFog.density + (targetFog.density - currentFog.density) * transitionProgress
-          : targetFog.density;
+      if (currentFog.density !== undefined && targetFog.density !== undefined) {
+        interpolatedConfig.density =
+          currentFog.density + (targetFog.density - currentFog.density) * transitionProgress;
+      } else if (targetFog.density !== undefined) {
+        interpolatedConfig.density = targetFog.density;
+      }
     }
 
     this.applyFogImmediate(interpolatedConfig);

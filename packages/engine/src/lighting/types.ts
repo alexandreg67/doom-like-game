@@ -37,9 +37,9 @@ export interface FogConfig {
   enabled: boolean;
   mode: 'linear' | 'exponential' | 'exponential2';
   color: Color3;
-  density?: number | undefined;
-  start?: number | undefined;
-  end?: number | undefined;
+  density?: number;
+  start?: number;
+  end?: number;
 }
 
 export interface SectorLightingConfig {
@@ -77,7 +77,7 @@ export interface LightingSystemConfig {
 export interface LightInstance {
   config: LightConfig;
   babylonLight: DirectionalLight | PointLight | SpotLight | HemisphericLight;
-  shadowGenerator?: ShadowGenerator | undefined;
+  shadowGenerator: ShadowGenerator | undefined;
   isActive: boolean;
   lastUpdateTime: number;
 }
@@ -91,8 +91,8 @@ export interface LightingMetrics {
 }
 
 export interface FogSystemState {
-  currentFog?: FogConfig | undefined;
-  targetFog?: FogConfig | undefined;
+  currentFog: FogConfig | undefined;
+  targetFog: FogConfig | undefined;
   transitionProgress: number;
   transitionDuration: number;
 }

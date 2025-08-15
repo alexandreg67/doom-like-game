@@ -56,6 +56,7 @@ export class LightManager {
     const lightInstance: LightInstance = {
       config,
       babylonLight,
+      shadowGenerator: undefined,
       isActive: config.enabled,
       lastUpdateTime: performance.now(),
     };
@@ -222,6 +223,14 @@ export class LightManager {
     }
   }
 
+  private lightSupportsShadows(
+    light: DirectionalLight | PointLight | SpotLight | HemisphericLight
+  ): light is DirectionalLight | PointLight | SpotLight {
+    return (
+      light instanceof DirectionalLight || light instanceof SpotLight || light instanceof PointLight
+    );
+  }
+
   private createShadowGenerator(
     light: DirectionalLight | PointLight | SpotLight | HemisphericLight,
     shadowConfig: ShadowConfig
@@ -231,11 +240,7 @@ export class LightManager {
       return undefined;
     }
 
-    if (
-      !(light instanceof DirectionalLight) &&
-      !(light instanceof SpotLight) &&
-      !(light instanceof PointLight)
-    ) {
+    if (!this.lightSupportsShadows(light)) {
       Logger.warn('[LIGHTING] Light type does not support shadows');
       return undefined;
     }

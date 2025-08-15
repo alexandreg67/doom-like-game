@@ -10,6 +10,8 @@ export class SectorLightingManager {
   private sectorConfigs: Map<string, SectorLightingConfig> = new Map();
   private currentSectorId: string | null = null;
   private fogState: FogSystemState = {
+    currentFog: undefined,
+    targetFog: undefined,
     transitionProgress: 0,
     transitionDuration: 0,
   };
@@ -262,17 +264,26 @@ export class SectorLightingManager {
       enabled: toFog.enabled,
       mode: toFog.mode,
       color: Color3.Lerp(fromFog.color, toFog.color, progress),
-      density:
-        fromFog.density && toFog.density
-          ? fromFog.density + (toFog.density - fromFog.density) * progress
-          : toFog.density,
-      start:
-        fromFog.start && toFog.start
-          ? fromFog.start + (toFog.start - fromFog.start) * progress
-          : toFog.start,
-      end:
-        fromFog.end && toFog.end ? fromFog.end + (toFog.end - fromFog.end) * progress : toFog.end,
     };
+
+    // Add optional properties with proper interpolation
+    if (fromFog.density !== undefined && toFog.density !== undefined) {
+      interpolatedFog.density = fromFog.density + (toFog.density - fromFog.density) * progress;
+    } else if (toFog.density !== undefined) {
+      interpolatedFog.density = toFog.density;
+    }
+
+    if (fromFog.start !== undefined && toFog.start !== undefined) {
+      interpolatedFog.start = fromFog.start + (toFog.start - fromFog.start) * progress;
+    } else if (toFog.start !== undefined) {
+      interpolatedFog.start = toFog.start;
+    }
+
+    if (fromFog.end !== undefined && toFog.end !== undefined) {
+      interpolatedFog.end = fromFog.end + (toFog.end - fromFog.end) * progress;
+    } else if (toFog.end !== undefined) {
+      interpolatedFog.end = toFog.end;
+    }
 
     this.setFog(interpolatedFog);
   }
@@ -308,7 +319,14 @@ export class SectorLightingManager {
   private updateFogTransition(deltaTime: number): void {
     if (!this.fogState.targetFog) return;
 
-    this.fogState.transitionProgress += deltaTime / this.fogState.transitionDuration;
+    if (this.fogState.transitionDuration <= 0) {
+      Logger.warn(
+        '[SECTOR-LIGHTING] Fog transition duration is zero or negative; completing transition instantly.'
+      );
+      this.fogState.transitionProgress = 1;
+    } else {
+      this.fogState.transitionProgress += deltaTime / this.fogState.transitionDuration;
+    }
 
     if (this.fogState.transitionProgress >= 1) {
       this.setFog(this.fogState.targetFog);

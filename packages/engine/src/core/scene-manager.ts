@@ -16,7 +16,7 @@ import { TextureManager } from '../assets/texture-manager';
 import demoLevelData from '../fixtures/demo_level_simple.json';
 import { BSPTree } from '../geometry/bsp-tree';
 import type { BSPNode, DoomLineDef, DoomSector, DoomVertex } from '../geometry/doom-geometry';
-import { type ParsedLevel, parseLevel } from '../geometry/level-loader';
+import { type LevelData, type ParsedLevel, parseLevel } from '../geometry/level-loader';
 import { SectorGeometry } from '../geometry/sector-geometry';
 import {
   FogManager,
@@ -140,10 +140,11 @@ export class SceneManager {
     console.log('[ENGINE] Loading Phase 1 demo level...');
 
     try {
-      // Parse the demo level (cast JSON to LevelData so loader can perform proper conversions)
-      this.currentLevel = parseLevel(
-        demoLevelData as unknown as import('../geometry/level-loader').LevelData
-      );
+      // Parse the demo level - validate and cast the imported JSON data
+      if (!this.isValidLevelData(demoLevelData)) {
+        throw new Error('Invalid demo level data format');
+      }
+      this.currentLevel = parseLevel(demoLevelData);
 
       // Find the door lineDef for interaction
       this.doorLineDef = this.currentLevel.lineDefs.find((line) => line.id === 'l3_door') || null;
@@ -917,6 +918,53 @@ export class SceneManager {
    */
   public getLightingMetrics() {
     return this.lightManager?.getMetrics() || null;
+  }
+
+  /**
+   * Validates that imported JSON data conforms to expected LevelData structure
+   */
+  private isValidLevelData(data: unknown): data is LevelData {
+    if (!data || typeof data !== 'object') {
+      return false;
+    }
+
+    const levelData = data as Partial<LevelData>;
+
+    // Check required properties
+    if (!Array.isArray(levelData.sectors) || !Array.isArray(levelData.lineDefs)) {
+      return false;
+    }
+
+    // Basic validation of sector structure
+    if (levelData.sectors.length > 0) {
+      const firstSector = levelData.sectors[0];
+      if (
+        !firstSector ||
+        typeof firstSector.id !== 'string' ||
+        typeof firstSector.floorHeight !== 'number' ||
+        typeof firstSector.ceilingHeight !== 'number' ||
+        typeof firstSector.lightLevel !== 'number' ||
+        !Array.isArray(firstSector.vertices)
+      ) {
+        return false;
+      }
+    }
+
+    // Basic validation of lineDef structure
+    if (levelData.lineDefs.length > 0) {
+      const firstLineDef = levelData.lineDefs[0];
+      if (
+        !firstLineDef ||
+        typeof firstLineDef.id !== 'string' ||
+        !firstLineDef.startVertex ||
+        !firstLineDef.endVertex ||
+        !firstLineDef.flags
+      ) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   public dispose(): void {

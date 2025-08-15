@@ -344,9 +344,25 @@ function parseLightingConfig(lightingData: RawLightingData): LightingSystemConfi
 
   // Parse light configurations
   for (const lightData of lightingData.lights || []) {
+    // Validate light type
+    const allowedLightTypes: LightConfig['type'][] = [
+      'point',
+      'directional',
+      'spot',
+      'hemispheric',
+    ];
+    let lightType: LightConfig['type'] = 'point';
+    if (allowedLightTypes.includes(lightData.type as LightConfig['type'])) {
+      lightType = lightData.type as LightConfig['type'];
+    } else {
+      Logger.warn(
+        `[LevelLoader] Invalid light type "${lightData.type}" for light "${lightData.id}". Defaulting to "point".`
+      );
+    }
+
     const lightConfig: LightConfig = {
       id: lightData.id,
-      type: lightData.type as LightConfig['type'], // Safe cast from our RawLightingData interface
+      type: lightType,
       color: new Color3(lightData.color.r, lightData.color.g, lightData.color.b),
       intensity: lightData.intensity,
       enabled: lightData.enabled !== false,
