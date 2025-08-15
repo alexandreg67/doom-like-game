@@ -226,13 +226,15 @@ export class SectorGeometry {
       vertices.push(new Vector3(vertex.position.x, this.sector.ceilingHeight, vertex.position.y));
       const bounds = this.boundingBox;
       const u = (vertex.position.x - bounds.minX) / (bounds.maxX - bounds.minX);
-      const v = 1 - (vertex.position.y - bounds.minY) / (bounds.maxY - bounds.minY); // Flipped V for ceiling
+      // UV coordinates normalized to sector bounding box
+      const v = (vertex.position.y - bounds.minY) / (bounds.maxY - bounds.minY);
       uvs.push(new Vector2(u, v));
     }
 
-    // Triangulate ceiling (fan triangulation, clockwise for downward normal)
+    // Triangulate ceiling (fan triangulation, counter-clockwise for visibility from below)
+    // We need the normals to point downward but be visible from below
     for (let i = 1; i < this.sector.vertices.length - 1; i++) {
-      indices.push(0, i, i + 1);
+      indices.push(0, i + 1, i); // Reversed order to make visible from below
     }
 
     return { vertices, indices, uvs };
@@ -267,18 +269,18 @@ export class SectorGeometry {
       new Vector3(start.x, ceilingHeight, start.y),
     ];
 
-    const wallLength = lineDef.length;
-    const wallHeight = ceilingHeight - floorHeight;
-
+    // UV coordinates that match the vertex order: bottom-left, bottom-right, top-right, top-left
     const uvs = [
-      new Vector2(0, 0),
-      new Vector2(wallLength / 64, 0), // Assuming 64-unit texture width
-      new Vector2(wallLength / 64, wallHeight / 64),
-      new Vector2(0, wallHeight / 64),
+      new Vector2(0, 1), // bottom-left (start, floor) - bottom of texture
+      new Vector2(1, 1), // bottom-right (end, floor) - bottom of texture
+      new Vector2(1, 0), // top-right (end, ceiling) - top of texture
+      new Vector2(0, 0), // top-left (start, ceiling) - top of texture
     ];
 
-    // Two triangles forming a quad
-    const indices = [0, 1, 2, 0, 2, 3];
+    // Two triangles forming a quad (counter-clockwise winding)
+    // First triangle: 0->2->1 (bottom-left -> top-right -> bottom-right)
+    // Second triangle: 0->3->2 (bottom-left -> top-left -> top-right)
+    const indices = [0, 2, 1, 0, 3, 2];
 
     return { vertices, indices, uvs };
   }
