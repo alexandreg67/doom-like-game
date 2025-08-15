@@ -1,4 +1,5 @@
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import { logger } from '../utils/logger';
 
 export type LoadOptions = {
   wrapU?: 'repeat' | 'clamp';
@@ -15,7 +16,7 @@ export type TextureHandle = {
   texture: Texture;
 };
 
-/** Prototype minimal d'un TextureManager. Ne gère pas encore LRU ni TTL. */
+/** Prototype minimal d'un TextureManager. Gère LRU (éviction) et TTL (expiration) pour les textures en cache. */
 export class TextureManager {
   // cache maps path -> { promise, lastAccess, sizeEstimate }
   private cache = new Map<
@@ -32,8 +33,16 @@ export class TextureManager {
     this.maxEntries = opts?.maxEntries ?? 200;
     this.ttlMs = opts?.ttlMs ?? 5 * 60 * 1000; // 5 minutes
   }
-
   load(path: string, options?: LoadOptions): Promise<TextureHandle> {
+    // public entry: create a fresh attempts set to detect circular fallbacks
+    return this._load(path, options, new Set<string>());
+  }
+
+  private _load(
+    path: string,
+    options: LoadOptions | undefined,
+    attempts: Set<string>
+  ): Promise<TextureHandle> {
     const existing = this.cache.get(path);
     if (existing) {
       existing.lastAccess = Date.now();
@@ -52,9 +61,15 @@ export class TextureManager {
             resolve({ path, texture: tex });
           },
           (message) => {
-            // try fallback if provided
+            // try fallback if provided, guard against circular fallback chains
             if (options?.fallback) {
-              this.load(options.fallback)
+              const fb = options.fallback;
+              if (attempts.has(fb)) {
+                reject(new Error(`Circular fallback detected for texture path: ${fb}`));
+                return;
+              }
+              attempts.add(fb);
+              this._load(fb, options, attempts)
                 .then(resolve)
                 .catch(() => reject(new Error(`Failed to load texture ${path}: ${message}`)));
               return;
@@ -95,8 +110,20 @@ export class TextureManager {
   release(path: string) {
     const e = this.cache.get(path);
     if (e) {
-      // dispose if resolved
-      e.promise.then((h) => h.texture.dispose?.());
+      // dispose if resolved, handle errors and await if dispose is async
+      e.promise
+        .then(async (h) => {
+          try {
+            const res: any = (h.texture as any).dispose?.();
+            if (res && typeof res.then === 'function') await res;
+          } catch (err) {
+            // don't throw from release; log for debugging
+            logger.error(`Error disposing texture for path ${path}:`, err);
+          }
+        })
+        .catch((_) => {
+          // promise rejected: nothing to dispose
+        });
     }
     this.cache.delete(path);
   }
@@ -106,8 +133,9 @@ export class TextureManager {
     // evict least-recently-used
     const items = Array.from(this.cache.entries());
     items.sort((a, b) => a[1].lastAccess - b[1].lastAccess);
-    while (this.cache.size > this.maxEntries) {
-      const key = items.shift();
+    const numToEvict = this.cache.size - this.maxEntries;
+    for (let i = 0; i < numToEvict; i++) {
+      const key = items[i];
       if (!key) break;
       this.release(key[0]);
     }
