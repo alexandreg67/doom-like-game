@@ -88,6 +88,8 @@ export interface BSPNode {
   frontChild?: BSPNode;
   backChild?: BSPNode;
   sectors?: DoomSector[]; // Only for leaf nodes
+  // Lines that are colinear with the splitLine and attached to this node
+  colinearLines?: DoomLineDef[];
 }
 
 // Utility types for geometry operations
@@ -104,4 +106,11 @@ export interface TriangulationResult {
   vertices: Vector3[];
   indices: number[];
   uvs: Vector2[];
+}
+
+/**
+ * Factory helpers
+ */
+export function createDoomVertex(id: string, position: Vector2): DoomVertex {
+  return { id, position } as DoomVertex;
 }
