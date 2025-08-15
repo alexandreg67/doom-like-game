@@ -218,7 +218,7 @@ export const TEXTURE_DATA_URLS = (() => {
         stone_wall: generateTexture('stone'),
         wood_door: generateTexture('wood', { color1: '#8B4513', color2: '#A0522D' }),
       };
-    } catch (error) {
+    } catch (_error) {
       console.warn('[TextureGenerator] Canvas not available, using fallback data URLs');
     }
   }

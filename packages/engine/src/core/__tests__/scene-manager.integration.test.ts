@@ -84,7 +84,7 @@ describe('SceneManager Texture Integration', () => {
   });
 
   test('should create BSP tree after loading textures', async () => {
-    const scene = await sceneManager.createDefaultScene();
+    const _scene = await sceneManager.createDefaultScene();
 
     // The BSP tree should be built after the scene is loaded
     expect(sceneManager).toBeDefined();

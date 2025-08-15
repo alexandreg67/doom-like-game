@@ -170,7 +170,10 @@ export class SectorRenderer {
     const materialKey = `${textureName}_${lightLevel}`;
 
     if (this.materials.has(materialKey)) {
-      return this.materials.get(materialKey)!;
+      const existingMaterial = this.materials.get(materialKey);
+      if (existingMaterial) {
+        return existingMaterial;
+      }
     }
 
     const material = new StandardMaterial(materialKey, this.scene);
