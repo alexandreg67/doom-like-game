@@ -18,6 +18,7 @@ export interface CameraConfig {
   // Smoothing
   smoothing: number;
   rotationSmoothing: number;
+  targetFPS: number;
 
   // Field of view
   fov: number;
@@ -44,8 +45,6 @@ export interface CameraState {
 }
 
 export class FPSCameraController implements InputListener {
-  private static readonly TARGET_FPS = 60;
-
   private inputManager: InputManager;
   private playerController: PlayerController;
   private config: CameraConfig;
@@ -74,6 +73,7 @@ export class FPSCameraController implements InputListener {
       // Smoothing
       smoothing: 1.0, // No smoothing by default for responsive FPS
       rotationSmoothing: 1.0,
+      targetFPS: 60,
 
       // Field of view
       fov: Math.PI / 3, // 60 degrees
@@ -242,7 +242,7 @@ export class FPSCameraController implements InputListener {
     // Apply smoothing if configured
     if (this.config.rotationSmoothing < 1.0) {
       const smoothingFactor =
-        1.0 - (1.0 - this.config.rotationSmoothing) ** (deltaTime * FPSCameraController.TARGET_FPS);
+        1.0 - (1.0 - this.config.rotationSmoothing) ** (deltaTime * this.config.targetFPS);
 
       this.state.smoothedYaw = this.lerp(this.state.smoothedYaw, this.state.yaw, smoothingFactor);
       this.state.smoothedPitch = this.lerp(
@@ -269,7 +269,7 @@ export class FPSCameraController implements InputListener {
     this.state.right.set(cosYaw, 0, -sinYaw);
 
     // Calculate up vector (perpendicular to forward and right)
-    this.state.up = this.state.forward.cross(this.state.right);
+    this.state.up = this.state.right.cross(this.state.forward);
 
     // Normalize vectors
     this.state.forward.normalize();

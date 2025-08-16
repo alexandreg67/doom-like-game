@@ -54,6 +54,7 @@ export interface PlayerConfig {
 
 export class PlayerController implements InputListener {
   private static readonly ACCELERATION_MULTIPLIER = 10;
+  private static readonly MINIMUM_FALL_VELOCITY = -0.1;
 
   private entity: Entity;
   private inputManager: InputManager;
@@ -313,7 +314,7 @@ export class PlayerController implements InputListener {
     );
 
     // Ground collision (simplified - will be replaced by proper collision system)
-    if (movement.velocity.y < -0.1) {
+    if (movement.velocity.y < PlayerController.MINIMUM_FALL_VELOCITY) {
       // Simple ground check at configurable ground level for now
       const transform = this.entity.components.get('transform') as Transform;
       if (transform && transform.y <= this.config.groundLevel) {

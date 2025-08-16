@@ -30,16 +30,30 @@ export function detectLayout(): KeyboardLayoutInfo {
     };
   }
 
-  // Secondary detection: Navigator platform (for future enhancement)
-  const platform = navigator.platform.toLowerCase();
-  const isFrenchSystem = platform.includes('fr');
+  // Secondary detection: Platform with userAgentData fallback
+  if ('userAgentData' in navigator && navigator.userAgentData) {
+    const userAgentData = navigator.userAgentData as { platform?: string };
+    const platform = userAgentData.platform?.toLowerCase();
+    const isFrenchSystem = platform?.includes('fr');
 
-  if (isFrenchSystem) {
-    return {
-      layout: 'azerty',
-      confidence: 0.7,
-      detectedLanguage: language,
-    };
+    if (isFrenchSystem) {
+      return {
+        layout: 'azerty',
+        confidence: 0.7,
+        detectedLanguage: language,
+      };
+    }
+  } else if (navigator.platform) {
+    const platform = navigator.platform.toLowerCase();
+    const isFrenchSystem = platform.includes('fr');
+
+    if (isFrenchSystem) {
+      return {
+        layout: 'azerty',
+        confidence: 0.7,
+        detectedLanguage: language,
+      };
+    }
   }
 
   // Default fallback

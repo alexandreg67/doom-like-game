@@ -6,7 +6,7 @@
 export interface BenchmarkConfig {
   duration: number; // Test duration in ms
   warmupFrames: number; // Frames to ignore for warmup
-  targetFPS: number; // Expected FPS baseline
+  targetFPS: number; // Expected FPS baseline (configurable per device)
   maxFrameTime: number; // Maximum acceptable frame time (ms)
   maxMemoryUsage: number; // Maximum acceptable memory usage (MB)
   tolerance: number; // Acceptable variance percentage (0.0-1.0)
@@ -14,6 +14,7 @@ export interface BenchmarkConfig {
   enableStressTest: boolean; // Enable high-load scenarios
   enableRegressionTest: boolean; // Compare against baseline
   outputFormat: 'console' | 'json' | 'junit' | 'all';
+  detectDisplayRefreshRate: boolean; // Auto-detect display refresh rate for targetFPS
 }
 
 export interface BenchmarkScenario {

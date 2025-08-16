@@ -50,6 +50,7 @@ export interface InputConfig {
   keyRepeatDelay: number;
   keyRepeatRate: number;
   deadzone: number; // For future gamepad support
+  weaponSwitchTimeoutMs: number;
 }
 
 export type InputAction = keyof Omit<
