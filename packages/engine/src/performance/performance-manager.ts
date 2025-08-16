@@ -82,7 +82,8 @@ export class PerformanceManager implements IPerformanceProfiler {
   public start(label: string): void {
     if (!this.config.enableMetrics) return;
 
-    this.activeTimers.set(label, performance.now());
+    const startTime = performance.now();
+    this.activeTimers.set(label, startTime);
     performance.mark(`${label}_start`);
   }
 
@@ -93,20 +94,13 @@ export class PerformanceManager implements IPerformanceProfiler {
     if (!this.config.enableMetrics) return 0;
 
     const startTime = this.activeTimers.get(label);
-    if (!startTime) {
+    if (startTime === undefined) {
       console.warn(`[PERFORMANCE] Timer '${label}' was not started`);
       return 0;
     }
 
     const endTime = performance.now();
     const duration = endTime - startTime;
-
-    // Debug output for testing
-    if (process.env.NODE_ENV === 'test') {
-      console.log(
-        `[DEBUG] Timer '${label}': start=${startTime}, end=${endTime}, duration=${duration}`
-      );
-    }
 
     performance.mark(`${label}_end`);
     performance.measure(label, `${label}_start`, `${label}_end`);

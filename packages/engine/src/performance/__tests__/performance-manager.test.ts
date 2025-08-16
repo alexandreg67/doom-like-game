@@ -176,14 +176,6 @@ describe('PerformanceManager', () => {
       performanceManager.endFrame();
 
       const alerts = performanceManager.getAlerts();
-      const metrics = performanceManager.getMetrics();
-
-      // Debug output for investigation
-      console.log('Test Debug - frameTime:', metrics.frameTime);
-      console.log('Test Debug - threshold:', 16.7);
-      console.log('Test Debug - critical threshold:', 16.7 * 2);
-      console.log('Test Debug - is critical?:', metrics.frameTime > 16.7 * 2);
-      console.log('Test Debug - alerts:', alerts);
 
       expect(alerts).toHaveLength(1);
       expect(alerts[0].type).toBe('frameTime');
@@ -195,7 +187,7 @@ describe('PerformanceManager', () => {
       vi.stubGlobal('performance', {
         ...performance,
         memory: {
-          usedJSHeapSize: 150 * 1024 * 1024, // 150MB (over 100MB threshold)
+          usedJSHeapSize: 151 * 1024 * 1024, // 151MB (over 100MB * 1.5 = 150MB threshold for critical)
           totalJSHeapSize: 200 * 1024 * 1024,
         },
       });
@@ -356,12 +348,16 @@ describe('PerformanceManager', () => {
 
   describe('Error Handling', () => {
     it('should handle performance.measure errors gracefully', () => {
-      vi.mocked(performance.measure).mockImplementation(() => {
+      const originalMeasure = performance.measure;
+      performance.measure = vi.fn().mockImplementation(() => {
         throw new Error('Measure failed');
       });
 
       const duration = performanceManager.measure('start', 'end');
       expect(duration).toBe(0);
+
+      // Restore original mock
+      performance.measure = originalMeasure;
     });
 
     it('should handle missing performance.memory gracefully', () => {
