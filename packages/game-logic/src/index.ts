@@ -7,8 +7,10 @@ export type { Component, Entity, System } from './types';
 // Input system
 export {
   InputManager,
-  KeyboardLayoutDetector,
   KeyMappings,
+  detectLayout,
+  getLayoutDisplayName,
+  isAzerty,
   type KeyboardLayout,
   type KeyboardLayoutInfo,
   type KeyMapping,

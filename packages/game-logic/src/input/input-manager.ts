@@ -4,7 +4,7 @@
 
 import type { InputAction, InputConfig, InputListener, InputState } from './input-types';
 import { type GameKeyMappings, KeyMappings } from './key-mappings';
-import { type KeyboardLayout, KeyboardLayoutDetector } from './keyboard-layout';
+import { type KeyboardLayout, detectLayout, getLayoutDisplayName } from './keyboard-layout';
 
 export class InputManager {
   private canvas: HTMLCanvasElement;
@@ -59,12 +59,12 @@ export class InputManager {
     this.canvas = canvas;
 
     // Detect keyboard layout
-    const layoutInfo = KeyboardLayoutDetector.detectLayout();
+    const layoutInfo = detectLayout();
     this.keyboardLayout = layoutInfo.layout;
     this.keyMappings = KeyMappings.getForLayout(this.keyboardLayout);
 
     console.log(
-      `[INPUT] Detected keyboard layout: ${KeyboardLayoutDetector.getLayoutDisplayName(this.keyboardLayout)} (confidence: ${Math.round(layoutInfo.confidence * 100)}%)`
+      `[INPUT] Detected keyboard layout: ${getLayoutDisplayName(this.keyboardLayout)} (confidence: ${Math.round(layoutInfo.confidence * 100)}%)`
     );
 
     this.buildKeyActionMap();
@@ -153,9 +153,7 @@ export class InputManager {
       this.keyboardLayout = layout;
       this.keyMappings = KeyMappings.getForLayout(layout);
       this.buildKeyActionMap();
-      console.log(
-        `[INPUT] Switched to ${KeyboardLayoutDetector.getLayoutDisplayName(layout)} layout`
-      );
+      console.log(`[INPUT] Switched to ${getLayoutDisplayName(layout)} layout`);
     }
   }
 

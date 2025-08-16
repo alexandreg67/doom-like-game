@@ -9,8 +9,7 @@
       "recommended": true,
       "complexity": {
         "noBannedTypes": "error",
-        "noUselessConstructor": "error",
-        "noStaticOnlyClass": "off"
+        "noUselessConstructor": "error"
       },
       "correctness": {
         "noUnusedVariables": "error",
@@ -23,11 +22,11 @@
         "noDangerouslySetInnerHtml": "error"
       },
       "style": {
-        "noNonNullAssertion": "off",
+        "noNonNullAssertion": "warn",
         "useImportType": "error"
       },
       "suspicious": {
-        "noExplicitAny": "off",
+        "noExplicitAny": "warn",
         "noArrayIndexKey": "warn"
       }
     }
@@ -59,22 +58,6 @@
     }
   },
   "files": {
-    "ignore": [
-      "node_modules", 
-      "dist", 
-      "build", 
-      "coverage", 
-      ".git", 
-      "*.min.js",
-      "packages/engine/src/performance/__tests__/**",
-      "packages/engine/src/performance/benchmark-*.ts",
-      "packages/engine/src/performance/ci-*.ts",
-      "packages/engine/src/performance/debug-*.ts",
-      "packages/engine/src/performance/geometry-*.ts",
-      "packages/engine/src/performance/light-*.ts",
-      "packages/engine/src/performance/lod-*.ts",
-      "packages/engine/src/performance/shadow-*.ts",
-      "packages/engine/src/performance/optimized-*.ts"
-    ]
+    "ignore": ["node_modules", "dist", "build", "coverage", ".git", "*.min.js"]
   }
 }
