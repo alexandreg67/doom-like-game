@@ -443,7 +443,9 @@ export class CIBenchmarkRunner {
 }
 
 // CLI execution (only in Node.js environment)
-if (isNodeEnvironment && typeof require !== 'undefined' && require.main === module) {
+// Check if this module is being run directly (ESM compatible)
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isNodeEnvironment && isMainModule) {
   CIBenchmarkRunner.runFromCLI().catch((error) => {
     console.error('[CI-BENCHMARK] CLI execution failed:', error);
     process.exit(1);

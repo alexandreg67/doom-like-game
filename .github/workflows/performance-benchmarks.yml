@@ -27,7 +27,7 @@ on:
 
 env:
   NODE_VERSION: '20'
-  PNPM_VERSION: '8'
+  PNPM_VERSION: '9'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -95,7 +95,7 @@ jobs:
           cd packages/engine
           
           # Configure benchmark parameters
-          TIMEOUT_MINUTES=10
+          TIMEOUT_MINUTES=5
           REGRESSION_THRESHOLD="${{ github.event.inputs.regression_threshold || '10' }}"
           STRESS_TEST="${{ github.event.inputs.stress_test || 'false' }}"
           

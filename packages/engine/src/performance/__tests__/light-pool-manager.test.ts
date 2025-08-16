@@ -44,6 +44,32 @@ describe('LightPoolManager', () => {
     vi.clearAllMocks();
   });
 
+  function mockGoodPerformance() {
+    vi.spyOn(performanceManager, 'getMetrics').mockReturnValue({
+      fps: 60,
+      frameTime: 16.7,
+      renderTime: 0,
+      bspTraversalTime: 0,
+      lightingTime: 0,
+      cullingTime: 0,
+      totalSectors: 0,
+      visibleSectors: 0,
+      totalLines: 0,
+      visibleLines: 0,
+      culledLines: 0,
+      bspNodes: 0,
+      bspDepth: 0,
+      bspTraversals: 0,
+      heapUsed: 0,
+      heapTotal: 0,
+      textureMemory: 0,
+      bufferMemory: 0,
+      avgFrameTime: 16.7,
+      maxFrameTime: 20,
+      minFrameTime: 15,
+    });
+  }
+
   function createTestLight(id: string, position: Vector3, intensity = 1): LightInstance {
     const babylonLight = new PointLight(id, position, scene);
     babylonLight.intensity = intensity;
@@ -117,6 +143,9 @@ describe('LightPoolManager', () => {
 
   describe('Distance Culling', () => {
     it('should activate nearby lights', () => {
+      // Mock good performance to prevent performance culling
+      mockGoodPerformance();
+
       const nearLight = createTestLight('near_light', new Vector3(10, 0, 0));
       lightPool.addLight(nearLight, false);
 
@@ -129,6 +158,9 @@ describe('LightPoolManager', () => {
     });
 
     it('should cull distant lights', () => {
+      // Mock good performance to prevent performance culling
+      mockGoodPerformance();
+
       const farLight = createTestLight('far_light', new Vector3(100, 0, 0)); // Beyond culling distance
       lightPool.addLight(farLight, false);
 
@@ -146,6 +178,9 @@ describe('LightPoolManager', () => {
     });
 
     it('should handle mixed distance scenarios', () => {
+      // Mock good performance to prevent performance culling
+      mockGoodPerformance();
+
       const nearLight = createTestLight('near', new Vector3(10, 0, 0));
       const farLight = createTestLight('far', new Vector3(100, 0, 0));
 
@@ -162,6 +197,9 @@ describe('LightPoolManager', () => {
 
   describe('Priority Culling', () => {
     it('should cull low priority lights when at limit', () => {
+      // Mock good performance to prevent performance culling
+      mockGoodPerformance();
+
       // Add more lights than the limit (4)
       for (let i = 0; i < 6; i++) {
         const light = createTestLight(`light_${i}`, new Vector3(i * 5, 0, 0), 1);
@@ -177,6 +215,12 @@ describe('LightPoolManager', () => {
     });
 
     it('should prioritize high intensity lights', () => {
+      // Mock good performance to prevent performance culling
+      mockGoodPerformance();
+
+      // Use very low threshold to ensure both lights activate
+      lightPool.updateConfig({ priorityThreshold: 0.001 });
+
       const lowIntensityLight = createTestLight('low', new Vector3(5, 0, 0), 0.1);
       const highIntensityLight = createTestLight('high', new Vector3(6, 0, 0), 2.0);
 
@@ -266,29 +310,7 @@ describe('LightPoolManager', () => {
       lightPool.addLight(light, false);
 
       // Mock performance to ensure light gets activated
-      vi.spyOn(performanceManager, 'getMetrics').mockReturnValue({
-        fps: 60,
-        frameTime: 16.7,
-        renderTime: 0,
-        bspTraversalTime: 0,
-        lightingTime: 0,
-        cullingTime: 0,
-        totalSectors: 0,
-        visibleSectors: 0,
-        totalLines: 0,
-        visibleLines: 0,
-        culledLines: 0,
-        bspNodes: 0,
-        bspDepth: 0,
-        bspTraversals: 0,
-        heapUsed: 0,
-        heapTotal: 0,
-        textureMemory: 0,
-        bufferMemory: 0,
-        avgFrameTime: 16.7,
-        maxFrameTime: 20,
-        minFrameTime: 15,
-      });
+      mockGoodPerformance();
 
       // Update with camera at origin (distance = 30)
       lightPool.updateLightCulling(Vector3.Zero());
@@ -304,29 +326,7 @@ describe('LightPoolManager', () => {
       lightPool.addLight(light, false);
 
       // Mock performance to ensure light gets activated
-      vi.spyOn(performanceManager, 'getMetrics').mockReturnValue({
-        fps: 60,
-        frameTime: 16.7,
-        renderTime: 0,
-        bspTraversalTime: 0,
-        lightingTime: 0,
-        cullingTime: 0,
-        totalSectors: 0,
-        visibleSectors: 0,
-        totalLines: 0,
-        visibleLines: 0,
-        culledLines: 0,
-        bspNodes: 0,
-        bspDepth: 0,
-        bspTraversals: 0,
-        heapUsed: 0,
-        heapTotal: 0,
-        textureMemory: 0,
-        bufferMemory: 0,
-        avgFrameTime: 16.7,
-        maxFrameTime: 20,
-        minFrameTime: 15,
-      });
+      mockGoodPerformance();
 
       lightPool.updateLightCulling(Vector3.Zero());
 
@@ -338,13 +338,19 @@ describe('LightPoolManager', () => {
 
   describe('Update Frequency', () => {
     it('should respect update frequency setting', () => {
-      lightPool.updateConfig({ updateFrequency: 5 });
+      // Mock good performance to prevent performance culling
+      mockGoodPerformance();
+
+      // Use very low threshold to ensure light activates
+      lightPool.updateConfig({ updateFrequency: 5, priorityThreshold: 0.001 });
 
       const light = createTestLight('test_light', new Vector3(10, 0, 0));
       lightPool.addLight(light, false);
 
-      // First update should work
-      lightPool.updateLightCulling(Vector3.Zero());
+      // Call updateLightCulling 5 times to trigger the first actual update (due to updateFrequency: 5)
+      for (let i = 0; i < 5; i++) {
+        lightPool.updateLightCulling(Vector3.Zero());
+      }
       expect(lightPool.getStats().active).toBe(1);
 
       // Subsequent updates within frequency should not change much
@@ -378,6 +384,9 @@ describe('LightPoolManager', () => {
 
   describe('Metrics and Statistics', () => {
     it('should provide accurate statistics', () => {
+      // Mock good performance to prevent performance culling
+      mockGoodPerformance();
+
       const light1 = createTestLight('light1', new Vector3(10, 0, 0));
       const light2 = createTestLight('light2', new Vector3(100, 0, 0));
 
@@ -392,6 +401,9 @@ describe('LightPoolManager', () => {
     });
 
     it('should track culling reasons', () => {
+      // Mock good performance to prevent performance culling
+      mockGoodPerformance();
+
       const farLight = createTestLight('far', new Vector3(100, 0, 0));
       lightPool.addLight(farLight, false);
 
