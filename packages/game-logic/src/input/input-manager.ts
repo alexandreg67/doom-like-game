@@ -217,6 +217,7 @@ export class InputManager {
     const action = this.keyActionMap.get(event.code);
     if (action && !this.pressedKeys.has(event.code)) {
       this.pressedKeys.add(event.code);
+      console.log(`[INPUT] Key pressed: ${event.code} -> ${action}`);
       this.setInputAction(action, true);
       event.preventDefault();
     }

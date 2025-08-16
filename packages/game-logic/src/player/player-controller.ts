@@ -210,6 +210,7 @@ export class PlayerController implements InputListener {
         break;
       case 'crouch':
         this.inputState.crouch = value;
+        console.log(`[PLAYER] Crouch input: ${value}`);
         break;
       case 'run':
         this.inputState.run = value;
@@ -321,7 +322,12 @@ export class PlayerController implements InputListener {
   }
 
   private updateCrouchState(movement: PlayerMovement): void {
+    const wasCrouching = movement.isCrouching;
     movement.isCrouching = this.inputState.crouch;
+
+    if (wasCrouching !== movement.isCrouching) {
+      console.log(`[PLAYER] Crouching state changed: ${movement.isCrouching}`);
+    }
   }
 
   private updateRunState(movement: PlayerMovement): void {
