@@ -168,12 +168,13 @@ export interface StressTestConfig {
   rampUpTime: number; // Gradually increase load
 }
 
-export interface BenchmarkEvent {
-  type: 'start' | 'end' | 'scenario-start' | 'scenario-end' | 'error' | 'warning';
-  timestamp: number;
-  data: BenchmarkRun | BenchmarkScenario | Error | Record<string, unknown>;
-  message: string;
-}
+export type BenchmarkEvent =
+  | { type: 'start'; timestamp: number; data: BenchmarkRun; message: string }
+  | { type: 'end'; timestamp: number; data: BenchmarkRun; message: string }
+  | { type: 'scenario-start'; timestamp: number; data: BenchmarkScenario; message: string }
+  | { type: 'scenario-end'; timestamp: number; data: BenchmarkScenario; message: string }
+  | { type: 'error'; timestamp: number; data: Error; message: string }
+  | { type: 'warning'; timestamp: number; data: Record<string, unknown>; message: string };
 
 export interface CIBenchmarkConfig {
   enabled: boolean;

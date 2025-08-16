@@ -52,6 +52,8 @@ export interface PlayerConfig {
 }
 
 export class PlayerController implements InputListener {
+  private static readonly ACCELERATION_MULTIPLIER = 10;
+
   private entity: Entity;
   private inputManager: InputManager;
   private config: PlayerConfig;
@@ -300,16 +302,16 @@ export class PlayerController implements InputListener {
     movement.velocity.x = this.lerp(
       movement.velocity.x,
       targetVelocityX,
-      friction * deltaTime * 10
+      friction * deltaTime * PlayerController.ACCELERATION_MULTIPLIER
     );
     movement.velocity.z = this.lerp(
       movement.velocity.z,
       targetVelocityZ,
-      friction * deltaTime * 10
+      friction * deltaTime * PlayerController.ACCELERATION_MULTIPLIER
     );
 
     // Ground collision (simplified - will be replaced by proper collision system)
-    if (movement.velocity.y < 0 && movement.velocity.y < -0.1) {
+    if (movement.velocity.y < -0.1) {
       // Simple ground check at y=0 for now
       const transform = this.entity.components.get('transform') as Transform;
       if (transform && transform.y <= 0) {

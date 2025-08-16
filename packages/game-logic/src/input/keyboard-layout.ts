@@ -32,7 +32,7 @@ export function detectLayout(): KeyboardLayoutInfo {
 
   // Secondary detection: Navigator platform (for future enhancement)
   const platform = navigator.platform.toLowerCase();
-  const isFrenchSystem = platform.includes('fr') || navigator.language.includes('fr');
+  const isFrenchSystem = platform.includes('fr');
 
   if (isFrenchSystem) {
     return {

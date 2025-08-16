@@ -44,6 +44,8 @@ export interface CameraState {
 }
 
 export class FPSCameraController implements InputListener {
+  private static readonly TARGET_FPS = 60;
+
   private inputManager: InputManager;
   private playerController: PlayerController;
   private config: CameraConfig;
@@ -239,7 +241,8 @@ export class FPSCameraController implements InputListener {
   private updateRotation(deltaTime: number): void {
     // Apply smoothing if configured
     if (this.config.rotationSmoothing < 1.0) {
-      const smoothingFactor = 1.0 - (1.0 - this.config.rotationSmoothing) ** (deltaTime * 60);
+      const smoothingFactor =
+        1.0 - (1.0 - this.config.rotationSmoothing) ** (deltaTime * FPSCameraController.TARGET_FPS);
 
       this.state.smoothedYaw = this.lerp(this.state.smoothedYaw, this.state.yaw, smoothingFactor);
       this.state.smoothedPitch = this.lerp(
