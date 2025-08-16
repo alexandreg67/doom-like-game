@@ -210,7 +210,7 @@ describe('GeometrySimplifier', () => {
   describe('Error Handling', () => {
     it('should handle mesh without geometry', () => {
       const box = CreateBox('testBox', { size: 2 }, scene);
-      box.geometry = null as any; // Remove geometry
+      box.getGeometry()?.dispose(); // Dispose geometry
 
       const simplifiedData = simplifier.simplifyMesh(box, 10);
 
@@ -294,8 +294,8 @@ describe('GeometrySimplifier', () => {
     });
 
     it('should scale reasonably with mesh complexity', () => {
-      const lowPolyBox = CreateBox('lowPoly', { size: 2, subdivisions: 1 }, scene);
-      const highPolyBox = CreateBox('highPoly', { size: 2, subdivisions: 4 }, scene);
+      const lowPolyBox = CreateBox('lowPoly', { size: 2, subdivisions: 2 }, scene);
+      const highPolyBox = CreateBox('highPoly', { size: 2, subdivisions: 8 }, scene);
 
       const lowPolyTarget = Math.floor(lowPolyBox.getTotalVertices() * 0.5);
       const highPolyTarget = Math.floor(highPolyBox.getTotalVertices() * 0.5);

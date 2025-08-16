@@ -188,9 +188,10 @@ export class LODManager {
     // Update all registered meshes
     for (const [meshId, lodInstance] of this.lodInstances) {
       const mesh = this.getMeshById(meshId);
-      if (!mesh) {
+      if (!mesh || mesh.isDisposed()) {
         // Mesh was disposed, remove from tracking
         this.lodInstances.delete(meshId);
+        this.metrics.totalMeshes--;
         continue;
       }
 
@@ -559,6 +560,18 @@ export class LODManager {
   public dispose(): void {
     this.lodInstances.clear();
     this.activeTransitions.clear();
+
+    // Reset metrics
+    this.metrics = {
+      totalMeshes: 0,
+      activeMeshes: 0,
+      culledMeshes: 0,
+      levelDistribution: {},
+      geometryMemory: 0,
+      textureMemory: 0,
+      processingTime: 0,
+      transitionCount: 0,
+    };
 
     console.log('[LOD] LODManager disposed');
   }

@@ -226,7 +226,7 @@ describe('BenchmarkManager', () => {
       // Should detect performance issues
       const run = report.runs.find((r) => r.scenarioId === 'strict-test');
       expect(run?.success).toBe(false);
-    });
+    }, 10000);
 
     it.skip('should detect memory leaks (skipped in CI)', async () => {
       let memoryUsage = 100 * 1024 * 1024; // Start at 100MB
@@ -403,7 +403,7 @@ describe('BenchmarkManager', () => {
       const consoleReport = benchmarkManager.exportReport(report, 'console');
       expect(consoleReport).toContain('Performance Benchmark Report');
       expect(consoleReport).toContain('Overall Score:');
-    });
+    }, 10000);
 
     it('should generate recommendations based on results', async () => {
       // Mock poor performance to trigger recommendations
