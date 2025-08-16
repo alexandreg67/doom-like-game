@@ -356,11 +356,11 @@ function updateDisplayMetrics() {
     sectorElement.textContent = currentSector ? currentSector.id : 'none';
   }
 
-  // Update collision metrics
+  // Update collision metrics (read-only to avoid interfering with other consumers)
   if (collisionElement) {
     const metrics = gameState.collisionDetector.getMetrics();
     collisionElement.textContent = `${metrics.collisionChecks}/sec, ${metrics.lineTests} tests`;
-    gameState.collisionDetector.resetMetrics(); // Reset for next measurement
+    // Note: Not calling resetMetrics() to avoid interfering with other metric consumers
   }
 }
 

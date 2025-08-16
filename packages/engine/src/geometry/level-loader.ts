@@ -50,6 +50,7 @@ export interface LevelLineDefData {
 export interface LevelPlayerStart {
   position: { x: number; y: number };
   angle: number;
+  angleUnit?: 'degrees' | 'radians'; // Optional, defaults to degrees
   sector: string; // sector ID
 }
 
