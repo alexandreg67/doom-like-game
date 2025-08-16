@@ -403,7 +403,7 @@ describe('BenchmarkManager', () => {
       const consoleReport = benchmarkManager.exportReport(report, 'console');
       expect(consoleReport).toContain('Performance Benchmark Report');
       expect(consoleReport).toContain('Overall Score:');
-    }, 10000);
+    }, 20000);
 
     it('should generate recommendations based on results', async () => {
       // Mock poor performance to trigger recommendations

@@ -158,11 +158,23 @@ describe('BSPTree Performance Benchmarks', () => {
       for (const count of sectorCounts) {
         const sectors = createMultipleSectors(count, 10);
 
-        const startTime = performance.now();
-        const bspTree = new BSPTree(sectors);
-        const endTime = performance.now();
+        let constructionTime = 0;
+        // For the fastest case, run multiple times to get a stable measurement
+        if (count === 1) {
+          const startTime = performance.now();
+          for (let i = 0; i < 100; i++) {
+            new BSPTree(sectors);
+          }
+          const endTime = performance.now();
+          constructionTime = (endTime - startTime) / 100;
+        } else {
+          const startTime = performance.now();
+          new BSPTree(sectors);
+          const endTime = performance.now();
+          constructionTime = endTime - startTime;
+        }
 
-        const constructionTime = endTime - startTime;
+        const bspTree = new BSPTree(sectors);
         const stats = bspTree.getStats();
 
         results.push({

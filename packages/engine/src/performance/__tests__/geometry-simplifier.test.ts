@@ -210,7 +210,7 @@ describe('GeometrySimplifier', () => {
   describe('Error Handling', () => {
     it('should handle mesh without geometry', () => {
       const box = CreateBox('testBox', { size: 2 }, scene);
-      box.getGeometry()?.dispose(); // Dispose geometry
+      box.geometry?.dispose(); // Dispose geometry
 
       const simplifiedData = simplifier.simplifyMesh(box, 10);
 
@@ -300,9 +300,14 @@ describe('GeometrySimplifier', () => {
       const lowPolyTarget = Math.floor(lowPolyBox.getTotalVertices() * 0.5);
       const highPolyTarget = Math.floor(highPolyBox.getTotalVertices() * 0.5);
 
+      // Run the low-poly simplification multiple times for stable measurement
+      const lowPolyRuns = 100;
       const startLow = performance.now();
-      simplifier.simplifyMesh(lowPolyBox, lowPolyTarget);
-      const lowTime = performance.now() - startLow;
+      for (let i = 0; i < lowPolyRuns; i++) {
+        simplifier.simplifyMesh(lowPolyBox, lowPolyTarget);
+      }
+      const endLow = performance.now();
+      const lowTime = (endLow - startLow) / lowPolyRuns;
 
       const startHigh = performance.now();
       simplifier.simplifyMesh(highPolyBox, highPolyTarget);
