@@ -177,30 +177,46 @@ export class SceneManager {
       if (!this.isValidLevelData(demoLevelData)) {
         throw new Error('Invalid demo level data format');
       }
-      this.currentLevel = parseLevel(demoLevelData);
+      const parsedLevel = parseLevel(demoLevelData);
 
-      // Find the door lineDef for interaction
-      this.doorLineDef = this.currentLevel.lineDefs.find((line) => line.id === 'l3_door') || null;
-
-      // Create meshes for all sectors
-      const sectorsArray = Array.from(this.currentLevel.sectors.values());
-      await this.createSectorMeshes(sectorsArray, scene);
-
-      // Build BSP tree for culling
-      this.bspTree = new BSPTree(sectorsArray);
-
-      // Initialize physics system with collision geometry
-      this.initializePhysicsSystem();
+      // Load the parsed level data
+      await this.loadLevelData(parsedLevel, scene);
 
       console.log('[ENGINE] Demo level loaded successfully');
-      console.log(
-        `[ENGINE] Sectors: ${this.currentLevel.sectors.size}, LineDefs: ${this.currentLevel.lineDefs.length}`
-      );
     } catch (error) {
       console.error('[ENGINE] Failed to load demo level:', error);
       // Fallback to simple scene
       this.createFallbackScene(scene);
     }
+  }
+
+  /**
+   * Loads level data and sets up all systems (reusable for any level)
+   */
+  private async loadLevelData(levelData: ParsedLevel, scene: Scene): Promise<void> {
+    console.log(
+      `[ENGINE] Loading level data with ${levelData.sectors.size} sectors, ${levelData.lineDefs.length} lineDefs...`
+    );
+
+    // Set current level
+    this.currentLevel = levelData;
+
+    // Find the door lineDef for interaction (if any)
+    this.doorLineDef = this.currentLevel.lineDefs.find((line) => line.id === 'l3_door') || null;
+
+    // Create meshes for all sectors
+    const sectorsArray = Array.from(this.currentLevel.sectors.values());
+    await this.createSectorMeshes(sectorsArray, scene);
+
+    // Build BSP tree for culling
+    this.bspTree = new BSPTree(sectorsArray);
+
+    // Initialize physics system with collision geometry
+    this.initializePhysicsSystem();
+
+    console.log(
+      `[ENGINE] Level data loaded successfully - Sectors: ${this.currentLevel.sectors.size}, LineDefs: ${this.currentLevel.lineDefs.length}`
+    );
   }
 
   /**
@@ -1140,6 +1156,95 @@ export class SceneManager {
         }
       }
     });
+  }
+
+  /**
+   * Public method to load a new level dynamically
+   */
+  public async loadLevel(levelData: ParsedLevel): Promise<void> {
+    if (!this.currentScene) {
+      throw new Error('Cannot load level: no active scene. Call createDefaultScene() first.');
+    }
+
+    console.log('[ENGINE] Starting dynamic level loading...');
+
+    try {
+      // Clean up current level
+      this.cleanupCurrentLevel();
+
+      // Load new level data
+      await this.loadLevelData(levelData, this.currentScene);
+
+      // Reposition camera to player start
+      if (this.camera && levelData.playerStart) {
+        const spawnPos = levelData.playerStart.position;
+        const spawnSector = levelData.playerStart.sector;
+
+        // Set camera position to spawn point + eye height
+        this.camera.position.x = spawnPos.x;
+        this.camera.position.y = spawnSector.floorHeight + PHYSICS_CONSTANTS.CAMERA_EYE_HEIGHT;
+        this.camera.position.z = spawnPos.y; // JSON uses x,y but we map to x,z
+
+        // Set camera direction based on spawn angle
+        const spawnAngle = levelData.playerStart.angle;
+        const targetOffset = new Vector3(Math.cos(spawnAngle), 0, Math.sin(spawnAngle));
+        this.camera.setTarget(this.camera.position.add(targetOffset));
+
+        console.log(
+          `[ENGINE] Camera repositioned to spawn: (${this.camera.position.x.toFixed(1)}, ${this.camera.position.y.toFixed(1)}, ${this.camera.position.z.toFixed(1)})`
+        );
+      }
+
+      // Update lighting system with new level
+      if (this.currentLevel?.lighting) {
+        this.loadLightingFromLevel(this.currentLevel.lighting);
+      }
+
+      console.log('[ENGINE] Dynamic level loading completed successfully');
+    } catch (error) {
+      console.error('[ENGINE] Failed to load level dynamically:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cleans up the current level to prepare for loading a new one
+   */
+  private cleanupCurrentLevel(): void {
+    if (!this.currentScene) return;
+
+    console.log('[ENGINE] Cleaning up current level...');
+
+    // Dispose existing meshes (except camera and lights)
+    const meshesToDispose = this.currentScene.meshes.filter(
+      (mesh) => !mesh.metadata?.isCamera && !mesh.metadata?.isLight
+    );
+
+    for (const mesh of meshesToDispose) {
+      // Dispose material if it exists
+      if (mesh.material) {
+        mesh.material.dispose();
+      }
+      mesh.dispose();
+    }
+
+    // Clear BSP tree
+    this.bspTree = null;
+
+    // Reset door state
+    this.doorLineDef = null;
+    this.doorOpen = false;
+
+    // Reset physics controller
+    if (this.physicsController) {
+      this.physicsController.dispose();
+      this.physicsController = null;
+    }
+
+    // Clear current level reference
+    this.currentLevel = null;
+
+    console.log(`[ENGINE] Cleanup completed - disposed ${meshesToDispose.length} meshes`);
   }
 
   public dispose(): void {
