@@ -18,7 +18,7 @@ export * from './dashboard-manager';
 export * from './debug-visualizer';
 export * from './benchmark-types';
 export * from './benchmark-manager';
-export * from './ci-benchmark-runner';
+// Note: ci-benchmark-runner is intentionally excluded as it's Node.js only
 
 // Re-export commonly used types
 export type {
