@@ -25,6 +25,12 @@ export {
   PHYSICS_CONSTANTS,
 } from './physics';
 
+// Performance monitoring and optimization
+export {
+  PerformanceManager,
+  BSPCuller,
+} from './performance';
+
 export type {
   MovementInput,
   PhysicsConfig,
@@ -65,3 +71,11 @@ export type {
   LightingMetrics,
   FogSystemState,
 } from './lighting';
+export type {
+  PerformanceMetrics,
+  BSPMetrics,
+  CullingMetrics,
+  PerformanceConfig,
+  PerformanceAlert,
+  CullingConfig,
+} from './performance';
