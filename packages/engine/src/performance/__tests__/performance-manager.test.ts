@@ -180,10 +180,16 @@ describe('PerformanceManager', () => {
   describe('Alert System', () => {
     it('should generate frame time alerts', () => {
       performanceManager.startFrame();
-      currentTime = 50; // Way over 16.7ms threshold
+      currentTime = 50; // Way over 16.7ms threshold (should be critical: 50 > 16.7 * 2 = 33.4)
       performanceManager.endFrame();
 
       const alerts = performanceManager.getAlerts();
+      const metrics = performanceManager.getMetrics();
+
+      // Debug output for investigation
+      console.log('Test Debug - frameTime:', metrics.frameTime);
+      console.log('Test Debug - alerts:', alerts);
+
       expect(alerts).toHaveLength(1);
       expect(alerts[0].type).toBe('frameTime');
       expect(alerts[0].severity).toBe('critical');

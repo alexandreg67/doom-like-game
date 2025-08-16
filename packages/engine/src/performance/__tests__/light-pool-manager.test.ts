@@ -30,6 +30,7 @@ describe('LightPoolManager', () => {
       cullingDistance: 50,
       enableLOD: true,
       updateFrequency: 0, // Force immediate updates for testing
+      priorityThreshold: 0.01, // Lower threshold for easier activation in tests
     };
 
     lightPool = new LightPoolManager(scene, performanceManager, config);

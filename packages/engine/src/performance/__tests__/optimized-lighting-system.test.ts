@@ -247,6 +247,10 @@ describe('OptimizedLightingSystem', () => {
       const mockMesh = {
         name: 'test_mesh',
         position: Vector3.Zero(),
+        getChildMeshes: () => [],
+        getMaterialForRenderPass: () => undefined,
+        dispose: () => {},
+        receiveShadows: false,
       };
 
       // Should not throw when adding shadow caster
@@ -268,6 +272,10 @@ describe('OptimizedLightingSystem', () => {
       const mockMesh = {
         name: 'test_mesh',
         receiveShadows: false,
+        getChildMeshes: () => [],
+        getMaterialForRenderPass: () => undefined,
+        dispose: () => {},
+        position: Vector3.Zero(),
       };
 
       optimizedLighting.addShadowReceiver('shadow_light', mockMesh as any);
