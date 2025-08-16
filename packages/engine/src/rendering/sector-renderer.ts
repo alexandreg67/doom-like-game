@@ -11,6 +11,11 @@ import type { DoomLineDef, DoomSector } from '../geometry/doom-geometry';
 import { SectorGeometry } from '../geometry/sector-geometry';
 
 /**
+ * Rendering modes for sector visualization
+ */
+export type RenderMode = 'solid' | 'wireframe' | 'debug';
+
+/**
  * SectorRenderer handles the rendering of DOOM-like sectors
  * Compatible with both WebGPU and WebGL2 pipelines
  */
@@ -18,6 +23,7 @@ export class SectorRenderer {
   private scene: Scene;
   private sectorMeshes = new Map<string, SectorMeshes>();
   private materials = new Map<string, StandardMaterial>();
+  private renderMode: RenderMode = 'solid';
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -67,6 +73,9 @@ export class SectorRenderer {
       }
     }
 
+    // Apply current render mode to new meshes
+    this.applyRenderModeToMeshes(meshes);
+
     // Cache the meshes
     this.sectorMeshes.set(sector.id, meshes);
 
@@ -74,6 +83,7 @@ export class SectorRenderer {
       floor: meshes.floor !== null,
       ceiling: meshes.ceiling !== null,
       walls: meshes.walls.length,
+      renderMode: this.renderMode,
       vertices: {
         floor: floorResult.vertices.length,
         ceiling: ceilingResult.vertices.length,
@@ -267,7 +277,104 @@ export class SectorRenderer {
     }
     this.materials.clear();
 
+    // Dispose wireframe helper - commented out as WireframeHelper is not available
+    // this.wireframeHelper?.dispose();
+
     console.log('[SectorRenderer] All resources disposed');
+  }
+
+  /**
+   * Sets the rendering mode for all sectors
+   */
+  public setRenderMode(mode: RenderMode): void {
+    this.renderMode = mode;
+
+    // Apply render mode to all existing meshes
+    for (const [, meshes] of this.sectorMeshes) {
+      this.applyRenderModeToMeshes(meshes);
+    }
+
+    console.log(`[SectorRenderer] Render mode changed to: ${mode}`);
+  }
+
+  /**
+   * Gets the current rendering mode
+   */
+  public getRenderMode(): RenderMode {
+    return this.renderMode;
+  }
+
+  /**
+   * Applies the current render mode to a set of meshes
+   */
+  private applyRenderModeToMeshes(meshes: SectorMeshes): void {
+    const allMeshes: Mesh[] = [];
+
+    if (meshes.floor) allMeshes.push(meshes.floor);
+    if (meshes.ceiling) allMeshes.push(meshes.ceiling);
+    allMeshes.push(...meshes.walls);
+
+    for (const mesh of allMeshes) {
+      switch (this.renderMode) {
+        case 'solid':
+          mesh.material = this.getSolidMaterialForMesh(mesh);
+          mesh.setEnabled(true);
+          break;
+        case 'wireframe':
+          // Enable wireframe on material directly since WireframeHelper is not available
+          if (mesh.material && 'wireframe' in mesh.material) {
+            (mesh.material as { wireframe: boolean }).wireframe = true;
+          }
+          mesh.setEnabled(true);
+          break;
+        case 'debug':
+          mesh.material = this.getDebugMaterialForMesh(mesh);
+          mesh.setEnabled(true);
+          break;
+      }
+    }
+  }
+
+  /**
+   * Gets the appropriate solid material for a mesh
+   */
+  private getSolidMaterialForMesh(mesh: Mesh): StandardMaterial {
+    // Extract material info from mesh name
+    const meshName = mesh.name;
+    if (meshName.includes('_floor')) {
+      return this.getMaterial('FLOOR_DEFAULT', 128);
+    }
+    if (meshName.includes('_ceiling')) {
+      return this.getMaterial('CEIL_DEFAULT', 128);
+    }
+    return this.getMaterial('WALL_DEFAULT', 128);
+  }
+
+  /**
+   * Gets debug material for a mesh (bright colors for visualization)
+   */
+  private getDebugMaterialForMesh(mesh: Mesh): StandardMaterial {
+    const meshName = mesh.name;
+    const debugKey = `debug_${meshName.includes('_floor') ? 'floor' : meshName.includes('_ceiling') ? 'ceiling' : 'wall'}`;
+
+    if (this.materials.has(debugKey)) {
+      const cached = this.materials.get(debugKey);
+      if (cached) {
+        return cached;
+      }
+    }
+
+    const material = new StandardMaterial(debugKey, this.scene);
+    material.wireframe = false;
+    material.emissiveColor = meshName.includes('_floor')
+      ? Color3.Green()
+      : meshName.includes('_ceiling')
+        ? Color3.Blue()
+        : Color3.Red();
+    material.diffuseColor = Color3.Black();
+
+    this.materials.set(debugKey, material);
+    return material;
   }
 
   /**
@@ -300,6 +407,7 @@ export class SectorRenderer {
       vertices: totalVertices,
       materials: this.materials.size,
       avgVerticesPerMesh: totalMeshes > 0 ? Math.round(totalVertices / totalMeshes) : 0,
+      renderMode: this.renderMode,
     };
   }
 }
