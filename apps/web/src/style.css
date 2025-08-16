@@ -42,8 +42,69 @@ main {
   flex: 1;
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+#level-selector {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #0f0;
+  border-radius: 4px;
+  padding: 1rem;
+  z-index: 100;
+  min-width: 250px;
+}
+
+#level-selector h3 {
+  color: #ff0;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+#level-select {
+  width: 100%;
+  background: #000;
+  color: #0f0;
+  border: 1px solid #0f0;
+  border-radius: 2px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+}
+
+#level-select option {
+  background: #000;
+  color: #0f0;
+}
+
+#load-level-btn,
+#reload-level-btn {
+  background: #000;
+  color: #0f0;
+  border: 1px solid #0f0;
+  border-radius: 2px;
+  padding: 0.5rem;
+  margin: 0.25rem 0.25rem 0.25rem 0;
+  font-family: "Courier New", monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#load-level-btn:hover,
+#reload-level-btn:hover {
+  background: #0f0;
+  color: #000;
+}
+
+#load-level-btn:active,
+#reload-level-btn:active {
+  transform: scale(0.95);
 }
 
 #gameCanvas {
