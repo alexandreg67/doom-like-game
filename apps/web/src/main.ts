@@ -146,8 +146,8 @@ async function loadLevel(levelName: string) {
       }
     }
 
-    // TODO: Update scene with level geometry
-    // await gameState.engine.loadLevel(levelData);
+    // Update scene with level geometry using the new dynamic loading system
+    await gameState.engine.loadLevel(levelData);
 
     // For now, just update the collision system and player position
     console.log(
