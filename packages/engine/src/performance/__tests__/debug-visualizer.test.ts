@@ -8,6 +8,14 @@ import type { DebugConfig, DebugVisualization } from '../debug-types';
 import { DebugVisualizer } from '../debug-visualizer';
 import { PerformanceManager } from '../performance-manager';
 
+// Mock performance.mark and performance.measure for tests
+if (!globalThis.performance.mark) {
+  globalThis.performance.mark = vi.fn();
+}
+if (!globalThis.performance.measure) {
+  globalThis.performance.measure = vi.fn();
+}
+
 // Mock DOM elements
 const mockCanvas = {
   width: 1920,
@@ -88,6 +96,14 @@ describe('DebugVisualizer', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Add missing performance methods for test environment
+    if (!performance.mark) {
+      (performance as any).mark = vi.fn();
+    }
+    if (!performance.measure) {
+      (performance as any).measure = vi.fn(() => ({ duration: 1 }));
+    }
 
     const config: Partial<DebugConfig> = {
       enabled: true,
