@@ -134,8 +134,9 @@ export interface ParsedLevel {
 
 /**
  * Generates missing wall lineDefs for sectors that don't have complete perimeter coverage
+ * DISABLED: Caused z-fighting and sector separation issues
  */
-function generateMissingWalls(
+/* function generateMissingWalls(
   sectors: Map<string, DoomSector>,
   existingLineDefs: DoomLineDef[]
 ): DoomLineDef[] {
@@ -227,7 +228,7 @@ function generateMissingWalls(
 
   Logger.info(`[LevelLoader] Generated ${additionalLineDefs.length} missing walls`);
   return additionalLineDefs;
-}
+} */
 
 /**
  * Loads and parses a level from JSON data
@@ -379,9 +380,9 @@ export function parseLevel(levelData: LevelData): ParsedLevel {
     }
   }
 
-  // Auto-generate missing walls for sectors that don't have complete lineDef coverage
-  const additionalLineDefs = generateMissingWalls(sectors, lineDefs);
-  lineDefs.push(...additionalLineDefs);
+  // NOTE: Auto-generation of missing walls disabled temporarily due to z-fighting issues
+  // const additionalLineDefs = generateMissingWalls(sectors, lineDefs);
+  // lineDefs.push(...additionalLineDefs);
 
   // Parse player start
   const playerStartSector = sectors.get(levelData.playerStart.sector);
