@@ -550,6 +550,10 @@ export class DebugVisualizer {
    * Add debug annotation
    */
   public addAnnotation(annotation: DebugAnnotation): void {
+    // Add creation timestamp if not provided
+    if (annotation.lifetime && !annotation.createdAt) {
+      annotation.createdAt = performance.now();
+    }
     this.annotations.set(annotation.id, annotation);
   }
 
@@ -638,12 +642,12 @@ export class DebugVisualizer {
   }
 
   private cleanupAnnotations(): void {
-    // const now = performance.now();
+    const now = performance.now();
     for (const [id, annotation] of this.annotations) {
-      if (annotation.lifetime) {
-        // Annotation should have a creation timestamp to compare with lifetime
-        // For now, just cleanup all timed annotations after 5 seconds
-        this.annotations.delete(id);
+      if (annotation.lifetime && typeof annotation.createdAt === 'number') {
+        if (now - annotation.createdAt > annotation.lifetime) {
+          this.annotations.delete(id);
+        }
       }
     }
   }

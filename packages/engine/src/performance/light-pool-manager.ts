@@ -374,8 +374,8 @@ export class LightPoolManager {
     importance *= (config.intensity || 1) * 0.5;
 
     // Shadow casting lights are more important
-    // Note: Using 'shadows' property instead of 'shadow' for compatibility
-    if ((config as any).shadows?.enabled) importance *= 1.5;
+    // Note: Using 'shadow' property for shadow configuration
+    if ((config as any).shadow?.enabled) importance *= 1.5;
 
     return importance;
   }

@@ -251,6 +251,7 @@ export interface DebugAnnotation {
   background: boolean;
   arrow: boolean;
   lifetime?: number; // Auto-remove after this time (ms)
+  createdAt?: number; // Timestamp when annotation was created
 }
 
 export interface DebugEvent {

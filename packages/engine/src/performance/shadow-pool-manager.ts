@@ -261,7 +261,9 @@ export class ShadowPoolManager {
       generator.usePercentageCloserFiltering = true;
       generator.filteringQuality = ShadowGenerator.QUALITY_HIGH;
       // Note: pcfKernel might not be available in all Babylon.js versions
-      (generator as any).pcfKernel = quality.pcfKernel;
+      if ('pcfKernel' in generator) {
+        (generator as any).pcfKernel = quality.pcfKernel;
+      }
     }
 
     // Set bias to reduce shadow acne
@@ -327,7 +329,9 @@ export class ShadowPoolManager {
     }
 
     // Update generator settings
-    (shadowMap.generator as any).pcfKernel = newQuality.pcfKernel;
+    if ('pcfKernel' in shadowMap.generator) {
+      (shadowMap.generator as any).pcfKernel = newQuality.pcfKernel;
+    }
     shadowMap.generator.bias = newQuality.bias;
 
     this.metrics.qualityAdjustments++;
