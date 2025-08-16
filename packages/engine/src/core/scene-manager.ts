@@ -1019,7 +1019,7 @@ export class SceneManager {
       // Get the main room sector to determine correct floor height
       const mainRoomSector = this.currentLevel.sectors.get('main_room');
       const floorHeight = mainRoomSector ? mainRoomSector.floorHeight : 0;
-      startPosition.y = floorHeight + 1.7; // Player height above floor
+      startPosition.y = floorHeight + PHYSICS_CONSTANTS.CAMERA_EYE_HEIGHT; // Player height above floor
       Logger.info(`[PHYSICS] Starting position: floor=${floorHeight}, player Y=${startPosition.y}`);
 
       this.physicsController = new PhysicsController(startPosition, SceneManager.PHYSICS_CONFIG);

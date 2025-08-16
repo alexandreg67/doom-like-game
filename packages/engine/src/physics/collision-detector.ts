@@ -116,11 +116,11 @@ export class CollisionDetector {
       };
     }
 
-    // Project toStart onto the line direction to find parameter t
-    // Since lineDir is normalized, we need the actual projection length
+    // Project toStart onto the normalized line direction
+    // Since lineDir is normalized, projectionLength is the distance along the line
     const projectionLength = Vector2.Dot(toStart, lineDir);
-    const t = Math.max(0, Math.min(1, projectionLength / lineLength));
-    const closestPoint = lineStart.add(lineDir.scale(t * lineLength));
+    const clampedProjection = Math.max(0, Math.min(lineLength, projectionLength));
+    const closestPoint = lineStart.add(lineDir.scale(clampedProjection));
 
     // Distance from circle center to line
     const distanceToLine = Vector2.Distance(startPos, closestPoint);
