@@ -219,7 +219,7 @@ export class FPSCameraController implements InputListener {
     if (!this.pointerLocked) return;
 
     // Apply mouse sensitivity and inversion
-    const yawDelta = -deltaX * this.config.mouseSensitivity;
+    const yawDelta = deltaX * this.config.mouseSensitivity;
     const pitchDelta = -deltaY * this.config.mouseSensitivity * (this.config.mouseInvertY ? -1 : 1);
 
     this.addRotation(yawDelta, pitchDelta);
