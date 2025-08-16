@@ -123,7 +123,10 @@ async function loadLevel(levelName: string) {
     console.log(`[GAME] Loading level: ${levelName}`);
 
     // Load level data from fixtures
-    const levelData = await loadLevelFromURL(`/fixtures/${levelName}.json`);
+    const levelUrl = `/fixtures/${levelName}.json`;
+    console.log(`[GAME] Attempting to load from URL: ${levelUrl}`);
+    const levelData = await loadLevelFromURL(levelUrl);
+    console.log('[GAME] Level data loaded:', levelData);
 
     // Setup collision geometry
     gameState.collisionDetector.setGeometry({
@@ -146,8 +149,25 @@ async function loadLevel(levelName: string) {
     // TODO: Update scene with level geometry
     // await gameState.engine.loadLevel(levelData);
 
+    // For now, just update the collision system and player position
+    console.log(
+      `[GAME] Collision geometry loaded with ${levelData.lineDefs.length} lines and ${Array.from(levelData.sectors.values()).length} sectors`
+    );
+
     gameState.currentLevel = levelName;
     console.log(`[GAME] Level ${levelName} loaded successfully`);
+
+    // Add visual indicator that level changed
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed; top: 20px; right: 20px; 
+      background: rgba(0, 255, 0, 0.8); color: black; 
+      padding: 10px; border-radius: 5px; z-index: 1000;
+      font-family: "Courier New", monospace; font-weight: bold;
+    `;
+    notification.textContent = `Level loaded: ${levelName}`;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
   } catch (error) {
     console.error(`[GAME] Failed to load level ${levelName}:`, error);
   }
@@ -169,14 +189,21 @@ function setupLevelSelector() {
   // Load level button
   loadLevelBtn.addEventListener('click', async () => {
     const selectedLevel = levelSelect.value;
+    console.log(
+      `[UI] Load level button clicked, selected: ${selectedLevel}, current: ${gameState.currentLevel}`
+    );
     if (selectedLevel !== gameState.currentLevel) {
       loadLevelBtn.disabled = true;
       loadLevelBtn.textContent = 'Chargement...';
+      console.log(`[UI] Starting level load for: ${selectedLevel}`);
 
       await loadLevel(selectedLevel);
 
       loadLevelBtn.disabled = false;
       loadLevelBtn.textContent = 'Charger niveau';
+      console.log('[UI] Level load completed');
+    } else {
+      console.log(`[UI] Level ${selectedLevel} already loaded, skipping`);
     }
   });
 
