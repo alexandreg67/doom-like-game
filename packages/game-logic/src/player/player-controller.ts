@@ -53,8 +53,21 @@ export interface PlayerConfig {
 }
 
 export class PlayerController implements InputListener {
+  /**
+   * Multiplier applied to movement acceleration to control player responsiveness.
+   * Value 10 was chosen through playtesting to provide a balance between snappy and smooth movement.
+   * Increasing this value makes the player accelerate faster, while decreasing it results in slower acceleration.
+   * This constant directly affects how quickly the player reaches max speed when moving.
+   */
   private static readonly ACCELERATION_MULTIPLIER = 10;
-  private static readonly MINIMUM_FALL_VELOCITY = -0.1;
+
+  /**
+   * Threshold for checking ground collision to prevent floating point precision issues.
+   * Value -0.1 ensures we only check for ground collision when there is actual downward movement,
+   * preventing unnecessary collision checks during upward movement or when stationary.
+   * This value ensures reliable ground detection while accounting for minor velocity fluctuations.
+   */
+  private static readonly GROUND_CHECK_THRESHOLD = -0.1;
 
   private entity: Entity;
   private inputManager: InputManager;
@@ -314,7 +327,7 @@ export class PlayerController implements InputListener {
     );
 
     // Ground collision (simplified - will be replaced by proper collision system)
-    if (movement.velocity.y < PlayerController.MINIMUM_FALL_VELOCITY) {
+    if (movement.velocity.y < PlayerController.GROUND_CHECK_THRESHOLD) {
       // Simple ground check at configurable ground level for now
       const transform = this.entity.components.get('transform') as Transform;
       if (transform && transform.y <= this.config.groundLevel) {

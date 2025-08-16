@@ -7,10 +7,18 @@ import { type GameKeyMappings, KeyMappings } from './key-mappings';
 import { type KeyboardLayout, detectLayout, getLayoutDisplayName } from './keyboard-layout';
 
 export class InputManager {
+  /**
+   * Timeout (in milliseconds) to prevent rapid weapon switching due to key repeat or accidental double presses.
+   * This ensures that weapon changes are intentional and not triggered multiple times in quick succession.
+   * The value is configurable via InputConfig.weaponSwitchTimeoutMs for fine-tuning responsiveness.
+   */
   private canvas: HTMLCanvasElement;
   private keyboardLayout: KeyboardLayout;
   private keyMappings: GameKeyMappings;
   private listeners: Set<InputListener> = new Set();
+
+  // Debouncing for weapon switching
+  private weaponSwitchTimeouts: Map<string, number> = new Map();
 
   private inputState: InputState = {
     // Movement
@@ -278,13 +286,11 @@ export class InputManager {
   private handleWheel = (event: WheelEvent): void => {
     if (!this.isEnabled) return;
 
-    // Handle weapon switching via mouse wheel
+    // Handle weapon switching via mouse wheel with debouncing
     if (event.deltaY < 0) {
-      this.setInputAction('nextWeapon', true);
-      setTimeout(() => this.setInputAction('nextWeapon', false), this.config.weaponSwitchTimeoutMs);
+      this.triggerWeaponSwitch('nextWeapon');
     } else if (event.deltaY > 0) {
-      this.setInputAction('prevWeapon', true);
-      setTimeout(() => this.setInputAction('prevWeapon', false), this.config.weaponSwitchTimeoutMs);
+      this.triggerWeaponSwitch('prevWeapon');
     }
 
     event.preventDefault();
@@ -329,7 +335,32 @@ export class InputManager {
     }
   }
 
+  private triggerWeaponSwitch(action: 'nextWeapon' | 'prevWeapon'): void {
+    // Clear any existing timeout for this action to prevent memory leaks
+    const existingTimeout = this.weaponSwitchTimeouts.get(action);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    // Trigger the action
+    this.setInputAction(action, true);
+
+    // Set timeout to reset the action
+    const timeoutId = setTimeout(() => {
+      this.setInputAction(action, false);
+      this.weaponSwitchTimeouts.delete(action);
+    }, this.config.weaponSwitchTimeoutMs) as unknown as number;
+
+    this.weaponSwitchTimeouts.set(action, timeoutId);
+  }
+
   private clearInputState(): void {
+    // Clear any pending weapon switch timeouts
+    for (const timeoutId of this.weaponSwitchTimeouts.values()) {
+      clearTimeout(timeoutId);
+    }
+    this.weaponSwitchTimeouts.clear();
+
     // Reset all boolean inputs
     const booleanKeys: Array<keyof InputState> = [
       'moveForward',

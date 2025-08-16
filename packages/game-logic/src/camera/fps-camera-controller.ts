@@ -45,6 +45,13 @@ export interface CameraState {
 }
 
 export class FPSCameraController implements InputListener {
+  /**
+   * Target frames per second used for smoothing calculations.
+   * Smoothing algorithms (e.g., for camera rotation) use this value to normalize
+   * time-based interpolation, ensuring consistent behavior regardless of actual frame rate.
+   * This can be configured per camera instance via the targetFPS config property.
+   * Default 60 FPS provides a good balance between responsiveness and visual smoothness.
+   */
   private inputManager: InputManager;
   private playerController: PlayerController;
   private config: CameraConfig;
