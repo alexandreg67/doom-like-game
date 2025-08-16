@@ -3,6 +3,9 @@
  * Provides real-time performance tracking and analysis for DOOM-like game engine
  */
 
+import type { DashboardManager } from './dashboard-manager';
+import type { DebugVisualizer } from './debug-visualizer';
+import type { LODMetrics } from './lod-types';
 import type {
   BSPMetrics,
   CullingMetrics,
@@ -22,6 +25,8 @@ export class PerformanceManager implements IPerformanceProfiler {
   private currentMetrics: PerformanceMetrics;
   private activeTimers: Map<string, number> = new Map();
   private frameNumber = 0;
+  private dashboard: DashboardManager | null = null;
+  private debugVisualizer: DebugVisualizer | null = null;
 
   // Rolling averages
   private frameTimes: number[] = [];
@@ -167,6 +172,11 @@ export class PerformanceManager implements IPerformanceProfiler {
     // Collect memory metrics
     this.collectMemoryMetrics();
 
+    // Update dashboard if available
+    if (this.dashboard) {
+      this.dashboard.updateMetrics(this.currentMetrics);
+    }
+
     // Check for alerts
     this.checkAlerts();
 
@@ -185,6 +195,11 @@ export class PerformanceManager implements IPerformanceProfiler {
     this.currentMetrics.bspTraversalTime = metrics.traversalTime;
     this.currentMetrics.bspNodes = metrics.nodesVisited;
     this.currentMetrics.bspTraversals++;
+
+    // Update dashboard if available
+    if (this.dashboard) {
+      this.dashboard.updateBSPMetrics(metrics);
+    }
 
     // Calculate culling efficiency
     const totalGeometry = this.currentMetrics.totalSectors + this.currentMetrics.totalLines;
@@ -216,6 +231,11 @@ export class PerformanceManager implements IPerformanceProfiler {
     if (!this.config.enableMetrics) return;
 
     this.currentMetrics.lightingTime = metrics.lightingPassTime;
+
+    // Update dashboard if available
+    if (this.dashboard) {
+      this.dashboard.updateLightingMetrics(metrics);
+    }
 
     console.log(
       `[PERFORMANCE] Lighting: ${metrics.activeLights} lights, ${metrics.lightingPassTime.toFixed(3)}ms`
@@ -389,6 +409,31 @@ export class PerformanceManager implements IPerformanceProfiler {
   }
 
   /**
+   * Update LOD metrics
+   */
+  public updateLODMetrics(lodMetrics: LODMetrics): void {
+    // Store LOD metrics for integration with performance tracking
+    // These can be used for performance analysis and alerts
+
+    // Update dashboard if available
+    if (this.dashboard) {
+      this.dashboard.updateLODMetrics(lodMetrics);
+    }
+
+    if (lodMetrics.processingTime > 5) {
+      // More than 5ms for LOD processing
+      this.addAlert({
+        type: 'lod',
+        severity: 'warning',
+        message: `LOD processing time high: ${lodMetrics.processingTime.toFixed(2)}ms`,
+        value: lodMetrics.processingTime,
+        threshold: 5,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  /**
    * Update configuration
    */
   public updateConfig(config: Partial<PerformanceConfig>): void {
@@ -408,9 +453,49 @@ export class PerformanceManager implements IPerformanceProfiler {
   }
 
   /**
+   * Set dashboard for real-time monitoring
+   */
+  public setDashboard(dashboard: DashboardManager | null): void {
+    this.dashboard = dashboard;
+    console.log('[PERFORMANCE] Dashboard', dashboard ? 'attached' : 'detached');
+  }
+
+  /**
+   * Get attached dashboard
+   */
+  public getDashboard(): DashboardManager | null {
+    return this.dashboard;
+  }
+
+  /**
+   * Set debug visualizer for visual debugging
+   */
+  public setDebugVisualizer(debugVisualizer: DebugVisualizer | null): void {
+    this.debugVisualizer = debugVisualizer;
+    console.log('[PERFORMANCE] DebugVisualizer', debugVisualizer ? 'attached' : 'detached');
+  }
+
+  /**
+   * Get attached debug visualizer
+   */
+  public getDebugVisualizer(): DebugVisualizer | null {
+    return this.debugVisualizer;
+  }
+
+  /**
    * Dispose and cleanup
    */
   public dispose(): void {
+    if (this.dashboard) {
+      this.dashboard.dispose();
+      this.dashboard = null;
+    }
+
+    if (this.debugVisualizer) {
+      this.debugVisualizer.dispose();
+      this.debugVisualizer = null;
+    }
+
     this.reset();
     this.activeTimers.clear();
     console.log('[PERFORMANCE] PerformanceManager disposed');

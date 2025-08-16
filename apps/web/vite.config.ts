@@ -26,6 +26,12 @@ export default defineConfig({
     target: 'es2022',
     sourcemap: true,
     rollupOptions: {
+      external: [
+        // Exclude Node.js modules from browser bundle
+        'fs',
+        'path',
+        'process',
+      ],
       output: {
         manualChunks: {
           'babylonjs-core': ['@babylonjs/core'],

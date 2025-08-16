@@ -32,6 +32,9 @@ export {
   LightPoolManager,
   ShadowPoolManager,
   OptimizedLightingSystem,
+  LODManager,
+  GeometrySimplifier,
+  DashboardManager,
 } from './performance';
 
 export type {
@@ -81,4 +84,16 @@ export type {
   PerformanceConfig,
   PerformanceAlert,
   CullingConfig,
+  LODLevel,
+  LODConfig,
+  LODMetrics,
+  GeometryLODOptions,
+  TextureLODOptions,
+  DashboardConfig,
+  DashboardMetrics,
+  DashboardAlert,
+  MetricChart,
+  RealTimeData,
+  PerformanceStats,
+  DashboardTheme,
 } from './performance';

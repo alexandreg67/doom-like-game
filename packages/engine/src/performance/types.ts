@@ -77,7 +77,7 @@ export interface PerformanceSample {
 }
 
 export interface PerformanceAlert {
-  type: 'frameTime' | 'memory' | 'culling' | 'error';
+  type: 'frameTime' | 'memory' | 'culling' | 'error' | 'lod';
   severity: 'warning' | 'error' | 'critical';
   message: string;
   value: number;
