@@ -1,13 +1,13 @@
-import { Engine, type EngineConfig } from '@doom-like/engine';
-import { 
-  ECS, 
-  Transform, 
-  InputManager, 
-  PlayerController, 
-  FPSCameraController,
-  type Entity 
-} from '@doom-like/game-logic';
 import { FreeCamera } from '@babylonjs/core';
+import { Engine, type EngineConfig } from '@doom-like/engine';
+import {
+  ECS,
+  type Entity,
+  FPSCameraController,
+  InputManager,
+  PlayerController,
+  Transform,
+} from '@doom-like/game-logic';
 import './style.css';
 
 async function initializeGame() {
@@ -47,48 +47,48 @@ async function initializeGame() {
     // Initialize game systems
     const ecs = new ECS();
     const inputManager = new InputManager(canvas);
-    
+
     // Create player entity
     const playerEntity: Entity = ecs.createEntity('player');
     playerEntity.components.set('transform', new Transform(0, 0, 0));
-    
+
     // Initialize player controller and camera
     const playerController = new PlayerController(playerEntity, inputManager);
     const cameraController = new FPSCameraController(inputManager, playerController);
-    
+
     console.log('[GAME] Player systems initialized');
 
     // Game loop variables
     let lastTime = performance.now();
     let gameRunning = true;
-    
+
     // Game update function
     function gameLoop(currentTime: number) {
       if (!gameRunning) return;
-      
+
       const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
       lastTime = currentTime;
-      
+
       // Update game systems
       playerController.update(deltaTime);
       cameraController.update(deltaTime);
-      
+
       // Sync with Babylon.js camera
       const babylonScene = engine.getBabylonEngine().scenes[0];
       if (babylonScene && babylonScene.activeCamera) {
         const cameraState = cameraController.getState();
         const babylonCamera = babylonScene.activeCamera;
-        
+
         // Update camera position and rotation
         babylonCamera.position.copyFrom(cameraState.position);
-        
+
         // Update camera rotation using direction vectors
         if (babylonCamera instanceof FreeCamera) {
           const target = cameraState.position.add(cameraState.forward);
           babylonCamera.setTarget(target);
         }
       }
-      
+
       requestAnimationFrame(gameLoop);
     }
 
@@ -99,7 +99,7 @@ async function initializeGame() {
     // Start engine and game loop
     engine.start();
     requestAnimationFrame(gameLoop);
-    
+
     // Auto-request pointer lock on canvas click
     canvas.addEventListener('click', async () => {
       await inputManager.requestPointerLock();
