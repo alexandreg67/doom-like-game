@@ -29,6 +29,9 @@ export {
 export {
   PerformanceManager,
   BSPCuller,
+  LightPoolManager,
+  ShadowPoolManager,
+  OptimizedLightingSystem,
 } from './performance';
 
 export type {
