@@ -17,6 +17,7 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "vitest run --coverage",
+    "test:ci": "vitest run --coverage --exclude '**/benchmark-manager.test.ts' --reporter=basic",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "format": "biome format . --write"
