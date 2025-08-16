@@ -9,14 +9,17 @@ import type { BSPMetrics, LightingMetrics, PerformanceConfig } from '../types';
 
 // Mock performance.now for consistent testing
 const mockPerformanceNow = vi.fn();
-vi.stubGlobal('performance', {
-  now: mockPerformanceNow,
-  mark: vi.fn(),
-  measure: vi.fn(),
-  getEntriesByName: vi.fn().mockReturnValue([{ duration: 10 }]),
-  memory: {
-    usedJSHeapSize: 50 * 1024 * 1024, // 50MB
-    totalJSHeapSize: 100 * 1024 * 1024, // 100MB
+Object.defineProperty(global, 'performance', {
+  writable: true,
+  value: {
+    now: mockPerformanceNow,
+    mark: vi.fn(),
+    measure: vi.fn(),
+    getEntriesByName: vi.fn().mockReturnValue([{ duration: 10 }]),
+    memory: {
+      usedJSHeapSize: 50 * 1024 * 1024, // 50MB
+      totalJSHeapSize: 100 * 1024 * 1024, // 100MB
+    },
   },
 });
 
@@ -27,18 +30,6 @@ describe('PerformanceManager', () => {
   beforeEach(() => {
     currentTime = 0;
     mockPerformanceNow.mockImplementation(() => currentTime);
-
-    // Reset performance object properly
-    vi.stubGlobal('performance', {
-      now: mockPerformanceNow,
-      mark: vi.fn(),
-      measure: vi.fn(),
-      getEntriesByName: vi.fn().mockReturnValue([{ duration: 10 }]),
-      memory: {
-        usedJSHeapSize: 50 * 1024 * 1024, // 50MB
-        totalJSHeapSize: 100 * 1024 * 1024, // 100MB
-      },
-    });
 
     const config: Partial<PerformanceConfig> = {
       enableMetrics: true,
@@ -179,6 +170,7 @@ describe('PerformanceManager', () => {
 
   describe('Alert System', () => {
     it('should generate frame time alerts', () => {
+      currentTime = 0;
       performanceManager.startFrame();
       currentTime = 50; // Way over 16.7ms threshold (should be critical: 50 > 16.7 * 2 = 33.4)
       performanceManager.endFrame();
@@ -188,6 +180,9 @@ describe('PerformanceManager', () => {
 
       // Debug output for investigation
       console.log('Test Debug - frameTime:', metrics.frameTime);
+      console.log('Test Debug - threshold:', 16.7);
+      console.log('Test Debug - critical threshold:', 16.7 * 2);
+      console.log('Test Debug - is critical?:', metrics.frameTime > 16.7 * 2);
       console.log('Test Debug - alerts:', alerts);
 
       expect(alerts).toHaveLength(1);
@@ -205,6 +200,7 @@ describe('PerformanceManager', () => {
         },
       });
 
+      currentTime = 0;
       performanceManager.startFrame();
       currentTime = 10;
       performanceManager.endFrame();
@@ -219,6 +215,7 @@ describe('PerformanceManager', () => {
       // Set up poor culling efficiency (only 20% culled)
       performanceManager.updateGeometryMetrics(10, 8, 100, 80);
 
+      currentTime = 0;
       performanceManager.startFrame();
       currentTime = 10;
       performanceManager.endFrame();
@@ -232,6 +229,7 @@ describe('PerformanceManager', () => {
 
   describe('Samples and History', () => {
     it('should collect performance samples', () => {
+      currentTime = 0;
       performanceManager.startFrame();
       currentTime = 10;
       performanceManager.endFrame();
@@ -244,6 +242,7 @@ describe('PerformanceManager', () => {
 
     it('should limit history size', () => {
       // Generate more samples than history size (10)
+      currentTime = 0;
       for (let i = 0; i < 15; i++) {
         performanceManager.startFrame();
         currentTime += 10;
@@ -256,6 +255,7 @@ describe('PerformanceManager', () => {
 
     it('should limit alert history', () => {
       // Generate many alerts
+      currentTime = 0;
       for (let i = 0; i < 110; i++) {
         performanceManager.startFrame();
         currentTime += 50; // Trigger frame time alerts
@@ -281,7 +281,9 @@ describe('PerformanceManager', () => {
       performanceManager.updateConfig(newConfig);
 
       // Should not collect metrics when disabled
+      currentTime = 0;
       performanceManager.startFrame();
+      currentTime = 10;
       performanceManager.endFrame();
 
       const samples = performanceManager.getSamples();
@@ -291,6 +293,7 @@ describe('PerformanceManager', () => {
     it('should handle sample rate correctly', () => {
       performanceManager.updateConfig({ sampleRate: 2 });
 
+      currentTime = 0;
       // First frame - should not sample
       performanceManager.startFrame();
       currentTime = 10;
@@ -309,6 +312,7 @@ describe('PerformanceManager', () => {
   describe('Summary and Utilities', () => {
     it('should generate performance summary', () => {
       performanceManager.updateGeometryMetrics(10, 4, 100, 40);
+      currentTime = 0;
       performanceManager.startFrame();
       currentTime = 16;
       performanceManager.endFrame();
@@ -321,7 +325,9 @@ describe('PerformanceManager', () => {
     });
 
     it('should reset correctly', () => {
+      currentTime = 0;
       performanceManager.startFrame();
+      currentTime = 10;
       performanceManager.endFrame();
 
       performanceManager.reset();

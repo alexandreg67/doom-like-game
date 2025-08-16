@@ -101,6 +101,13 @@ export class PerformanceManager implements IPerformanceProfiler {
     const endTime = performance.now();
     const duration = endTime - startTime;
 
+    // Debug output for testing
+    if (process.env.NODE_ENV === 'test') {
+      console.log(
+        `[DEBUG] Timer '${label}': start=${startTime}, end=${endTime}, duration=${duration}`
+      );
+    }
+
     performance.mark(`${label}_end`);
     performance.measure(label, `${label}_start`, `${label}_end`);
 

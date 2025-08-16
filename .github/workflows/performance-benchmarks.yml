@@ -84,7 +84,7 @@ jobs:
 
       - name: Download baseline (if exists)
         continue-on-error: true
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: performance-baseline
           path: benchmark-artifacts/
@@ -113,7 +113,7 @@ jobs:
           GITHUB_OUTPUT: ${{ env.GITHUB_OUTPUT }}
 
       - name: Upload benchmark artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: benchmark-results-${{ github.run_number }}
@@ -121,7 +121,7 @@ jobs:
           retention-days: 30
 
       - name: Upload baseline (main branch only)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         with:
           name: performance-baseline
@@ -219,14 +219,14 @@ jobs:
 
     steps:
       - name: Download current results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: benchmark-results-${{ github.run_number }}
           path: current-results/
 
       - name: Download baseline
         continue-on-error: true
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: performance-baseline
           path: baseline/
@@ -249,7 +249,7 @@ jobs:
           fi
 
       - name: Upload comparison report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: benchmark-comparison-${{ github.run_number }}
           path: comparison.md
@@ -292,7 +292,7 @@ jobs:
             --regression-threshold 5
 
       - name: Upload stress test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: stress-test-results-${{ github.run_number }}
