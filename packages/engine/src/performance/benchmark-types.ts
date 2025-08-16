@@ -171,7 +171,7 @@ export interface StressTestConfig {
 export interface BenchmarkEvent {
   type: 'start' | 'end' | 'scenario-start' | 'scenario-end' | 'error' | 'warning';
   timestamp: number;
-  data: any;
+  data: BenchmarkRun | BenchmarkScenario | Error | Record<string, unknown>;
   message: string;
 }
 
