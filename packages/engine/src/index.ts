@@ -17,6 +17,22 @@ export {
   LightingDebugUI,
 } from './lighting';
 
+// Physics system
+export {
+  CollisionDetector,
+  PhysicsController,
+  DEFAULT_PHYSICS_CONFIG,
+  PHYSICS_CONSTANTS,
+} from './physics';
+
+export type {
+  MovementInput,
+  PhysicsConfig,
+  CollisionEvent,
+  CollisionGeometry,
+  PlayerController,
+  PhysicsMetrics,
+} from './physics';
 export type { EngineConfig, RenderConfig } from './types';
 export type {
   DoomVertex,

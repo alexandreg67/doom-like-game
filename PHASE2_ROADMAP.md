@@ -50,7 +50,12 @@ Checklist mise à jour
 
 Progression Sprint 1 — Textures
 
-- [>] Issue #13 (Atlas builder) : en cours — ajout d'un packer d'atlas simple (shelf packer) dans `packages/engine/src/assets/atlas-builder.ts` et tests unitaires.
+- [x] Issue #13 (Atlas builder) : ✅ COMPLÉTÉ — ajout d'un packer d'atlas simple (shelf packer) dans `packages/engine/src/assets/atlas-builder.ts` et tests unitaires.
+- [x] **TextureManager avec cache LRU/TTL** : Implémentation complète avec éviction optimisée
+- [x] **Atlas builder fonctionnel** : Shelf packer avec tests complets
+- [x] **UV mapping pour sub-textures** : Support des coordonnées UV normalisées
+- [x] **Intégration complète** : TextureManager intégré avec SceneManager et système d'éclairage
+- [x] **Tests exhaustifs** : 133/133 tests passent, couverture > 80% sur les assets
 
 Progression Sprint 2 — Éclairage
 
@@ -88,6 +93,7 @@ Notes et décisions d'architecture (à documenter en ADR)
 
 **Sprint 2 - Éclairage : ✅ COMPLÉTÉ**
 Le système d'éclairage est maintenant entièrement fonctionnel avec :
+
 - Architecture solide et extensible
 - Interface de debug complète
 - Métriques de performance intégrées
@@ -96,18 +102,30 @@ Le système d'éclairage est maintenant entièrement fonctionnel avec :
 
 Prochaines actions proposées
 
-**Priorité immédiate :**
-1. **Finaliser Sprint 1 (Textures)** :
-   - Compléter l'atlas builder (#13)
-   - Intégration du TextureManager avec le système d'éclairage
-   - Tests d'intégration texture + lighting
+**Sprint 1 - Textures : ✅ COMPLÉTÉ**
+Le système de textures est maintenant entièrement finalisé avec :
 
-2. **Commencer Sprint 3 (Collisions)** :
-   - Design du système de collision
-   - Implémentation du contrôleur joueur
-   - Intégration avec le moteur de rendu
+- TextureManager avec cache LRU optimisé et TTL
+- Atlas builder avec shelf packer performant
+- Intégration complète avec le système d'éclairage
+- Tests exhaustifs (133/133 passent)
+- Code de qualité production
+
+**Priorité immédiate :**
+
+1. **Commencer Sprint 3 (Collision & Player Controller)** :
+
+   - Design du système de collision AABB vs segments
+   - Implémentation du contrôleur joueur physique
+   - Prévention de traversée des murs
+   - Tests d'intégration mouvement
+
+2. **Préparer Sprint 4 (Audio)** :
+   - Architecture du système audio 3D
+   - Intégration avec Babylon.js Audio Engine
 
 **Actions administratives :**
+
 1. Créer milestone "Phase 2" et assigner les issues créées
 2. Mettre à jour les issues GitHub avec le statut des éclairages (fermer #9)
 3. Documenter les décisions d'architecture dans des ADR

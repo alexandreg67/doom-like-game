@@ -1,5 +1,4 @@
 import {
-  ActionManager,
   Color3,
   type Engine,
   FreeCamera,
@@ -25,6 +24,12 @@ import {
   type LightingSystemConfig,
   SectorLightingManager,
 } from '../lighting';
+import {
+  type CollisionGeometry,
+  type MovementInput,
+  PHYSICS_CONSTANTS,
+  PhysicsController,
+} from '../physics';
 import { Logger } from '../utils/logger';
 
 export interface RenderMetrics {
@@ -58,6 +63,29 @@ export class SceneManager {
   private fogManager: FogManager | null = null;
   private lightingDebugUI: LightingDebugUI | null = null;
 
+  /**
+   * Physics configuration for the game
+   */
+  private static readonly PHYSICS_CONFIG = {
+    gravity: -9.81,
+    jumpForce: 4.5,
+    walkSpeed: 5.0,
+    sprintSpeed: 8.0,
+    friction: 0.995, // Very high friction for immediate stop
+    airControl: 0.3,
+    maxVelocity: 15.0, // Increased max velocity
+  } as const;
+
+  // Physics system
+  private physicsController: PhysicsController | null = null;
+  private camera: FreeCamera | null = null;
+  private currentInput: MovementInput = {
+    forward: 0,
+    strafe: 0,
+    jump: false,
+    sprint: false,
+  };
+
   constructor(engine: Engine) {
     this.engine = engine;
     this.assetLoader = new AssetLoader(engine, {
@@ -78,32 +106,34 @@ export class SceneManager {
     });
 
     // Create camera - positioned inside main room looking towards door
-    const camera = new FreeCamera('camera', new Vector3(0, 1.7, 0), scene);
-    camera.setTarget(new Vector3(6.5, 1.7, 0)); // Look towards the door
+    this.camera = new FreeCamera('camera', new Vector3(0, 1.7, 0), scene);
+    this.camera.setTarget(new Vector3(6.5, 1.7, 0)); // Look towards the door
 
     // Configure camera for FPS-like movement
-    camera.minZ = 0.1;
-    camera.maxZ = 1000;
-    camera.fov = Math.PI / 3; // 60 degrees FOV
-    camera.angularSensibility = 2000;
-    camera.keysUp = [87]; // W
-    camera.keysDown = [83]; // S
-    camera.keysLeft = [65]; // A
-    camera.keysRight = [68]; // D
-    camera.speed = 0.5; // Movement speed
+    this.camera.minZ = 0.1;
+    this.camera.maxZ = 1000;
+    this.camera.fov = Math.PI / 3; // 60 degrees FOV
+    this.camera.angularSensibility = 2000;
 
-    // Attach camera controls to canvas
+    // Disable default movement - we'll use PhysicsController instead
+    this.camera.keysUp = [];
+    this.camera.keysDown = [];
+    this.camera.keysLeft = [];
+    this.camera.keysRight = [];
+    this.camera.speed = 0;
+
+    // Attach camera controls to canvas for mouse look only
     const canvas = this.engine.getRenderingCanvas();
     if (canvas) {
-      camera.attachControl(canvas, true);
-      camera.setTarget(new Vector3(6.5, 1.7, 0));
+      this.camera.attachControl(canvas, true);
+      this.camera.setTarget(new Vector3(6.5, 1.7, 0));
     }
 
     console.log(
       '[ENGINE] Camera positioned at:',
-      camera.position,
+      this.camera.position,
       'looking at:',
-      camera.getTarget()
+      this.camera.getTarget()
     );
 
     // Initialize new lighting system
@@ -117,16 +147,19 @@ export class SceneManager {
       this.loadLightingFromLevel(this.currentLevel.lighting);
     }
 
-    // Setup keyboard interaction for door
-    this.setupKeyboardInteraction(scene);
-
     this.currentScene = scene;
 
+    // Set up input handling after scene is assigned
+    this.setupPhysicsInput();
+
+    // Start physics update loop
+    this.startPhysicsLoop();
+
     // Update lighting system with camera position
-    if (this.sectorLightingManager && this.currentLevel) {
-      const currentSector = this.getCurrentSector(camera.position);
+    if (this.sectorLightingManager && this.currentLevel && this.camera) {
+      const currentSector = this.getCurrentSector(this.camera.position);
       if (currentSector) {
-        this.sectorLightingManager.updatePlayerPosition(camera.position, currentSector);
+        this.sectorLightingManager.updatePlayerPosition(this.camera.position, currentSector);
       }
     }
 
@@ -155,6 +188,9 @@ export class SceneManager {
 
       // Build BSP tree for culling
       this.bspTree = new BSPTree(sectorsArray);
+
+      // Initialize physics system with collision geometry
+      this.initializePhysicsSystem();
 
       console.log('[ENGINE] Demo level loaded successfully');
       console.log(
@@ -250,26 +286,17 @@ export class SceneManager {
   /**
    * Sets up keyboard interaction for door opening/closing
    */
-  private setupKeyboardInteraction(scene: Scene): void {
-    scene.actionManager = scene.actionManager || new ActionManager(scene);
-
-    // Listen for E key press
-    window.addEventListener('keydown', (event) => {
-      if (event.code === 'KeyE' && this.doorLineDef) {
-        this.toggleDoor();
-      }
-    });
-  }
-
   /**
    * Toggles the door open/closed state
    */
   private toggleDoor(): void {
     if (!this.doorLineDef || !this.currentScene) {
+      Logger.warn('[DOOR] Cannot toggle door: missing doorLineDef or scene');
       return;
     }
 
     this.doorOpen = !this.doorOpen;
+    Logger.info(`[DOOR] Toggling door to ${this.doorOpen ? 'OPEN' : 'CLOSED'}`);
 
     // Toggle blocking flag
     this.doorLineDef.flags.blocking = !this.doorOpen;
@@ -971,7 +998,155 @@ export class SceneManager {
     return true;
   }
 
+  /**
+   * Initialize physics system with collision geometry from current level
+   */
+  private initializePhysicsSystem(): void {
+    if (!this.currentLevel || !this.camera) {
+      Logger.warn('[PHYSICS] Cannot initialize physics system: missing level or camera');
+      return;
+    }
+
+    try {
+      // Create collision geometry from level data
+      const collisionGeometry: CollisionGeometry = {
+        lineDefs: this.currentLevel.lineDefs,
+        sectors: Array.from(this.currentLevel.sectors.values()),
+      };
+
+      // Initialize physics controller at correct height above floor
+      const startPosition = this.camera.position.clone();
+      // Get the main room sector to determine correct floor height
+      const mainRoomSector = this.currentLevel.sectors.get('main_room');
+      const floorHeight = mainRoomSector ? mainRoomSector.floorHeight : 0;
+      startPosition.y = floorHeight + PHYSICS_CONSTANTS.CAMERA_EYE_HEIGHT; // Player height above floor
+      Logger.info(`[PHYSICS] Starting position: floor=${floorHeight}, player Y=${startPosition.y}`);
+
+      this.physicsController = new PhysicsController(startPosition, SceneManager.PHYSICS_CONFIG);
+
+      Logger.info('[PHYSICS] PhysicsController created at position:', this.camera.position);
+
+      // Set collision geometry
+      this.physicsController.setGeometry(collisionGeometry);
+
+      Logger.info(
+        '[PHYSICS] Collision geometry set with',
+        collisionGeometry.lineDefs.length,
+        'lines and',
+        collisionGeometry.sectors.length,
+        'sectors'
+      );
+
+      Logger.info('[PHYSICS] Physics system initialized successfully');
+    } catch (error) {
+      Logger.error('[PHYSICS] Failed to initialize physics system:', error);
+    }
+  }
+
+  /**
+   * Set up keyboard input handling for physics system
+   */
+  private setupPhysicsInput(): void {
+    Logger.info('[INPUT] Setting up physics input system...');
+    if (!this.currentScene || !this.camera) {
+      Logger.warn('[INPUT] Cannot setup input: missing scene or camera');
+      return;
+    }
+
+    // Track key states
+    const keys: Record<string, boolean> = {};
+
+    // Use window events for better compatibility
+    window.addEventListener('keydown', (event) => {
+      Logger.debug(`[INPUT] Key pressed: ${event.code}`);
+      keys[event.code] = true;
+      this.updateMovementInput(keys);
+
+      // Handle door interaction
+      if (event.code === 'KeyE') {
+        Logger.debug(`[INPUT] E key pressed, doorLineDef exists: ${!!this.doorLineDef}`);
+        if (this.doorLineDef) {
+          this.toggleDoor();
+        }
+      }
+    });
+
+    window.addEventListener('keyup', (event) => {
+      Logger.debug(`[INPUT] Key released: ${event.code}`);
+      keys[event.code] = false;
+      this.updateMovementInput(keys);
+    });
+
+    Logger.info('[INPUT] Physics input system initialized');
+  }
+
+  /**
+   * Update movement input based on current key states
+   */
+  private updateMovementInput(keys: Record<string, boolean>): void {
+    const newInput = {
+      // Support both QWERTY and AZERTY layouts
+      forward: (keys.KeyW || keys.KeyZ ? 1 : 0) + (keys.KeyS ? -1 : 0),
+      strafe: (keys.KeyD ? 1 : 0) + (keys.KeyA || keys.KeyQ ? -1 : 0),
+      jump: keys.Space || false,
+      sprint: keys.ShiftLeft || keys.ShiftRight || false,
+    };
+
+    // Only log if there's actual input change
+    if (
+      newInput.forward !== this.currentInput.forward ||
+      newInput.strafe !== this.currentInput.strafe ||
+      newInput.jump !== this.currentInput.jump ||
+      newInput.sprint !== this.currentInput.sprint
+    ) {
+      Logger.info('[INPUT] Movement input changed:', newInput);
+    }
+
+    this.currentInput = newInput;
+  }
+
+  /**
+   * Start the physics update loop
+   */
+  private startPhysicsLoop(): void {
+    if (!this.currentScene) return;
+
+    let lastTime = performance.now();
+
+    this.currentScene.registerBeforeRender(() => {
+      if (!this.physicsController || !this.camera) return;
+
+      const currentTime = performance.now();
+      const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+      lastTime = currentTime;
+
+      // Update physics
+      const cameraDirection = this.camera.getTarget().subtract(this.camera.position).normalize();
+      this.physicsController.update(this.currentInput, deltaTime, cameraDirection);
+
+      // Update camera position to match physics controller
+      const newPosition = this.physicsController.getPosition();
+      // Add camera height offset (eyes are above feet)
+      const cameraHeight = PHYSICS_CONSTANTS.CAMERA_EYE_HEIGHT; // Camera at eye level
+      this.camera.position.x = newPosition.x;
+      this.camera.position.y = newPosition.y + cameraHeight;
+      this.camera.position.z = newPosition.z;
+
+      // Update sector lighting if available
+      if (this.sectorLightingManager) {
+        const currentSector = this.physicsController.getCurrentSector();
+        if (currentSector) {
+          this.sectorLightingManager.updatePlayerPosition(newPosition, currentSector);
+        }
+      }
+    });
+  }
+
   public dispose(): void {
+    // Dispose physics system
+    this.physicsController?.dispose();
+    this.physicsController = null;
+
     // Dispose lighting system
     this.lightingDebugUI?.hide();
     this.lightManager?.dispose();
