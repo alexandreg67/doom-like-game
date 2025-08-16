@@ -75,7 +75,7 @@ async function initializeGame() {
 
       // Sync with Babylon.js camera
       const babylonScene = engine.getBabylonEngine().scenes[0];
-      if (babylonScene && babylonScene.activeCamera) {
+      if (babylonScene?.activeCamera) {
         const cameraState = cameraController.getState();
         const babylonCamera = babylonScene.activeCamera;
 
