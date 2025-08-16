@@ -1,0 +1,860 @@
+{
+  "name": "Physics Playground",
+  "description": "Comprehensive testing level for movement physics, collision detection and performance",
+  "version": "1.0.0",
+  "vertices": [
+    { "id": "v1", "position": { "x": -5, "y": -5 } },
+    { "id": "v2", "position": { "x": 5, "y": -5 } },
+    { "id": "v3", "position": { "x": 5, "y": 5 } },
+    { "id": "v4", "position": { "x": -5, "y": 5 } },
+    { "id": "v5", "position": { "x": 5, "y": -2 } },
+    { "id": "v6", "position": { "x": 5, "y": 2 } },
+    { "id": "v7", "position": { "x": 25, "y": 2 } },
+    { "id": "v8", "position": { "x": 25, "y": -2 } },
+    { "id": "v9", "position": { "x": -2, "y": 5 } },
+    { "id": "v10", "position": { "x": 2, "y": 5 } },
+    { "id": "v11", "position": { "x": 2, "y": 15 } },
+    { "id": "v12", "position": { "x": -2, "y": 15 } },
+    { "id": "v13", "position": { "x": -1, "y": 8 } },
+    { "id": "v14", "position": { "x": 1, "y": 8 } },
+    { "id": "v15", "position": { "x": 1, "y": 10 } },
+    { "id": "v16", "position": { "x": -1, "y": 10 } },
+    { "id": "v17", "position": { "x": -1, "y": 12 } },
+    { "id": "v18", "position": { "x": 1, "y": 12 } },
+    { "id": "v19", "position": { "x": 1, "y": 14 } },
+    { "id": "v20", "position": { "x": -1, "y": 14 } },
+    { "id": "v21", "position": { "x": -5, "y": -2 } },
+    { "id": "v22", "position": { "x": -5, "y": 2 } },
+    { "id": "v23", "position": { "x": -25, "y": 2 } },
+    { "id": "v24", "position": { "x": -25, "y": -2 } },
+    { "id": "v25", "position": { "x": -20, "y": 0.5 } },
+    { "id": "v26", "position": { "x": -15, "y": 0.5 } },
+    { "id": "v27", "position": { "x": -15, "y": -0.5 } },
+    { "id": "v28", "position": { "x": -20, "y": -0.5 } },
+    { "id": "v29", "position": { "x": -2, "y": -5 } },
+    { "id": "v30", "position": { "x": 2, "y": -5 } },
+    { "id": "v31", "position": { "x": 2, "y": -15 } },
+    { "id": "v32", "position": { "x": -2, "y": -15 } },
+    { "id": "v33", "position": { "x": -1, "y": -8 } },
+    { "id": "v34", "position": { "x": 1, "y": -8 } },
+    { "id": "v35", "position": { "x": 1, "y": -10 } },
+    { "id": "v36", "position": { "x": -1, "y": -10 } },
+    { "id": "v37", "position": { "x": -1, "y": -12 } },
+    { "id": "v38", "position": { "x": 1, "y": -12 } },
+    { "id": "v39", "position": { "x": 1, "y": -14 } },
+    { "id": "v40", "position": { "x": -1, "y": -14 } },
+    { "id": "v41", "position": { "x": -1.5, "y": -1.5 } },
+    { "id": "v42", "position": { "x": -0.5, "y": -1.5 } },
+    { "id": "v43", "position": { "x": -0.5, "y": -0.5 } },
+    { "id": "v44", "position": { "x": -1.5, "y": -0.5 } },
+    { "id": "v45", "position": { "x": 0.5, "y": 0.5 } },
+    { "id": "v46", "position": { "x": 1.5, "y": 0.5 } },
+    { "id": "v47", "position": { "x": 1.5, "y": 1.5 } },
+    { "id": "v48", "position": { "x": 0.5, "y": 1.5 } }
+  ],
+  "sectors": [
+    {
+      "id": "central_spawn",
+      "floorHeight": 0,
+      "ceilingHeight": 4,
+      "floorTexture": "FLOOR_MAIN",
+      "ceilingTexture": "CEIL_MAIN",
+      "lightLevel": 220,
+      "vertices": ["v1", "v2", "v3", "v4"]
+    },
+    {
+      "id": "sprint_track",
+      "floorHeight": 0,
+      "ceilingHeight": 3,
+      "floorTexture": "FLOOR_TRACK",
+      "ceilingTexture": "CEIL_TRACK",
+      "lightLevel": 200,
+      "vertices": ["v5", "v8", "v7", "v6"]
+    },
+    {
+      "id": "jump_area_main",
+      "floorHeight": 0,
+      "ceilingHeight": 6,
+      "floorTexture": "FLOOR_JUMP",
+      "ceilingTexture": "CEIL_HIGH",
+      "lightLevel": 180,
+      "vertices": ["v9", "v10", "v11", "v12"]
+    },
+    {
+      "id": "platform_low",
+      "floorHeight": 1.5,
+      "ceilingHeight": 6,
+      "floorTexture": "FLOOR_PLATFORM",
+      "ceilingTexture": "CEIL_HIGH",
+      "lightLevel": 180,
+      "vertices": ["v13", "v14", "v15", "v16"]
+    },
+    {
+      "id": "platform_high",
+      "floorHeight": 3,
+      "ceilingHeight": 6,
+      "floorTexture": "FLOOR_PLATFORM",
+      "ceilingTexture": "CEIL_HIGH",
+      "lightLevel": 180,
+      "vertices": ["v17", "v18", "v19", "v20"]
+    },
+    {
+      "id": "tight_corridors",
+      "floorHeight": 0,
+      "ceilingHeight": 2.5,
+      "floorTexture": "FLOOR_TIGHT",
+      "ceilingTexture": "CEIL_LOW",
+      "lightLevel": 160,
+      "vertices": ["v21", "v24", "v23", "v22"]
+    },
+    {
+      "id": "maze_section",
+      "floorHeight": 0,
+      "ceilingHeight": 2.5,
+      "floorTexture": "FLOOR_TIGHT",
+      "ceilingTexture": "CEIL_LOW",
+      "lightLevel": 140,
+      "vertices": ["v25", "v26", "v27", "v28"]
+    },
+    {
+      "id": "multi_level_main",
+      "floorHeight": 0,
+      "ceilingHeight": 5,
+      "floorTexture": "FLOOR_MULTI",
+      "ceilingTexture": "CEIL_MULTI",
+      "lightLevel": 190,
+      "vertices": ["v29", "v30", "v31", "v32"]
+    },
+    {
+      "id": "stairs_mid",
+      "floorHeight": 1,
+      "ceilingHeight": 5,
+      "floorTexture": "FLOOR_STAIRS",
+      "ceilingTexture": "CEIL_MULTI",
+      "lightLevel": 190,
+      "vertices": ["v33", "v34", "v35", "v36"]
+    },
+    {
+      "id": "upper_level",
+      "floorHeight": 2,
+      "ceilingHeight": 5,
+      "floorTexture": "FLOOR_UPPER",
+      "ceilingTexture": "CEIL_MULTI",
+      "lightLevel": 190,
+      "vertices": ["v37", "v38", "v39", "v40"]
+    },
+    {
+      "id": "pillar_1",
+      "floorHeight": 0,
+      "ceilingHeight": 4,
+      "floorTexture": "FLOOR_PILLAR",
+      "ceilingTexture": "CEIL_PILLAR",
+      "lightLevel": 100,
+      "vertices": ["v41", "v42", "v43", "v44"]
+    },
+    {
+      "id": "pillar_2",
+      "floorHeight": 0,
+      "ceilingHeight": 4,
+      "floorTexture": "FLOOR_PILLAR",
+      "ceilingTexture": "CEIL_PILLAR",
+      "lightLevel": 100,
+      "vertices": ["v45", "v46", "v47", "v48"]
+    }
+  ],
+  "lineDefs": [
+    {
+      "id": "l1_spawn_south",
+      "startVertex": "v1",
+      "endVertex": "v2",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "spawn_south_f",
+        "sector": "central_spawn",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l2_spawn_east",
+      "startVertex": "v2",
+      "endVertex": "v5",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "spawn_east1_f",
+        "sector": "central_spawn",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l3_sprint_entrance",
+      "startVertex": "v5",
+      "endVertex": "v6",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "spawn_sprint_f",
+        "sector": "central_spawn",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "sprint_spawn_b",
+        "sector": "sprint_track",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l4_sprint_north",
+      "startVertex": "v6",
+      "endVertex": "v7",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "sprint_north_f",
+        "sector": "sprint_track",
+        "textureMiddle": "WALL_METAL",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l5_sprint_east",
+      "startVertex": "v7",
+      "endVertex": "v8",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "sprint_east_f",
+        "sector": "sprint_track",
+        "textureMiddle": "WALL_METAL",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l6_sprint_south",
+      "startVertex": "v8",
+      "endVertex": "v5",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "sprint_south_f",
+        "sector": "sprint_track",
+        "textureMiddle": "WALL_METAL",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l7_jump_entrance",
+      "startVertex": "v9",
+      "endVertex": "v10",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "spawn_jump_f",
+        "sector": "central_spawn",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "jump_spawn_b",
+        "sector": "jump_area_main",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l8_jump_west",
+      "startVertex": "v12",
+      "endVertex": "v9",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "jump_west_f",
+        "sector": "jump_area_main",
+        "textureMiddle": "WALL_BRICK",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l9_jump_north",
+      "startVertex": "v11",
+      "endVertex": "v12",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "jump_north_f",
+        "sector": "jump_area_main",
+        "textureMiddle": "WALL_BRICK",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l10_jump_east",
+      "startVertex": "v10",
+      "endVertex": "v11",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "jump_east_f",
+        "sector": "jump_area_main",
+        "textureMiddle": "WALL_BRICK",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l11_platform_low_south",
+      "startVertex": "v13",
+      "endVertex": "v14",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "platform_low_main_f",
+        "sector": "platform_low",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "WALL_PLATFORM",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": true,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "main_platform_low_b",
+        "sector": "jump_area_main",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l12_platform_high_south",
+      "startVertex": "v17",
+      "endVertex": "v18",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "platform_high_main_f",
+        "sector": "platform_high",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "WALL_PLATFORM",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": true,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "main_platform_high_b",
+        "sector": "jump_area_main",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l13_tight_entrance",
+      "startVertex": "v21",
+      "endVertex": "v22",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "spawn_tight_f",
+        "sector": "central_spawn",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "WALL_LOWER",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": true,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "tight_spawn_b",
+        "sector": "tight_corridors",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l14_multi_entrance",
+      "startVertex": "v29",
+      "endVertex": "v30",
+      "flags": {
+        "blocking": false,
+        "twoSided": true,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": false
+      },
+      "frontSide": {
+        "id": "spawn_multi_f",
+        "sector": "central_spawn",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "multi_spawn_b",
+        "sector": "multi_level_main",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": true,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l15_pillar1_south",
+      "startVertex": "v41",
+      "endVertex": "v42",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "pillar1_south_f",
+        "sector": "pillar_1",
+        "textureMiddle": "WALL_PILLAR",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l16_pillar1_east",
+      "startVertex": "v42",
+      "endVertex": "v43",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "pillar1_east_f",
+        "sector": "pillar_1",
+        "textureMiddle": "WALL_PILLAR",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l17_pillar1_north",
+      "startVertex": "v43",
+      "endVertex": "v44",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "pillar1_north_f",
+        "sector": "pillar_1",
+        "textureMiddle": "WALL_PILLAR",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l18_pillar1_west",
+      "startVertex": "v44",
+      "endVertex": "v41",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "pillar1_west_f",
+        "sector": "pillar_1",
+        "textureMiddle": "WALL_PILLAR",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l19_spawn_north1",
+      "startVertex": "v4",
+      "endVertex": "v9",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "spawn_north1_f",
+        "sector": "central_spawn",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l20_spawn_west1",
+      "startVertex": "v1",
+      "endVertex": "v21",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "spawn_west1_f",
+        "sector": "central_spawn",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l21_spawn_west2",
+      "startVertex": "v22",
+      "endVertex": "v4",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "spawn_west2_f",
+        "sector": "central_spawn",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l22_spawn_south2",
+      "startVertex": "v30",
+      "endVertex": "v2",
+      "flags": {
+        "blocking": true,
+        "twoSided": false,
+        "dontDraw": false,
+        "mapped": true,
+        "soundBlock": false,
+        "secret": false,
+        "lowerUnpegged": false,
+        "upperUnpegged": false,
+        "blockMonsters": true
+      },
+      "frontSide": {
+        "id": "spawn_south2_f",
+        "sector": "central_spawn",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0,
+        "offsetY": 0,
+        "needsUpperTexture": false,
+        "needsLowerTexture": false,
+        "needsMiddleTexture": true
+      }
+    }
+  ],
+  "playerStart": {
+    "position": { "x": 0, "y": 0 },
+    "angle": 0,
+    "sector": "central_spawn"
+  }
+}

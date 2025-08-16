@@ -42,6 +42,7 @@ export type {
   PhysicsConfig,
   CollisionEvent,
   CollisionGeometry,
+  CollisionResult,
   PlayerController,
   PhysicsMetrics,
 } from './physics';

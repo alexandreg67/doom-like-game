@@ -25,6 +25,16 @@
     </header>
     
     <main>
+      <div id="level-selector">
+        <h3>Sélection de niveau</h3>
+        <select id="level-select">
+          <option value="demo_level_phase1">Phase 1 Demo (Default)</option>
+          <option value="physics_playground">Physics Playground (Test)</option>
+        </select>
+        <button id="load-level-btn">Charger niveau</button>
+        <button id="reload-level-btn">Recharger niveau actuel</button>
+      </div>
+      
       <canvas id="gameCanvas" width="1280" height="720"></canvas>
       
       <div id="loading">
