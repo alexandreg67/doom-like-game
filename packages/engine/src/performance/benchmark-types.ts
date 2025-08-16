@@ -6,7 +6,7 @@
 export interface BenchmarkConfig {
   duration: number; // Test duration in ms
   warmupFrames: number; // Frames to ignore for warmup
-  targetFPS: number; // Expected FPS baseline
+  targetFPS: number; // Expected FPS baseline (configurable per device)
   maxFrameTime: number; // Maximum acceptable frame time (ms)
   maxMemoryUsage: number; // Maximum acceptable memory usage (MB)
   tolerance: number; // Acceptable variance percentage (0.0-1.0)
@@ -14,6 +14,7 @@ export interface BenchmarkConfig {
   enableStressTest: boolean; // Enable high-load scenarios
   enableRegressionTest: boolean; // Compare against baseline
   outputFormat: 'console' | 'json' | 'junit' | 'all';
+  detectDisplayRefreshRate: boolean; // Auto-detect display refresh rate for targetFPS
 }
 
 export interface BenchmarkScenario {
@@ -168,12 +169,13 @@ export interface StressTestConfig {
   rampUpTime: number; // Gradually increase load
 }
 
-export interface BenchmarkEvent {
-  type: 'start' | 'end' | 'scenario-start' | 'scenario-end' | 'error' | 'warning';
-  timestamp: number;
-  data: any;
-  message: string;
-}
+export type BenchmarkEvent =
+  | { type: 'start'; timestamp: number; data: BenchmarkRun; message: string }
+  | { type: 'end'; timestamp: number; data: BenchmarkRun; message: string }
+  | { type: 'scenario-start'; timestamp: number; data: BenchmarkScenario; message: string }
+  | { type: 'scenario-end'; timestamp: number; data: BenchmarkScenario; message: string }
+  | { type: 'error'; timestamp: number; data: Error; message: string }
+  | { type: 'warning'; timestamp: number; data: Record<string, unknown>; message: string };
 
 export interface CIBenchmarkConfig {
   enabled: boolean;

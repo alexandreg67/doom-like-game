@@ -37,6 +37,7 @@ export class BenchmarkManager {
       enableStressTest: false,
       enableRegressionTest: true,
       outputFormat: 'console',
+      detectDisplayRefreshRate: false, // Default to false, can be enabled per test
       ...config,
     };
 

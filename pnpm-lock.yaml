@@ -127,6 +127,9 @@ importers:
 
   packages/game-logic:
     dependencies:
+      '@babylonjs/core':
+        specifier: ^7.0.0
+        version: 7.54.3
       '@doom-like/engine':
         specifier: workspace:*
         version: link:../engine

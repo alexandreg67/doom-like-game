@@ -22,7 +22,8 @@
     "format": "biome format . --write"
   },
   "dependencies": {
-    "@doom-like/engine": "workspace:*"
+    "@doom-like/engine": "workspace:*",
+    "@babylonjs/core": "^7.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
