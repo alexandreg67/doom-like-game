@@ -19,3 +19,11 @@ export {
   type InputListener,
   type KeyBinding,
 } from './input';
+
+// Player system
+export {
+  PlayerController,
+  type PlayerMovement,
+  type PlayerState,
+  type PlayerConfig,
+} from './player';
