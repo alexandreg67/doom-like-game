@@ -52,6 +52,8 @@ export class UnifiedRenderer {
   };
 
   private frameStartTime = 0;
+  private frameCounter = 0;
+  private readonly LOG_INTERVAL = 1000; // Log every 1000 frames
 
   constructor(engine: Engine, scene: Scene, preferWebGPU = true) {
     this.engine = engine;
@@ -127,9 +129,9 @@ export class UnifiedRenderer {
     const frameTime = performance.now() - this.frameStartTime;
     this.metrics.frameTime = frameTime;
 
-    // Log performance metrics occasionally
-    if (Math.random() < 0.01) {
-      // 1% chance to log
+    // Log performance metrics every LOG_INTERVAL frames
+    this.frameCounter++;
+    if (this.frameCounter % this.LOG_INTERVAL === 0) {
       Logger.debug('[UnifiedRenderer] Frame metrics:', {
         frameTime: `${frameTime.toFixed(2)}ms`,
         fps: Math.round(1000 / frameTime),
@@ -218,14 +220,23 @@ export class UnifiedRenderer {
    * Get renderer capabilities
    */
   public getCapabilities(): RendererCapabilities {
-    const caps = this.activeRenderer.getCapabilities();
+    const rawCaps = this.activeRenderer.getCapabilities();
+
+    // Type-safe capability extraction with proper interfaces
+    interface RawRendererCapabilities {
+      maxTextureSize?: number;
+      maxBufferSize?: number;
+      maxBindGroups?: number;
+    }
+
+    const caps = rawCaps as RawRendererCapabilities;
 
     return {
-      maxTextureSize: (caps as { maxTextureSize?: number }).maxTextureSize || 4096,
-      maxBufferSize: (caps as { maxBufferSize?: number }).maxBufferSize || 128 * 1024 * 1024, // 128MB default
+      maxTextureSize: caps.maxTextureSize ?? 4096,
+      maxBufferSize: caps.maxBufferSize ?? 128 * 1024 * 1024, // 128MB default
       supportsCompute: this.getRendererType() === 'webgpu',
       supportsRayTracing: false, // Not supported yet
-      maxBindGroups: (caps as { maxBindGroups?: number }).maxBindGroups || 4,
+      maxBindGroups: caps.maxBindGroups ?? 4,
     };
   }
 

@@ -278,23 +278,41 @@ export class ShaderManager {
         material.setFloat('time', performance.now() / 1000.0);
       }
 
-      // Vector properties (for test compatibility)
-      // Use type assertion to bypass TypeScript checks for mock testing
-      const materialAny = material as any;
-      if ('setVector3' in material && typeof materialAny.setVector3 === 'function') {
-        materialAny.setVector3(
+      // Vector properties with improved type safety
+      interface Vector3Setter {
+        setVector3(name: string, x: number, y: number, z: number): void;
+      }
+      interface Vector4Setter {
+        setVector4(name: string, x: number, y: number, z: number, w: number): void;
+      }
+      interface Vector2Setter {
+        setVector2(name: string, x: number, y: number): void;
+      }
+
+      function hasSetVector3(obj: unknown): obj is Vector3Setter {
+        return typeof (obj as Vector3Setter).setVector3 === 'function';
+      }
+      function hasSetVector4(obj: unknown): obj is Vector4Setter {
+        return typeof (obj as Vector4Setter).setVector4 === 'function';
+      }
+      function hasSetVector2(obj: unknown): obj is Vector2Setter {
+        return typeof (obj as Vector2Setter).setVector2 === 'function';
+      }
+
+      if (hasSetVector3(material)) {
+        material.setVector3(
           'ambientColor',
           finalConfig.ambientColor[0],
           finalConfig.ambientColor[1],
           finalConfig.ambientColor[2]
         );
-        materialAny.setVector3(
+        material.setVector3(
           'fogColor',
           finalConfig.fogColor[0],
           finalConfig.fogColor[1],
           finalConfig.fogColor[2]
         );
-        materialAny.setVector3(
+        material.setVector3(
           'emissiveColor',
           finalConfig.emissiveColor[0],
           finalConfig.emissiveColor[1],
@@ -302,8 +320,8 @@ export class ShaderManager {
         );
       }
 
-      if ('setVector4' in material && typeof materialAny.setVector4 === 'function') {
-        materialAny.setVector4(
+      if (hasSetVector4(material)) {
+        material.setVector4(
           'baseColor',
           finalConfig.baseColor[0],
           finalConfig.baseColor[1],
@@ -312,8 +330,8 @@ export class ShaderManager {
         );
       }
 
-      if ('setVector2' in material && typeof materialAny.setVector2 === 'function') {
-        materialAny.setVector2(
+      if (hasSetVector2(material)) {
+        material.setVector2(
           'textureScale',
           finalConfig.textureScale[0],
           finalConfig.textureScale[1]
@@ -333,53 +351,8 @@ export class ShaderManager {
     }
   }
 
-  /**
-   * Get shader attributes (kept for future Effect API implementation)
-   * @private
-   */
-  // @ts-ignore - Method kept for future use
-  private getShaderAttributes(): string[] {
-    return ['position', 'normal', 'uv', 'lightLevel'];
-  }
-
-  /**
-   * Get shader uniforms (kept for future Effect API implementation)
-   * @private
-   */
-  // @ts-ignore - Method kept for future use
-  private getShaderUniforms(): string[] {
-    return [
-      // Scene uniforms
-      'viewProjectionMatrix',
-      'viewMatrix',
-      'cameraPosition',
-      'time',
-      'globalLightLevel',
-      'ambientColor',
-      'fogColor',
-      'fogDensity',
-      'sectorLightLevel',
-      'sectorFloorHeight',
-      'sectorCeilingHeight',
-
-      // Model uniforms
-      'modelMatrix',
-      'normalMatrix',
-      'sectorId',
-      'surfaceType',
-
-      // Material uniforms
-      'baseColor',
-      'emissiveColor',
-      'metallic',
-      'roughness',
-      'materialTextureScale',
-      'animationSpeed',
-
-      // Textures
-      'baseTexture',
-    ];
-  }
+  // Note: getShaderAttributes and getShaderUniforms methods removed
+  // They will be re-implemented when proper Babylon.js Effect API is integrated
 
   /**
    * Get sector vertex shader source
