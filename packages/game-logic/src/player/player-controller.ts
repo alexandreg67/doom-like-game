@@ -55,6 +55,11 @@ export interface PlayerConfig {
 
 export class PlayerController implements InputListener {
   /**
+   * Debug logging flag - set to true to enable detailed collision and sector logs
+   */
+  private static readonly DEBUG_LOGGING = false;
+
+  /**
    * Multiplier applied to movement acceleration to control player responsiveness.
    * Value 10 was chosen through playtesting to provide a balance between snappy and smooth movement.
    * Increasing this value makes the player accelerate faster, while decreasing it results in slower acceleration.
@@ -73,7 +78,7 @@ export class PlayerController implements InputListener {
   private entity: Entity;
   private inputManager: InputManager;
   private config: PlayerConfig;
-  private collisionDetector: CollisionDetector | null = null;
+  private collisionDetector: CollisionDetector;
   private currentSector: DoomSector | null = null;
 
   private moveDirection = new Vector2(0, 0);
@@ -90,12 +95,12 @@ export class PlayerController implements InputListener {
   constructor(
     entity: Entity,
     inputManager: InputManager,
-    collisionDetector?: CollisionDetector,
+    collisionDetector: CollisionDetector,
     config?: Partial<PlayerConfig>
   ) {
     this.entity = entity;
     this.inputManager = inputManager;
-    this.collisionDetector = collisionDetector || null;
+    this.collisionDetector = collisionDetector;
 
     // Default configuration
     this.config = {
@@ -162,14 +167,6 @@ export class PlayerController implements InputListener {
    */
   public updateConfig(newConfig: Partial<PlayerConfig>): void {
     this.config = { ...this.config, ...newConfig };
-  }
-
-  /**
-   * Set collision detector for physics integration
-   */
-  public setCollisionDetector(collisionDetector: CollisionDetector): void {
-    this.collisionDetector = collisionDetector;
-    this.updateCurrentSector();
   }
 
   /**
@@ -346,13 +343,8 @@ export class PlayerController implements InputListener {
       friction * deltaTime * PlayerController.ACCELERATION_MULTIPLIER
     );
 
-    // Apply collision detection if available
-    if (this.collisionDetector) {
-      this.handleCollisionDetection(movement, transform, deltaTime);
-    } else {
-      // Fallback to simple ground collision
-      this.handleSimpleGroundCollision(movement, transform);
-    }
+    // Apply collision detection
+    this.handleCollisionDetection(movement, transform, deltaTime);
 
     // Update current sector
     this.updateCurrentSector();
@@ -388,8 +380,6 @@ export class PlayerController implements InputListener {
     transform: Transform,
     deltaTime: number
   ): void {
-    if (!this.collisionDetector) return;
-
     const currentPosition = new Vector2(transform.x, transform.z);
     const velocity2D = new Vector2(movement.velocity.x, movement.velocity.z);
 
@@ -423,7 +413,7 @@ export class PlayerController implements InputListener {
    * Handle vertical collision and ground detection
    */
   private handleVerticalCollision(movement: PlayerMovement, transform: Transform): void {
-    if (!this.collisionDetector || !this.currentSector) {
+    if (!this.currentSector) {
       this.handleSimpleGroundCollision(movement, transform);
       return;
     }
@@ -453,7 +443,9 @@ export class PlayerController implements InputListener {
 
     // Update sector if changed
     if (sector !== this.currentSector) {
-      console.log(`[PLAYER] Sector changed: ${this.currentSector?.id} -> ${sector.id}`);
+      if (PlayerController.DEBUG_LOGGING) {
+        console.log(`[PLAYER] Sector changed: ${this.currentSector?.id} -> ${sector.id}`);
+      }
       this.currentSector = sector;
     }
   }
@@ -475,8 +467,6 @@ export class PlayerController implements InputListener {
    * Update current sector based on player position
    */
   private updateCurrentSector(): void {
-    if (!this.collisionDetector) return;
-
     const transform = this.entity.components.get('transform') as Transform;
     if (!transform) return;
 
@@ -486,7 +476,9 @@ export class PlayerController implements InputListener {
     if (newSector && newSector !== this.currentSector) {
       const oldSector = this.currentSector;
       this.currentSector = newSector;
-      console.log(`[PLAYER] Moved to sector: ${newSector.id} (from ${oldSector?.id || 'none'})`);
+      if (PlayerController.DEBUG_LOGGING) {
+        console.log(`[PLAYER] Moved to sector: ${newSector.id} (from ${oldSector?.id || 'none'})`);
+      }
     }
   }
 
