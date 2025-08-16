@@ -25,6 +25,18 @@ export {
   PHYSICS_CONSTANTS,
 } from './physics';
 
+// Performance monitoring and optimization
+export {
+  PerformanceManager,
+  BSPCuller,
+  LightPoolManager,
+  ShadowPoolManager,
+  OptimizedLightingSystem,
+  LODManager,
+  GeometrySimplifier,
+  DashboardManager,
+} from './performance';
+
 export type {
   MovementInput,
   PhysicsConfig,
@@ -65,3 +77,23 @@ export type {
   LightingMetrics,
   FogSystemState,
 } from './lighting';
+export type {
+  PerformanceMetrics,
+  BSPMetrics,
+  CullingMetrics,
+  PerformanceConfig,
+  PerformanceAlert,
+  CullingConfig,
+  LODLevel,
+  LODConfig,
+  LODMetrics,
+  GeometryLODOptions,
+  TextureLODOptions,
+  DashboardConfig,
+  DashboardMetrics,
+  DashboardAlert,
+  MetricChart,
+  RealTimeData,
+  PerformanceStats,
+  DashboardTheme,
+} from './performance';
