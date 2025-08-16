@@ -27,3 +27,10 @@ export {
   type PlayerState,
   type PlayerConfig,
 } from './player';
+
+// Camera system
+export {
+  FPSCameraController,
+  type CameraConfig,
+  type CameraState,
+} from './camera';
