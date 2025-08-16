@@ -121,8 +121,11 @@ export class LightPoolManager {
 
     this.frameCounter++;
 
-    // Only update every N frames for performance
-    if (this.frameCounter - this.lastUpdateFrame < this.config.updateFrequency) {
+    // Only update every N frames for performance (skip if updateFrequency is 0 for testing)
+    if (
+      this.config.updateFrequency > 0 &&
+      this.frameCounter - this.lastUpdateFrame < this.config.updateFrequency
+    ) {
       this.performanceManager.end('light_culling');
       return;
     }

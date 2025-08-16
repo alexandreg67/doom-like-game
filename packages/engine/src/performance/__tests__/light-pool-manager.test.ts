@@ -29,7 +29,7 @@ describe('LightPoolManager', () => {
       poolSize: 8,
       cullingDistance: 50,
       enableLOD: true,
-      updateFrequency: 1, // Update every frame for testing
+      updateFrequency: 0, // Force immediate updates for testing
     };
 
     lightPool = new LightPoolManager(scene, performanceManager, config);
@@ -191,13 +191,43 @@ describe('LightPoolManager', () => {
 
   describe('Performance Culling', () => {
     it('should cull lights when FPS is low', () => {
-      // Add several lights
+      // Add several lights close enough to be activated
       for (let i = 0; i < 4; i++) {
         const light = createTestLight(`light_${i}`, new Vector3(i * 5, 0, 0));
         lightPool.addLight(light, false);
       }
 
-      // Mock low FPS
+      // First update with good FPS to activate lights
+      vi.spyOn(performanceManager, 'getMetrics').mockReturnValue({
+        fps: 60, // Good FPS
+        frameTime: 16.7,
+        renderTime: 0,
+        bspTraversalTime: 0,
+        lightingTime: 0,
+        cullingTime: 0,
+        totalSectors: 0,
+        visibleSectors: 0,
+        totalLines: 0,
+        visibleLines: 0,
+        culledLines: 0,
+        bspNodes: 0,
+        bspDepth: 0,
+        bspTraversals: 0,
+        heapUsed: 0,
+        heapTotal: 0,
+        textureMemory: 0,
+        bufferMemory: 0,
+        avgFrameTime: 16.7,
+        maxFrameTime: 20,
+        minFrameTime: 15,
+      });
+
+      lightPool.updateLightCulling(Vector3.Zero());
+
+      // Verify lights are activated
+      expect(lightPool.getStats().active).toBeGreaterThan(0);
+
+      // Now mock low FPS
       vi.spyOn(performanceManager, 'getMetrics').mockReturnValue({
         fps: 30, // Low FPS
         frameTime: 33,
@@ -234,20 +264,73 @@ describe('LightPoolManager', () => {
       const light = createTestLight('lod_light', new Vector3(30, 0, 0), 1.0);
       lightPool.addLight(light, false);
 
+      // Mock performance to ensure light gets activated
+      vi.spyOn(performanceManager, 'getMetrics').mockReturnValue({
+        fps: 60,
+        frameTime: 16.7,
+        renderTime: 0,
+        bspTraversalTime: 0,
+        lightingTime: 0,
+        cullingTime: 0,
+        totalSectors: 0,
+        visibleSectors: 0,
+        totalLines: 0,
+        visibleLines: 0,
+        culledLines: 0,
+        bspNodes: 0,
+        bspDepth: 0,
+        bspTraversals: 0,
+        heapUsed: 0,
+        heapTotal: 0,
+        textureMemory: 0,
+        bufferMemory: 0,
+        avgFrameTime: 16.7,
+        maxFrameTime: 20,
+        minFrameTime: 15,
+      });
+
       // Update with camera at origin (distance = 30)
       lightPool.updateLightCulling(Vector3.Zero());
 
-      // LOD should reduce intensity based on distance
+      // Light should be active and LOD should reduce intensity based on distance
+      expect(lightPool.getStats().active).toBe(1);
       expect(light.babylonLight.intensity).toBeLessThan(1.0);
+      expect(light.babylonLight.intensity).toBeCloseTo(0.8, 1); // Should be ~0.8 for distance 30
     });
 
     it('should maintain full intensity for close lights', () => {
       const light = createTestLight('close_light', new Vector3(5, 0, 0), 1.0);
       lightPool.addLight(light, false);
 
+      // Mock performance to ensure light gets activated
+      vi.spyOn(performanceManager, 'getMetrics').mockReturnValue({
+        fps: 60,
+        frameTime: 16.7,
+        renderTime: 0,
+        bspTraversalTime: 0,
+        lightingTime: 0,
+        cullingTime: 0,
+        totalSectors: 0,
+        visibleSectors: 0,
+        totalLines: 0,
+        visibleLines: 0,
+        culledLines: 0,
+        bspNodes: 0,
+        bspDepth: 0,
+        bspTraversals: 0,
+        heapUsed: 0,
+        heapTotal: 0,
+        textureMemory: 0,
+        bufferMemory: 0,
+        avgFrameTime: 16.7,
+        maxFrameTime: 20,
+        minFrameTime: 15,
+      });
+
       lightPool.updateLightCulling(Vector3.Zero());
 
-      // Close lights should maintain full intensity
+      // Close lights should maintain full intensity (distance 5 < 25, so LOD level 0)
+      expect(lightPool.getStats().active).toBe(1);
       expect(light.babylonLight.intensity).toBeCloseTo(1.0, 2);
     });
   });
