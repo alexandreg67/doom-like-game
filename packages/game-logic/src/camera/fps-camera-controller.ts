@@ -269,7 +269,7 @@ export class FPSCameraController implements InputListener {
     this.state.right.set(cosYaw, 0, -sinYaw);
 
     // Calculate up vector (perpendicular to forward and right)
-    this.state.up = this.state.right.cross(this.state.forward);
+    this.state.up = this.state.forward.cross(this.state.right);
 
     // Normalize vectors
     this.state.forward.normalize();

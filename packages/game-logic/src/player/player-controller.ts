@@ -45,6 +45,7 @@ export interface PlayerConfig {
   height: number;
   crouchHeight: number;
   radius: number;
+  groundLevel: number;
 
   // Camera
   eyeHeight: number;
@@ -88,6 +89,7 @@ export class PlayerController implements InputListener {
       height: 1.8,
       crouchHeight: 1.2,
       radius: 0.3,
+      groundLevel: 0.0,
 
       // Camera (relative to feet)
       eyeHeight: 1.6,
@@ -312,10 +314,10 @@ export class PlayerController implements InputListener {
 
     // Ground collision (simplified - will be replaced by proper collision system)
     if (movement.velocity.y < -0.1) {
-      // Simple ground check at y=0 for now
+      // Simple ground check at configurable ground level for now
       const transform = this.entity.components.get('transform') as Transform;
-      if (transform && transform.y <= 0) {
-        transform.y = 0;
+      if (transform && transform.y <= this.config.groundLevel) {
+        transform.y = this.config.groundLevel;
         movement.velocity.y = 0;
         movement.isGrounded = true;
       }

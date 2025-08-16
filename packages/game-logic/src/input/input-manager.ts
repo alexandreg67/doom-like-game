@@ -7,6 +7,8 @@ import { type GameKeyMappings, KeyMappings } from './key-mappings';
 import { type KeyboardLayout, detectLayout, getLayoutDisplayName } from './keyboard-layout';
 
 export class InputManager {
+  private static readonly WEAPON_SWITCH_TIMEOUT_MS = 100;
+
   private canvas: HTMLCanvasElement;
   private keyboardLayout: KeyboardLayout;
   private keyMappings: GameKeyMappings;
@@ -280,10 +282,16 @@ export class InputManager {
     // Handle weapon switching via mouse wheel
     if (event.deltaY < 0) {
       this.setInputAction('nextWeapon', true);
-      setTimeout(() => this.setInputAction('nextWeapon', false), 100);
+      setTimeout(
+        () => this.setInputAction('nextWeapon', false),
+        InputManager.WEAPON_SWITCH_TIMEOUT_MS
+      );
     } else if (event.deltaY > 0) {
       this.setInputAction('prevWeapon', true);
-      setTimeout(() => this.setInputAction('prevWeapon', false), 100);
+      setTimeout(
+        () => this.setInputAction('prevWeapon', false),
+        InputManager.WEAPON_SWITCH_TIMEOUT_MS
+      );
     }
 
     event.preventDefault();
