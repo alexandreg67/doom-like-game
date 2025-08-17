@@ -241,13 +241,17 @@ export function parseLevel(levelData: LevelData): ParsedLevel {
   const validationResult = validateLevel(levelData);
   if (!validationResult.isValid) {
     Logger.error('[LevelLoader] Level validation failed:');
-    validationResult.errors.forEach((error) => Logger.error(`  - ${error}`));
+    for (const error of validationResult.errors) {
+      Logger.error(`  - ${error}`);
+    }
     throw new Error(`Level validation failed: ${validationResult.errors.join(', ')}`);
   }
 
   if (validationResult.warnings.length > 0) {
     Logger.warn('[LevelLoader] Level validation warnings:');
-    validationResult.warnings.forEach((warning) => Logger.warn(`  - ${warning}`));
+    for (const warning of validationResult.warnings) {
+      Logger.warn(`  - ${warning}`);
+    }
   }
 
   // Parse vertices first

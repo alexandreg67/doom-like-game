@@ -30,7 +30,10 @@ export function validateLevel(levelData: LevelData): ValidationResult {
   }
 
   // Create sector lookup
-  const sectorMap = new Map<string, any>();
+  const sectorMap = new Map<
+    string,
+    { id: string; floorHeight: number; ceilingHeight: number; vertices: string[] }
+  >();
   for (const sector of levelData.sectors) {
     sectorMap.set(sector.id, sector);
   }
@@ -122,11 +125,15 @@ export function validateLevel(levelData: LevelData): ValidationResult {
     if (!edgeCoverage.has(edgeKey)) {
       edgeCoverage.set(edgeKey, []);
     }
-    edgeCoverage.get(edgeKey)!.push(lineDef.id);
+    const edgeArray = edgeCoverage.get(edgeKey);
+    if (edgeArray) {
+      edgeArray.push(lineDef.id);
+    }
 
     // Check for duplicate edges
     if (edgeCoverage.has(reverseEdgeKey)) {
-      const reverseLineDefs = edgeCoverage.get(reverseEdgeKey)!;
+      const reverseLineDefs = edgeCoverage.get(reverseEdgeKey);
+      if (!reverseLineDefs) continue;
       if (reverseLineDefs.length > 0) {
         warnings.push(
           `Edge ${lineDef.startVertex}-${lineDef.endVertex} covered by multiple lineDefs: ${lineDef.id} and ${reverseLineDefs.join(', ')}`
@@ -177,12 +184,16 @@ export function validateLevel(levelData: LevelData): ValidationResult {
 
   if (errors.length > 0) {
     Logger.error('[LevelValidator] Errors found:');
-    errors.forEach((error) => Logger.error(`  - ${error}`));
+    for (const error of errors) {
+      Logger.error(`  - ${error}`);
+    }
   }
 
   if (warnings.length > 0) {
     Logger.warn('[LevelValidator] Warnings found:');
-    warnings.forEach((warning) => Logger.warn(`  - ${warning}`));
+    for (const warning of warnings) {
+      Logger.warn(`  - ${warning}`);
+    }
   }
 
   return {
