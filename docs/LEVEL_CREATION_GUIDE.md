@@ -462,7 +462,82 @@ sceneManager.setMetricsEnabled(true); // Performance metrics
 - **Couloir** : 2 secteurs connectés en ligne
 - **Salle avec piliers** : Secteur principal + obstacles intérieurs
 - **Escaliers** : Secteurs à hauteurs croissantes
-- **Portes** : `twoSided: true` avec textures conditionnelles
+- **Portes interactives** : Configuration spéciale (voir section dédiée)
+
+## 🚪 Portes Interactives - Configuration Fonctionnelle
+
+### Structure testée et validée
+
+Basé sur la porte fonctionnelle du `demo_level_phase1` :
+
+```json
+{
+  "id": "l3_door",
+  "startVertex": "v7",
+  "endVertex": "v8", 
+  "flags": {
+    "blocking": true,     // CRUCIAL: fermée par défaut
+    "twoSided": true,     // CRUCIAL: visible des deux côtés
+    "dontDraw": false,
+    "mapped": true,
+    "soundBlock": false,
+    "secret": false,
+    "lowerUnpegged": false,
+    "upperUnpegged": false,
+    "blockMonsters": true
+  },
+  "frontSide": {
+    "id": "corridor_door_f",
+    "sector": "corridor",            // Secteur A
+    "textureMiddle": "DOOR_WOOD",    // Texture de porte visible
+    "textureUpper": "-",
+    "textureLower": "WALL_LOWER",    // Base du mur
+    "offsetX": 0,
+    "offsetY": 0,
+    "needsUpperTexture": false,
+    "needsLowerTexture": true,       // CRUCIAL: afficher la base
+    "needsMiddleTexture": true       // CRUCIAL: afficher la porte
+  },
+  "backSide": {
+    "id": "corridor_door_b", 
+    "sector": "door_room",           // Secteur B (différent!)
+    "textureMiddle": "DOOR_WOOD",    // Même texture
+    "textureUpper": "-",
+    "textureLower": "WALL_LOWER",
+    "offsetX": 0,
+    "offsetY": 0,
+    "needsUpperTexture": false,
+    "needsLowerTexture": true,
+    "needsMiddleTexture": true
+  }
+}
+```
+
+### Points critiques ⚠️
+
+1. **ID obligatoire** : Exactement `"l3_door"` (reconnue par le moteur)
+2. **Deux secteurs différents** : frontSide et backSide dans des secteurs adjacents
+3. **Flags essentiels** :
+   - `blocking: true` → fermée par défaut
+   - `twoSided: true` → accessible des deux côtés
+4. **Textures requises** :
+   - `textureMiddle: "DOOR_WOOD"` → texture visible de la porte
+   - `textureLower: "WALL_LOWER"` → base du mur
+5. **Activation** : Appuyez sur **E** près de la porte
+
+### Usage et comportement
+
+- **Fermée** : `blocking: true` → collision active
+- **Ouverte** : `blocking: false` → passage libre (moteur change automatiquement)
+- **Toggle** : Appuyer sur E alterne l'état
+- **Visuel** : Porte apparaît/disparaît selon l'état
+
+### Erreurs courantes ❌
+
+- **Mauvais ID** : Autre que "l3_door" → porte non reconnue
+- **Même secteur** : frontSide et backSide identiques → dysfonctionnement  
+- **Textures vides** : `textureMiddle: "-"` → porte invisible
+- **Superposition** : Porte ajoutée sur mur existant → z-fighting
 
 ## 🎮 Conseils Pratiques
 
