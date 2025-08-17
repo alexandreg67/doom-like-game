@@ -55,7 +55,7 @@ describe('GeometrySimplifier', () => {
 
   describe('Mesh Simplification', () => {
     it('should simplify a box mesh', () => {
-      const box = CreateBox('testBox', { size: 2, subdivisions: 4 }, scene);
+      const box = CreateBox('testBox', { size: 2 }, scene);
       const originalVertexCount = box.getTotalVertices();
       const targetVertexCount = Math.floor(originalVertexCount * 0.5);
 
@@ -171,7 +171,7 @@ describe('GeometrySimplifier', () => {
       };
 
       const ratioSimplifier = new GeometrySimplifier(options);
-      const box = CreateBox('testBox', { size: 2, subdivisions: 8 }, scene);
+      const box = CreateBox('testBox', { size: 2 }, scene);
       const originalVertexCount = box.getTotalVertices();
       const targetVertexCount = Math.floor(originalVertexCount * 0.1); // Aggressive target
 
@@ -185,7 +185,7 @@ describe('GeometrySimplifier', () => {
     });
 
     it('should handle different simplification levels', () => {
-      const box = CreateBox('testBox', { size: 2, subdivisions: 4 }, scene);
+      const box = CreateBox('testBox', { size: 2 }, scene);
       const originalVertexCount = box.getTotalVertices();
 
       const ratios = [0.8, 0.5, 0.2];
@@ -294,8 +294,8 @@ describe('GeometrySimplifier', () => {
     });
 
     it('should scale reasonably with mesh complexity', () => {
-      const lowPolyBox = CreateBox('lowPoly', { size: 2, subdivisions: 2 }, scene);
-      const highPolyBox = CreateBox('highPoly', { size: 2, subdivisions: 8 }, scene);
+      const lowPolyBox = CreateBox('lowPoly', { size: 2 }, scene);
+      const highPolyBox = CreateSphere('highPoly', { diameter: 2, segments: 16 }, scene);
 
       const lowPolyTarget = Math.floor(lowPolyBox.getTotalVertices() * 0.5);
       const highPolyTarget = Math.floor(highPolyBox.getTotalVertices() * 0.5);
