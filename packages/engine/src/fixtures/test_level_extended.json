@@ -1,7 +1,7 @@
 {
-  "name": "Test Level 4 Rooms - T-Junction",
-  "description": "The 3-room level plus a corridor with a room branching off to the north.",
-  "version": "1.0.3",
+  "name": "Test Level 5 Rooms - West Wing (Textures Fixed)",
+  "description": "The level now features a new west wing accessible from the main room, with corrected textures for height differences.",
+  "version": "1.0.5",
   "vertices": [
     {"id": "v1", "position": {"x": -10, "y": -10}},
     {"id": "v2", "position": {"x": 10, "y": -10}},
@@ -20,7 +20,11 @@
     {"id": "v15", "position": {"x": 28, "y": 5}},
     {"id": "v16", "position": {"x": 38, "y": 5}},
     {"id": "v17", "position": {"x": 38, "y": 15}},
-    {"id": "v18", "position": {"x": 28, "y": 15}}
+    {"id": "v18", "position": {"x": 28, "y": 15}},
+    {"id": "v19", "position": {"x": -10, "y": 5}},
+    {"id": "v20", "position": {"x": -10, "y": -5}},
+    {"id": "v21", "position": {"x": -25, "y": 5}},
+    {"id": "v22", "position": {"x": -25, "y": -5}}
   ],
   "sectors": [
     {
@@ -30,7 +34,7 @@
       "floorTexture": "FLOOR_MAIN",
       "ceilingTexture": "CEIL_MAIN",
       "lightLevel": 200,
-      "vertices": ["v1", "v2", "v3", "v4"]
+      "vertices": ["v20", "v1", "v2", "v3", "v4", "v19"]
     },
     {
       "id": "room_east",
@@ -62,11 +66,20 @@
     {
       "id": "room_storage",
       "floorHeight": 0,
-      "ceilingHeight": 4,
+      "ceilingHeight": 2.5,
       "floorTexture": "FLOOR_CONCRETE",
-      "ceilingTexture": "CEIL_HIGH",
-      "lightLevel": 180,
+      "ceilingTexture": "CEIL_LOW",
+      "lightLevel": 120,
       "vertices": ["v15", "v16", "v17", "v18"]
+    },
+    {
+      "id": "room_west_corridor",
+      "floorHeight": 0,
+      "ceilingHeight": 4,
+      "floorTexture": "FLOOR_BRICK",
+      "ceilingTexture": "CEIL_MAIN",
+      "lightLevel": 190,
+      "vertices": ["v22", "v21", "v19", "v20"]
     }
   ],
   "lineDefs": [
@@ -154,8 +167,39 @@
       "frontSide": {"sector": "room_main", "textureMiddle": "WALL_STONE"}
     },
     {
-      "id": "l8_main_west",
+      "id": "l8_main_west_upper",
       "startVertex": "v4",
+      "endVertex": "v19",
+      "flags": {"blocking": true, "twoSided": false},
+      "frontSide": {"sector": "room_main", "textureMiddle": "WALL_STONE"}
+    },
+    {
+      "id": "l8a_main_to_west",
+      "startVertex": "v19",
+      "endVertex": "v20",
+      "flags": {"blocking": false, "twoSided": true, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": false},
+      "frontSide": {
+        "id": "main_to_west_f",
+        "sector": "room_main",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "west_to_main_b",
+        "sector": "room_west_corridor",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l8b_main_west_lower",
+      "startVertex": "v20",
       "endVertex": "v1",
       "flags": {"blocking": true, "twoSided": false},
       "frontSide": {"sector": "room_main", "textureMiddle": "WALL_STONE"}
@@ -242,12 +286,12 @@
     },
     {
       "id": "l18_corridor_to_storage",
-      "startVertex": "v15",
-      "endVertex": "v16",
+      "startVertex": "v16",
+      "endVertex": "v15",
       "flags": {"blocking": false, "twoSided": true, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": false},
       "frontSide": {
-        "id": "storage_to_corridor_f",
-        "sector": "room_storage",
+        "id": "corridor_to_storage_f",
+        "sector": "room_corridor",
         "textureMiddle": "-",
         "textureUpper": "WALL_UPPER",
         "textureLower": "-",
@@ -255,8 +299,8 @@
         "needsUpperTexture": true, "needsLowerTexture": false, "needsMiddleTexture": false
       },
       "backSide": {
-        "id": "corridor_to_storage_b",
-        "sector": "room_corridor",
+        "id": "storage_to_corridor_b",
+        "sector": "room_storage",
         "textureMiddle": "-",
         "textureUpper": "WALL_UPPER",
         "textureLower": "-",
@@ -291,6 +335,27 @@
       "endVertex": "v15",
       "flags": {"blocking": true, "twoSided": false},
       "frontSide": {"sector": "room_storage", "textureMiddle": "WALL_CONCRETE"}
+    },
+    {
+      "id": "l23_west_corridor_south",
+      "startVertex": "v20",
+      "endVertex": "v22",
+      "flags": {"blocking": true, "twoSided": false},
+      "frontSide": {"sector": "room_west_corridor", "textureMiddle": "WALL_BRICK"}
+    },
+    {
+      "id": "l24_west_corridor_west",
+      "startVertex": "v22",
+      "endVertex": "v21",
+      "flags": {"blocking": true, "twoSided": false},
+      "frontSide": {"sector": "room_west_corridor", "textureMiddle": "WALL_BRICK"}
+    },
+    {
+      "id": "l25_west_corridor_north",
+      "startVertex": "v21",
+      "endVertex": "v19",
+      "flags": {"blocking": true, "twoSided": false},
+      "frontSide": {"sector": "room_west_corridor", "textureMiddle": "WALL_BRICK"}
     }
   ],
   "playerStart": {
