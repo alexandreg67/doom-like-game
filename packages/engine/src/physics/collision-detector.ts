@@ -88,21 +88,7 @@ export class CollisionDetector {
     const lineDir = lineEnd.subtract(lineStart).normalize();
     const lineNormal = new Vector2(-lineDir.y, lineDir.x); // Perpendicular normal
 
-    // Project movement onto line normal
-    const movement = endPos.subtract(startPos);
-    const normalDot = Vector2.Dot(movement, lineNormal);
-
-    // If moving away from line, no collision
-    if (normalDot >= 0) {
-      return {
-        collided: false,
-        correction: Vector2.Zero(),
-        normal: Vector2.Zero(),
-        distance: 0,
-      };
-    }
-
-    // Find closest point on line segment to circle center
+    // Find closest point on line segment to start position (current position)
     const toStart = startPos.subtract(lineStart);
     const lineLength = Vector2.Distance(lineStart, lineEnd);
 
@@ -120,35 +106,86 @@ export class CollisionDetector {
     // Since lineDir is normalized, projectionLength is the distance along the line
     const projectionLength = Vector2.Dot(toStart, lineDir);
     const clampedProjection = Math.max(0, Math.min(lineLength, projectionLength));
-    const closestPoint = lineStart.add(lineDir.scale(clampedProjection));
+    const closestPointOnLine = lineStart.add(lineDir.scale(clampedProjection));
 
-    // Distance from circle center to line
-    const distanceToLine = Vector2.Distance(startPos, closestPoint);
+    // Distance from circle center to line (current position)
+    const currentDistanceToLine = Vector2.Distance(startPos, closestPointOnLine);
 
-    // Check if collision occurs
-    if (distanceToLine > radius) {
+    // Check if already intersecting with the line
+    const isCurrentlyIntersecting = currentDistanceToLine < radius;
+
+    // If currently intersecting, we need to push the player out
+    if (isCurrentlyIntersecting) {
+      const penetration = radius - currentDistanceToLine;
+
+      // Calculate direction from closest point to player
+      let correctionDirection = startPos.subtract(closestPointOnLine);
+
+      // If the distance is too small, use the line normal
+      if (correctionDirection.length() < PHYSICS_CONSTANTS.COLLISION_NORMAL_EPSILON) {
+        correctionDirection = lineNormal;
+      } else {
+        correctionDirection = correctionDirection.normalize();
+      }
+
+      // Ensure correction pushes player toward the "front" side of the line (into the sector)
+      // The line normal points perpendicular to the line; we want to push toward the sector
+      const dotWithNormal = Vector2.Dot(correctionDirection, lineNormal);
+      if (dotWithNormal < 0) {
+        // Player is on the "back" side of the line, push toward front (into sector)
+        correctionDirection = lineNormal;
+      }
+
+      const correction = correctionDirection.scale(penetration);
+
+      return {
+        collided: true,
+        correction,
+        normal: correctionDirection,
+        distance: currentDistanceToLine,
+      };
+    }
+
+    // Check if movement would cause intersection
+    // Find closest point on line segment to target position
+    const toTarget = endPos.subtract(lineStart);
+    const targetProjectionLength = Vector2.Dot(toTarget, lineDir);
+    const targetClampedProjection = Math.max(0, Math.min(lineLength, targetProjectionLength));
+    const targetClosestPoint = lineStart.add(lineDir.scale(targetClampedProjection));
+
+    // Distance from target position to line
+    const targetDistanceToLine = Vector2.Distance(endPos, targetClosestPoint);
+
+    // Check if target position would cause collision
+    if (targetDistanceToLine >= radius) {
       return {
         collided: false,
         correction: Vector2.Zero(),
         normal: Vector2.Zero(),
-        distance: 0,
+        distance: targetDistanceToLine,
       };
     }
 
-    // Calculate collision response
-    const penetration = radius - distanceToLine;
-    const collisionNormal =
-      distanceToLine > PHYSICS_CONSTANTS.COLLISION_NORMAL_EPSILON
-        ? startPos.subtract(closestPoint).normalize()
-        : lineNormal;
+    // Movement would cause intersection - prevent it
+    const penetration = radius - targetDistanceToLine;
 
-    const correction = collisionNormal.scale(penetration);
+    // Calculate direction from closest point to target position (should push away from line)
+    let correctionDirection = endPos.subtract(targetClosestPoint);
+
+    // If the distance is too small, use the line normal
+    if (correctionDirection.length() < PHYSICS_CONSTANTS.COLLISION_NORMAL_EPSILON) {
+      correctionDirection = lineNormal;
+    } else {
+      correctionDirection = correctionDirection.normalize();
+    }
+
+    const correction = correctionDirection.scale(penetration);
 
     return {
       collided: true,
       correction,
-      normal: collisionNormal,
-      distance: distanceToLine,
+      normal: correctionDirection,
+      distance: targetDistanceToLine,
     };
   }
 

@@ -1,0 +1,285 @@
+{
+  "name": "Test Level Complete",
+  "description": "Simple but complete level for testing - 3 connected rooms",
+  "version": "1.0.0",
+  "vertices": [
+    {"id": "v1", "position": {"x": -10, "y": -10}},
+    {"id": "v2", "position": {"x": 10, "y": -10}},
+    {"id": "v3", "position": {"x": 10, "y": 10}},
+    {"id": "v4", "position": {"x": -10, "y": 10}},
+    
+    {"id": "v5", "position": {"x": 10, "y": -5}},
+    {"id": "v6", "position": {"x": 10, "y": 5}},
+    {"id": "v7", "position": {"x": 25, "y": 5}},
+    {"id": "v8", "position": {"x": 25, "y": -5}},
+    
+    {"id": "v9", "position": {"x": -5, "y": 10}},
+    {"id": "v10", "position": {"x": 5, "y": 10}},
+    {"id": "v11", "position": {"x": 5, "y": 20}},
+    {"id": "v12", "position": {"x": -5, "y": 20}}
+  ],
+  "sectors": [
+    {
+      "id": "room_main",
+      "floorHeight": 0,
+      "ceilingHeight": 4,
+      "floorTexture": "FLOOR_MAIN",
+      "ceilingTexture": "CEIL_MAIN",
+      "lightLevel": 200,
+      "vertices": ["v1", "v2", "v3", "v4"]
+    },
+    {
+      "id": "room_east",
+      "floorHeight": 0,
+      "ceilingHeight": 3,
+      "floorTexture": "FLOOR_WOOD",
+      "ceilingTexture": "CEIL_WOOD",
+      "lightLevel": 180,
+      "vertices": ["v5", "v8", "v7", "v6"]
+    },
+    {
+      "id": "room_north",
+      "floorHeight": 1,
+      "ceilingHeight": 5,
+      "floorTexture": "FLOOR_STONE",
+      "ceilingTexture": "CEIL_HIGH",
+      "lightLevel": 160,
+      "vertices": ["v9", "v10", "v11", "v12"]
+    }
+  ],
+  "lineDefs": [
+    {
+      "id": "l1_main_south",
+      "startVertex": "v1",
+      "endVertex": "v2",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "main_south_f",
+        "sector": "room_main",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l2_main_east_lower",
+      "startVertex": "v2",
+      "endVertex": "v5",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "main_east_lower_f",
+        "sector": "room_main",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l3_main_to_east",
+      "startVertex": "v5",
+      "endVertex": "v6",
+      "flags": {"blocking": false, "twoSided": true, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": false},
+      "frontSide": {
+        "id": "main_to_east_f",
+        "sector": "room_main",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": true, "needsLowerTexture": false, "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "east_to_main_b",
+        "sector": "room_east",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": true, "needsLowerTexture": false, "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l4_main_east_upper",
+      "startVertex": "v6",
+      "endVertex": "v3",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "main_east_upper_f",
+        "sector": "room_main",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l5_main_north_east",
+      "startVertex": "v3",
+      "endVertex": "v10",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "main_north_east_f",
+        "sector": "room_main",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l6_main_to_north",
+      "startVertex": "v10",
+      "endVertex": "v9",
+      "flags": {"blocking": false, "twoSided": true, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": false},
+      "frontSide": {
+        "id": "main_to_north_f",
+        "sector": "room_main",
+        "textureMiddle": "-",
+        "textureUpper": "WALL_UPPER",
+        "textureLower": "WALL_LOWER",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": true, "needsLowerTexture": true, "needsMiddleTexture": false
+      },
+      "backSide": {
+        "id": "north_to_main_b",
+        "sector": "room_north",
+        "textureMiddle": "-",
+        "textureUpper": "-",
+        "textureLower": "WALL_LOWER",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": true, "needsMiddleTexture": false
+      }
+    },
+    {
+      "id": "l7_main_north_west",
+      "startVertex": "v9",
+      "endVertex": "v4",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "main_north_west_f",
+        "sector": "room_main",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l8_main_west",
+      "startVertex": "v4",
+      "endVertex": "v1",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "main_west_f",
+        "sector": "room_main",
+        "textureMiddle": "WALL_STONE",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l9_east_north",
+      "startVertex": "v6",
+      "endVertex": "v7",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "east_north_f",
+        "sector": "room_east",
+        "textureMiddle": "WALL_WOOD",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l10_east_east",
+      "startVertex": "v7",
+      "endVertex": "v8",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "east_east_f",
+        "sector": "room_east",
+        "textureMiddle": "WALL_WOOD",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l11_east_south",
+      "startVertex": "v8",
+      "endVertex": "v5",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "east_south_f",
+        "sector": "room_east",
+        "textureMiddle": "WALL_WOOD",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l12_north_west",
+      "startVertex": "v12",
+      "endVertex": "v9",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "north_west_f",
+        "sector": "room_north",
+        "textureMiddle": "WALL_BRICK",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l13_north_north",
+      "startVertex": "v11",
+      "endVertex": "v12",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "north_north_f",
+        "sector": "room_north",
+        "textureMiddle": "WALL_BRICK",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    },
+    {
+      "id": "l14_north_east",
+      "startVertex": "v10",
+      "endVertex": "v11",
+      "flags": {"blocking": true, "twoSided": false, "dontDraw": false, "mapped": true, "soundBlock": false, "secret": false, "lowerUnpegged": false, "upperUnpegged": false, "blockMonsters": true},
+      "frontSide": {
+        "id": "north_east_f",
+        "sector": "room_north",
+        "textureMiddle": "WALL_BRICK",
+        "textureUpper": "-",
+        "textureLower": "-",
+        "offsetX": 0, "offsetY": 0,
+        "needsUpperTexture": false, "needsLowerTexture": false, "needsMiddleTexture": true
+      }
+    }
+  ],
+  "playerStart": {
+    "position": {"x": 0, "y": 0},
+    "angle": 0,
+    "sector": "room_main"
+  }
+}

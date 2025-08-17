@@ -1032,9 +1032,9 @@ export class SceneManager {
 
       // Initialize physics controller at correct height above floor
       const startPosition = this.camera.position.clone();
-      // Get the main room sector to determine correct floor height
-      const mainRoomSector = this.currentLevel.sectors.get('main_room');
-      const floorHeight = mainRoomSector ? mainRoomSector.floorHeight : 0;
+      // Get the player start sector to determine correct floor height
+      const playerStartSector = this.currentLevel.playerStart.sector;
+      const floorHeight = playerStartSector.floorHeight;
       startPosition.y = floorHeight + PHYSICS_CONSTANTS.CAMERA_EYE_HEIGHT; // Player height above floor
       Logger.info(`[PHYSICS] Starting position: floor=${floorHeight}, player Y=${startPosition.y}`);
 
@@ -1193,6 +1193,14 @@ export class SceneManager {
         console.log(
           `[ENGINE] Camera repositioned to spawn: (${this.camera.position.x.toFixed(1)}, ${this.camera.position.y.toFixed(1)}, ${this.camera.position.z.toFixed(1)})`
         );
+
+        // Synchronize physics controller position with camera position
+        if (this.physicsController) {
+          this.physicsController.setPosition(this.camera.position.clone());
+          console.log(
+            `[ENGINE] PhysicsController synchronized to: (${this.camera.position.x.toFixed(1)}, ${this.camera.position.y.toFixed(1)}, ${this.camera.position.z.toFixed(1)})`
+          );
+        }
       }
 
       // Update lighting system with new level

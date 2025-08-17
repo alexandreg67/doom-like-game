@@ -11,6 +11,10 @@ export {
   loadLevelFromURL,
 } from './geometry/level-loader';
 export {
+  validateLevel,
+  validateLevelOrThrow,
+} from './geometry/level-validator';
+export {
   LightManager,
   SectorLightingManager,
   FogManager,

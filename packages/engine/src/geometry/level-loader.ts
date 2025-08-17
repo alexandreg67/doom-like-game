@@ -8,6 +8,7 @@ import type {
   DoomSideDef,
   DoomVertex,
 } from './doom-geometry';
+import { validateLevel } from './level-validator';
 
 // JSON format types
 export interface LevelVertexData {
@@ -235,6 +236,19 @@ export interface ParsedLevel {
  */
 export function parseLevel(levelData: LevelData): ParsedLevel {
   Logger.info(`[LevelLoader] Loading level: ${levelData.name} v${levelData.version}`);
+
+  // Validate level before parsing
+  const validationResult = validateLevel(levelData);
+  if (!validationResult.isValid) {
+    Logger.error('[LevelLoader] Level validation failed:');
+    validationResult.errors.forEach((error) => Logger.error(`  - ${error}`));
+    throw new Error(`Level validation failed: ${validationResult.errors.join(', ')}`);
+  }
+
+  if (validationResult.warnings.length > 0) {
+    Logger.warn('[LevelLoader] Level validation warnings:');
+    validationResult.warnings.forEach((warning) => Logger.warn(`  - ${warning}`));
+  }
 
   // Parse vertices first
   const vertices = new Map<string, DoomVertex>();
