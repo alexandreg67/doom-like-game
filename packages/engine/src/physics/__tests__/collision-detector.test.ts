@@ -245,6 +245,113 @@ describe('CollisionDetector', () => {
     });
   });
 
+  describe('Bidirectional Collision Detection', () => {
+    it('should detect collision when player is already inside wall and trying to exit', () => {
+      // Position player inside the wall (very close to y=0 wall)
+      const position = new Vector2(5, -0.3); // Inside the wall
+      const velocity = new Vector2(0, 1); // Moving away from wall
+      const radius = 0.5;
+      const deltaTime = 0.1;
+
+      const result = detector.testCircleLineCollision(position, radius, velocity, deltaTime);
+
+      expect(result.collided).toBe(true);
+      expect(result.correction.length()).toBeGreaterThan(0);
+      expect(result.normal.length()).toBeCloseTo(1); // Normalized normal
+    });
+
+    it('should detect collision when moving toward wall from outside', () => {
+      const position = new Vector2(5, 0.4); // Outside wall
+      const velocity = new Vector2(0, -1); // Moving toward wall
+      const radius = 0.5;
+      const deltaTime = 0.1;
+
+      const result = detector.testCircleLineCollision(position, radius, velocity, deltaTime);
+
+      expect(result.collided).toBe(true);
+      expect(result.correction.length()).toBeGreaterThan(0);
+      expect(result.normal.length()).toBeCloseTo(1);
+    });
+
+    it('should prevent passage through wall in both directions', () => {
+      const radius = 0.3;
+      const deltaTime = 0.1;
+
+      // Test moving from outside (above y=0) toward wall (y=0)
+      // Movement should cause collision because final position would be too close
+      const outsidePosition = new Vector2(5, 0.5);
+      const insideVelocity = new Vector2(0, -3); // Stronger movement: from y=0.5 to y=0.2
+
+      const outsideResult = detector.testCircleLineCollision(
+        outsidePosition,
+        radius,
+        insideVelocity,
+        deltaTime
+      );
+
+      // Final position would be y=0.2, which means distance to wall = 0.2 < radius 0.3
+      expect(outsideResult.collided).toBe(true);
+
+      // Test moving from inside (below y=0) to outside
+      const insidePosition = new Vector2(5, -0.2); // Inside/below the wall
+      const outsideVelocity = new Vector2(0, 2); // Strong movement away from wall
+
+      const insideResult = detector.testCircleLineCollision(
+        insidePosition,
+        radius,
+        outsideVelocity,
+        deltaTime
+      );
+
+      expect(insideResult.collided).toBe(true);
+    });
+
+    it('should provide appropriate correction when player is stuck in wall', () => {
+      // Player is deep inside the wall (below y=0 line)
+      const position = new Vector2(5, -0.4);
+      const velocity = new Vector2(0, 0); // Not moving
+      const radius = 0.5;
+      const deltaTime = 0.1;
+
+      const result = detector.testCircleLineCollision(position, radius, velocity, deltaTime);
+
+      expect(result.collided).toBe(true);
+      expect(result.correction.y).toBeGreaterThan(0); // Should push player up (away from wall)
+      expect(result.correction.length()).toBeCloseTo(0.1, 1); // Penetration depth should be radius - distance = 0.5 - 0.4 = 0.1
+    });
+
+    it('should handle corner cases at line segment endpoints', () => {
+      const radius = 0.5;
+      const deltaTime = 0.1;
+
+      // Test collision near start vertex (0,0)
+      const nearStartPos = new Vector2(0.3, 0.3);
+      const towardStartVel = new Vector2(-1, -1);
+
+      const startResult = detector.testCircleLineCollision(
+        nearStartPos,
+        radius,
+        towardStartVel,
+        deltaTime
+      );
+
+      expect(startResult.collided).toBe(true);
+
+      // Test collision near end vertex (10,0)
+      const nearEndPos = new Vector2(9.7, 0.3);
+      const towardEndVel = new Vector2(1, -1);
+
+      const endResult = detector.testCircleLineCollision(
+        nearEndPos,
+        radius,
+        towardEndVel,
+        deltaTime
+      );
+
+      expect(endResult.collided).toBe(true);
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle zero velocity', () => {
       const position = new Vector2(5, 5);
@@ -277,6 +384,19 @@ describe('CollisionDetector', () => {
       // Should not crash or produce invalid results
       const result = detector.testCircleLineCollision(position, radius, velocity, deltaTime);
       expect(result).toBeDefined();
+    });
+
+    it('should handle player starting exactly on wall boundary', () => {
+      // Player exactly on the wall surface
+      const position = new Vector2(5, 0.5); // Exactly radius distance from wall
+      const velocity = new Vector2(0, -0.1); // Tiny movement toward wall
+      const radius = 0.5;
+      const deltaTime = 0.1;
+
+      const result = detector.testCircleLineCollision(position, radius, velocity, deltaTime);
+
+      // Should detect collision because movement would cause intersection
+      expect(result.collided).toBe(true);
     });
   });
 });

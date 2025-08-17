@@ -8,6 +8,7 @@ import type {
   DoomSideDef,
   DoomVertex,
 } from './doom-geometry';
+import { validateLevel } from './level-validator';
 
 // JSON format types
 export interface LevelVertexData {
@@ -133,10 +134,125 @@ export interface ParsedLevel {
 }
 
 /**
+ * Generates missing wall lineDefs for sectors that don't have complete perimeter coverage
+ * DISABLED: Caused z-fighting and sector separation issues
+ */
+/* function generateMissingWalls(
+  sectors: Map<string, DoomSector>,
+  existingLineDefs: DoomLineDef[]
+): DoomLineDef[] {
+  Logger.info('[LevelLoader] Checking for missing walls...');
+
+  const additionalLineDefs: DoomLineDef[] = [];
+  let wallCounter = 1000; // Start IDs at 1000 to avoid conflicts
+
+  for (const sector of sectors.values()) {
+    // Check if sector has lineDefs for all its edges
+    const sectorVertices = sector.vertices;
+    const sectorLineDefs = existingLineDefs.filter(
+      (lineDef) =>
+        lineDef.frontSide?.sector.id === sector.id || lineDef.backSide?.sector.id === sector.id
+    );
+
+    // Create a set of edges covered by existing lineDefs
+    const coveredEdges = new Set<string>();
+    for (const lineDef of sectorLineDefs) {
+      const edgeKey1 = `${lineDef.startVertex.id}-${lineDef.endVertex.id}`;
+      const edgeKey2 = `${lineDef.endVertex.id}-${lineDef.startVertex.id}`;
+      coveredEdges.add(edgeKey1);
+      coveredEdges.add(edgeKey2);
+    }
+
+    // Check each edge of the sector
+    for (let i = 0; i < sectorVertices.length; i++) {
+      const currentVertex = sectorVertices[i];
+      const nextVertex = sectorVertices[(i + 1) % sectorVertices.length];
+
+      if (!currentVertex || !nextVertex) continue;
+
+      const edgeKey1 = `${currentVertex.id}-${nextVertex.id}`;
+      const edgeKey2 = `${nextVertex.id}-${currentVertex.id}`;
+
+      // If this edge is not covered by any lineDef, create one
+      if (!coveredEdges.has(edgeKey1) && !coveredEdges.has(edgeKey2)) {
+        Logger.info(
+          `[LevelLoader] Creating missing wall for sector ${sector.id}: ${currentVertex.id} -> ${nextVertex.id}`
+        );
+
+        // Calculate line properties
+        const dx = nextVertex.position.x - currentVertex.position.x;
+        const dy = nextVertex.position.y - currentVertex.position.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const normal = new Vector2(-dy / length, dx / length);
+
+        // Create the missing lineDef
+        const missingLineDef: DoomLineDef = {
+          id: `auto_wall_${wallCounter++}`,
+          startVertex: currentVertex,
+          endVertex: nextVertex,
+          flags: {
+            blocking: true,
+            twoSided: false,
+            dontDraw: false,
+            mapped: true,
+            soundBlock: false,
+            secret: false,
+            lowerUnpegged: false,
+            upperUnpegged: false,
+            blockMonsters: true,
+          },
+          frontSide: {
+            id: `auto_wall_${wallCounter}_front`,
+            sector: sector,
+            textureMiddle: 'WALL_STONE',
+            textureUpper: '-',
+            textureLower: '-',
+            offsetX: 0,
+            offsetY: 0,
+            needsUpperTexture: false,
+            needsLowerTexture: false,
+            needsMiddleTexture: true,
+          },
+          length,
+          normal,
+        };
+
+        additionalLineDefs.push(missingLineDef);
+        sector.lineDefs.push(missingLineDef);
+
+        // Mark this edge as covered
+        coveredEdges.add(edgeKey1);
+        coveredEdges.add(edgeKey2);
+      }
+    }
+  }
+
+  Logger.info(`[LevelLoader] Generated ${additionalLineDefs.length} missing walls`);
+  return additionalLineDefs;
+} */
+
+/**
  * Loads and parses a level from JSON data
  */
 export function parseLevel(levelData: LevelData): ParsedLevel {
   Logger.info(`[LevelLoader] Loading level: ${levelData.name} v${levelData.version}`);
+
+  // Validate level before parsing
+  const validationResult = validateLevel(levelData);
+  if (!validationResult.isValid) {
+    Logger.error('[LevelLoader] Level validation failed:');
+    for (const error of validationResult.errors) {
+      Logger.error(`  - ${error}`);
+    }
+    throw new Error(`Level validation failed: ${validationResult.errors.join(', ')}`);
+  }
+
+  if (validationResult.warnings.length > 0) {
+    Logger.warn('[LevelLoader] Level validation warnings:');
+    for (const warning of validationResult.warnings) {
+      Logger.warn(`  - ${warning}`);
+    }
+  }
 
   // Parse vertices first
   const vertices = new Map<string, DoomVertex>();
@@ -281,6 +397,10 @@ export function parseLevel(levelData: LevelData): ParsedLevel {
       }
     }
   }
+
+  // NOTE: Auto-generation of missing walls disabled temporarily due to z-fighting issues
+  // const additionalLineDefs = generateMissingWalls(sectors, lineDefs);
+  // lineDefs.push(...additionalLineDefs);
 
   // Parse player start
   const playerStartSector = sectors.get(levelData.playerStart.sector);

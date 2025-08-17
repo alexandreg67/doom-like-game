@@ -5,15 +5,16 @@
   "description": "Web application for the DOOM-like game",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "npm run sync-fixtures && vite",
+    "build": "npm run sync-fixtures && tsc && vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "test": "vitest",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
-    "format": "biome format . --write"
+    "format": "biome format . --write",
+    "sync-fixtures": "cp -r ../../packages/engine/src/fixtures/*.json public/fixtures/ 2>/dev/null || true"
   },
   "dependencies": {
     "@doom-like/engine": "workspace:*",

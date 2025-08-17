@@ -3,7 +3,7 @@
  * Validates integrated lighting optimization functionality
  */
 
-import { NullEngine, Scene, Vector3 } from '@babylonjs/core';
+import { Color3, NullEngine, Scene, Vector3 } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LightManager } from '../../lighting/light-manager';
 import type { LightConfig } from '../../lighting/types';
@@ -71,10 +71,10 @@ describe('OptimizedLightingSystem', () => {
     return {
       id,
       type: 'point',
-      position: { x, y, z },
+      position: new Vector3(x, y, z),
       intensity: 1.0,
       enabled: true,
-      color: { r: 1, g: 1, b: 1 },
+      color: new Color3(1, 1, 1),
     };
   }
 
@@ -238,7 +238,7 @@ describe('OptimizedLightingSystem', () => {
       const lightConfig: LightConfig = {
         ...createTestLightConfig('shadow_light'),
         type: 'directional',
-        shadow: { enabled: true, mapSize: 512 },
+        shadows: { enabled: true, mapSize: 512, bias: 0.001, darkness: 0.5 },
       };
 
       optimizedLighting.addLight(lightConfig, false);
@@ -263,7 +263,7 @@ describe('OptimizedLightingSystem', () => {
       const lightConfig: LightConfig = {
         ...createTestLightConfig('shadow_light'),
         type: 'directional',
-        shadow: { enabled: true, mapSize: 512 },
+        shadows: { enabled: true, mapSize: 512, bias: 0.001, darkness: 0.5 },
       };
 
       optimizedLighting.addLight(lightConfig, false);
@@ -332,6 +332,8 @@ describe('OptimizedLightingSystem', () => {
         globalSettings: {
           performanceTarget: 45,
           enableDynamicQuality: false,
+          aggressiveCulling: false,
+          adaptiveLOD: true,
         },
       };
 
