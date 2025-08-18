@@ -195,8 +195,11 @@ export class SectorLightingManager {
     this.setAmbientLighting(config.ambient.color, config.ambient.intensity);
     this.setFog(config.fog);
 
-    for (const [lightId, _light] of this.lightManager.getAllLights()) {
-      const shouldBeEnabled = config.lights.includes(lightId);
+    for (const [lightId, light] of this.lightManager.getAllLights()) {
+      const isGlobal =
+        (light.config.type === 'hemispheric' || light.config.type === 'directional') &&
+        light.config.id.startsWith('global_');
+      const shouldBeEnabled = isGlobal || config.lights.includes(lightId);
       this.lightManager.setLightEnabled(lightId, shouldBeEnabled);
     }
   }
@@ -267,7 +270,17 @@ export class SectorLightingManager {
     const fromLights = new Set(from?.lights || []);
     const toLights = new Set(to.lights);
 
-    for (const [lightId] of this.lightManager.getAllLights()) {
+    for (const [lightId, light] of this.lightManager.getAllLights()) {
+      const isGlobal =
+        (light.config.type === 'hemispheric' || light.config.type === 'directional') &&
+        light.config.id.startsWith('global_');
+
+      // Keep global lights always enabled as a safety baseline
+      if (isGlobal) {
+        this.lightManager.setLightEnabled(lightId, true);
+        continue;
+      }
+
       const wasEnabled = fromLights.has(lightId);
       const willBeEnabled = toLights.has(lightId);
 

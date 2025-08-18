@@ -1363,6 +1363,41 @@
     },
     "lights": [
       {
+        "id": "global_fill",
+        "type": "hemispheric",
+        "color": { "r": 0.35, "g": 0.3, "b": 0.3 },
+        "intensity": 0.18,
+        "direction": { "x": 0, "y": 1, "z": 0 },
+        "enabled": true
+      },
+      {
+        "id": "exit_light_glass_corridor",
+        "type": "point",
+        "color": { "r": 1.0, "g": 0.15, "b": 0.15 },
+        "intensity": 0.4,
+        "position": { "x": -33.5, "y": 2.0, "z": -20 },
+        "range": 12,
+        "enabled": true
+      },
+      {
+        "id": "exit_light_control_room",
+        "type": "point",
+        "color": { "r": 1.0, "g": 0.12, "b": 0.12 },
+        "intensity": 0.35,
+        "position": { "x": -50, "y": 2.0, "z": -20 },
+        "range": 10,
+        "enabled": true
+      },
+      {
+        "id": "exit_light_main_corridor",
+        "type": "point",
+        "color": { "r": 1.0, "g": 0.16, "b": 0.16 },
+        "intensity": 0.35,
+        "position": { "x": 33, "y": 2.0, "z": 0 },
+        "range": 10,
+        "enabled": true
+      },
+      {
         "id": "torch_west_1",
         "type": "point",
         "color": { "r": 1.0, "g": 0.85, "b": 0.6 },
@@ -1463,6 +1498,54 @@
           "intensity": 0.45
         },
         "lights": ["pillar_light_storage_1", "pillar_light_storage_2"]
+      },
+      {
+        "sectorId": "sector_glass_corridor",
+        "ambient": {
+          "color": { "r": 0.55, "g": 0.2, "b": 0.2 },
+          "intensity": 0.35
+        },
+  "lights": ["exit_light_glass_corridor"]
+      },
+      {
+        "sectorId": "sector_control_room",
+        "ambient": {
+          "color": { "r": 0.5, "g": 0.18, "b": 0.18 },
+          "intensity": 0.32
+        },
+  "lights": ["exit_light_control_room"]
+      },
+      {
+        "sectorId": "room_west_entry",
+        "ambient": {
+          "color": { "r": 0.5, "g": 0.22, "b": 0.2 },
+          "intensity": 0.33
+        },
+        "lights": []
+      },
+      {
+        "sectorId": "room_west_platform",
+        "ambient": {
+          "color": { "r": 0.5, "g": 0.22, "b": 0.2 },
+          "intensity": 0.33
+        },
+        "lights": []
+      },
+      {
+        "sectorId": "room_corridor",
+        "ambient": {
+          "color": { "r": 0.45, "g": 0.2, "b": 0.2 },
+          "intensity": 0.28
+        },
+  "lights": ["exit_light_main_corridor"]
+      },
+      {
+        "sectorId": "room_north",
+        "ambient": {
+          "color": { "r": 0.45, "g": 0.18, "b": 0.22 },
+          "intensity": 0.3
+        },
+        "lights": []
       },
       {
         "sectorId": "secret_room",
