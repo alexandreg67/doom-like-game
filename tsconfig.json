@@ -23,8 +23,6 @@
       "@doom-like/engine/*": ["./packages/engine/src/*"],
       "@doom-like/game-logic": ["./packages/game-logic/src"],
       "@doom-like/game-logic/*": ["./packages/game-logic/src/*"],
-      "@doom-like/weapons": ["./packages/weapons/src"],
-      "@doom-like/weapons/*": ["./packages/weapons/src/*"],
       "@doom-like/map-editor": ["./packages/map-editor/src"],
       "@doom-like/map-editor/*": ["./packages/map-editor/src/*"],
       "@doom-like/assets": ["./packages/assets/src"],
