@@ -107,7 +107,7 @@ export class CrosshairManager {
 
     // Update spread-based expansion if dynamic
     if (this.baseConfig.behavior === 'dynamic' && this.currentWeaponConfig) {
-      const spreadIncrease = this.currentWeaponConfig.spreadIncrease;
+      const _spreadIncrease = this.currentWeaponConfig.spreadIncrease;
       // This would be updated by the weapon system with actual spread values
     }
   }

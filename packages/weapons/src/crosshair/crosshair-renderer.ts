@@ -78,7 +78,7 @@ export class CrosshairRenderer {
       const progress = Math.min(elapsed / duration, 1);
 
       // Ease-out animation
-      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const easeOut = 1 - (1 - progress) ** 3;
       const currentMultiplier = 1 + (expansionAmount - 1) * (1 - easeOut);
 
       this.setDynamicSize(currentMultiplier);
@@ -166,21 +166,16 @@ export class CrosshairRenderer {
 
     switch (style) {
       case 'dot':
-        return (
-          baseCSS +
-          `
+        return `${baseCSS}
           background-color: var(--crosshair-color);
           border-radius: 50%;
           width: var(--crosshair-thickness);
           height: var(--crosshair-thickness);
           box-shadow: 0 0 0 1px var(--crosshair-outline);
-        `
-        );
+        `;
 
       case 'cross':
-        return (
-          baseCSS +
-          `
+        return `${baseCSS}
           &::before, &::after {
             content: '';
             position: absolute;
@@ -213,21 +208,17 @@ export class CrosshairRenderer {
               calc(-var(--crosshair-gap) / 2 - var(--crosshair-thickness) / 2) 
               calc(50% + var(--crosshair-gap) / 2) 0 1px var(--crosshair-outline);
           }
-        `
-        );
+        `;
 
       case 'circle':
-        return (
-          baseCSS +
-          `
+        return `${baseCSS}
           border: var(--crosshair-thickness) solid var(--crosshair-color);
           border-radius: 50%;
           box-sizing: border-box;
           box-shadow: 
             0 0 0 1px var(--crosshair-outline),
             inset 0 0 0 1px var(--crosshair-outline);
-        `
-        );
+        `;
 
       case 'custom':
         return baseCSS; // Custom styles should be provided via CSS classes

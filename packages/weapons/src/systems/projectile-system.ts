@@ -150,7 +150,7 @@ export class ProjectileSystem {
 
   private createProjectileEntity(
     config: ProjectileConfig,
-    origin: Vector3,
+    _origin: Vector3,
     direction: Vector3,
     owner?: Entity
   ): Entity {
@@ -169,11 +169,12 @@ export class ProjectileSystem {
     return entity;
   }
 
-  private createProjectileMesh(config: ProjectileConfig): Mesh {
+  private createProjectileMesh(_config: ProjectileConfig): Mesh {
     let mesh: Mesh;
 
-    if (this.projectilePool.length > 0) {
-      mesh = this.projectilePool.pop()!;
+    const pooledMesh = this.projectilePool.pop();
+    if (pooledMesh) {
+      mesh = pooledMesh;
       mesh.setEnabled(true);
     } else {
       mesh = MeshBuilder.CreateSphere('projectile', { diameter: 0.2 }, this.scene);
@@ -227,7 +228,7 @@ export class ProjectileSystem {
     }
   }
 
-  private checkProjectileCollision(projectile: ProjectileComponent, mesh: Mesh): boolean {
+  private checkProjectileCollision(_projectile: ProjectileComponent, mesh: Mesh): boolean {
     if (!mesh.physicsImpostor) return false;
 
     // Use physics collision detection
@@ -237,7 +238,7 @@ export class ProjectileSystem {
   private handleProjectileCollision(
     projectile: ProjectileComponent,
     mesh: Mesh,
-    entity: Entity
+    _entity: Entity
   ): void {
     projectile.hasCollided = true;
     projectile.collisionPoint = mesh.position.clone();
@@ -388,7 +389,7 @@ export class ProjectileSystem {
     animate();
   }
 
-  private applyExplosionDamage(position: Vector3, projectile: ProjectileComponent): void {
+  private applyExplosionDamage(_position: Vector3, _projectile: ProjectileComponent): void {
     // This would need integration with the ECS system to find and damage entities
     // Implementation depends on your entity management system
   }

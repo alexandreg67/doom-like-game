@@ -91,9 +91,9 @@ export class RocketLauncher extends BaseWeapon {
     targetPosition: { x: number; y: number; z: number }
   ): boolean {
     const distance = Math.sqrt(
-      Math.pow(targetPosition.x - firerPosition.x, 2) +
-        Math.pow(targetPosition.y - firerPosition.y, 2) +
-        Math.pow(targetPosition.z - firerPosition.z, 2)
+      (targetPosition.x - firerPosition.x) ** 2 +
+        (targetPosition.y - firerPosition.y) ** 2 +
+        (targetPosition.z - firerPosition.z) ** 2
     );
 
     const explosionRadius = this.config.explosionRadius || 128;

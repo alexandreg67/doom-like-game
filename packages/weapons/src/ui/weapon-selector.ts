@@ -4,7 +4,7 @@
  */
 
 import type { Entity } from '@doom-like/game-logic';
-import type { WeaponSlotComponent } from '../components/weapon-component';
+import type { WeaponSlotComponent, WeaponComponent } from '../components/weapon-component';
 import { WeaponFactory } from '../weapons/weapon-factory';
 
 export interface WeaponSelectorConfig {
@@ -204,7 +204,11 @@ export class WeaponSelector {
     }
   }
 
-  private updateSlotWithWeapon(slotElement: HTMLElement, weapon: any, isCurrent: boolean): void {
+  private updateSlotWithWeapon(
+    slotElement: HTMLElement,
+    weapon: WeaponComponent,
+    isCurrent: boolean
+  ): void {
     const weaponDisplay = slotElement.querySelector('.weapon-display') as HTMLElement;
 
     if (!weaponDisplay) return;

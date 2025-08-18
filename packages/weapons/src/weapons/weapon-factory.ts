@@ -34,7 +34,7 @@ export class WeaponFactory {
    * Create a weapon instance by type
    */
   static createWeapon(type: WeaponType): BaseWeapon {
-    const WeaponClass = this.weaponClasses.get(type);
+    const WeaponClass = WeaponFactory.weaponClasses.get(type);
 
     if (!WeaponClass) {
       throw new Error(`Unknown weapon type: ${type}`);
@@ -47,7 +47,7 @@ export class WeaponFactory {
    * Create a weapon component for ECS
    */
   static createWeaponComponent(type: WeaponType): WeaponComponent {
-    const weapon = this.createWeapon(type);
+    const weapon = WeaponFactory.createWeapon(type);
     const config = weapon.getConfig();
     const audioConfig = weapon.getAudioConfig();
 
@@ -64,21 +64,21 @@ export class WeaponFactory {
    * Get all available weapon types
    */
   static getAvailableWeaponTypes(): WeaponType[] {
-    return Array.from(this.weaponClasses.keys());
+    return Array.from(WeaponFactory.weaponClasses.keys());
   }
 
   /**
    * Check if weapon type exists
    */
   static isValidWeaponType(type: string): type is WeaponType {
-    return this.weaponClasses.has(type as WeaponType);
+    return WeaponFactory.weaponClasses.has(type as WeaponType);
   }
 
   /**
    * Get weapon info without creating instance
    */
   static getWeaponInfo(type: WeaponType): { name: string; slot: number; category: string } {
-    const weapon = this.createWeapon(type);
+    const weapon = WeaponFactory.createWeapon(type);
     return {
       name: weapon.getName(),
       slot: weapon.getSlotNumber(),
@@ -92,15 +92,15 @@ export class WeaponFactory {
   static getWeaponsBySlot(): Map<number, WeaponType[]> {
     const slotMap = new Map<number, WeaponType[]>();
 
-    for (const type of this.weaponClasses.keys()) {
-      const weapon = this.createWeapon(type);
+    for (const type of WeaponFactory.weaponClasses.keys()) {
+      const weapon = WeaponFactory.createWeapon(type);
       const slot = weapon.getSlotNumber();
 
       if (!slotMap.has(slot)) {
         slotMap.set(slot, []);
       }
 
-      slotMap.get(slot)!.push(type);
+      slotMap.get(slot)?.push(type);
     }
 
     return slotMap;
@@ -124,7 +124,7 @@ export class WeaponFactory {
     currentAmmo?: number,
     reserveAmmo?: number
   ): WeaponComponent {
-    const component = this.createWeaponComponent(type);
+    const component = WeaponFactory.createWeaponComponent(type);
 
     if (currentAmmo !== undefined) {
       component.currentAmmo = currentAmmo;
@@ -149,8 +149,8 @@ export class WeaponFactory {
     range: number;
     ammoType: string;
   }> {
-    return this.getAvailableWeaponTypes().map((type) => {
-      const weapon = this.createWeapon(type);
+    return WeaponFactory.getAvailableWeaponTypes().map((type) => {
+      const weapon = WeaponFactory.createWeapon(type);
       const config = weapon.getConfig();
 
       // Calculate approximate DPS

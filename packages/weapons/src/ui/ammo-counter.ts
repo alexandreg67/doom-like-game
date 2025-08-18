@@ -3,6 +3,8 @@
  * Displays current ammo and reserves in DOOM style
  */
 
+import type { AmmoType } from '../types';
+
 import type { Entity } from '@doom-like/game-logic';
 import type { AmmoComponent } from '../components/ammo-component';
 import type { WeaponComponent } from '../components/weapon-component';
@@ -169,7 +171,7 @@ export class AmmoCounter {
     this.currentAmmoElement.textContent = displayText;
   }
 
-  private updateReserveAmmo(reserve: number, ammo: AmmoComponent, ammoType: any): void {
+  private updateReserveAmmo(reserve: number, ammo: AmmoComponent, ammoType: AmmoType): void {
     if (!this.reserveAmmoElement) return;
 
     let displayText = reserve.toString();

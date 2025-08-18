@@ -86,13 +86,13 @@ export class HitscanSystem {
    * Get all entities in a cone (for area effect hitscan)
    */
   public getEntitiesInCone(
-    origin: Vector3,
-    direction: Vector3,
+    _origin: Vector3,
+    _direction: Vector3,
     angle: number,
-    maxDistance: number
+    _maxDistance: number
   ): Entity[] {
     const entities: Entity[] = [];
-    const halfAngle = angle / 2;
+    const _halfAngle = angle / 2;
 
     // This would need integration with the ECS system to get all entities
     // For now, return empty array - implementation depends on ECS structure
@@ -103,7 +103,7 @@ export class HitscanSystem {
   /**
    * Update system (cleanup cache, etc.)
    */
-  public update(deltaTime: number): void {
+  public update(_deltaTime: number): void {
     const now = performance.now();
 
     // Clear raycast cache periodically
@@ -117,8 +117,9 @@ export class HitscanSystem {
     // Create cache key for potential optimization
     const cacheKey = `${origin.x},${origin.y},${origin.z}:${direction.x},${direction.y},${direction.z}`;
 
-    if (this.raycastCache.has(cacheKey)) {
-      return this.raycastCache.get(cacheKey)!;
+    const cachedResult = this.raycastCache.get(cacheKey);
+    if (cachedResult) {
+      return cachedResult;
     }
 
     const ray = new Ray(origin, direction, config.range);
@@ -127,14 +128,19 @@ export class HitscanSystem {
     let result: HitResult;
 
     if (pickInfo?.hit && pickInfo.pickedPoint && pickInfo.getNormal()) {
-      result = {
-        hit: true,
-        position: pickInfo.pickedPoint,
-        normal: pickInfo.getNormal()!,
-        distance: pickInfo.distance,
-        damage: 0, // Will be calculated later
-        // entity: this.getEntityFromMesh(pickInfo.pickedMesh), // Need ECS integration
-      };
+      const normal = pickInfo.getNormal();
+      if (normal) {
+        result = {
+          hit: true,
+          position: pickInfo.pickedPoint,
+          normal,
+          distance: pickInfo.distance,
+          damage: 0, // Will be calculated later
+          // entity: this.getEntityFromMesh(pickInfo.pickedMesh), // Need ECS integration
+        };
+      } else {
+        result = this.createMissResult(origin, direction);
+      }
     } else {
       result = this.createMissResult(origin, direction);
     }

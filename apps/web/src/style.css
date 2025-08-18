@@ -246,7 +246,7 @@ footer {
 
 .crosshair-cross::before,
 .crosshair-cross::after {
-  content: '';
+  content: "";
   position: absolute;
   background: var(--crosshair-color, #ffffff);
   opacity: var(--crosshair-opacity, 1.0);
@@ -302,8 +302,14 @@ footer {
 }
 
 @keyframes hitMarker {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); filter: brightness(1.5); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+    filter: brightness(1.5);
+  }
 }
 
 /* Ammo Counter Styles */
@@ -371,30 +377,65 @@ footer {
 }
 
 @keyframes ammoLowBlink {
-  0%, 70% { opacity: 1; }
-  85%, 100% { opacity: 0.4; }
+  0%,
+  70% {
+    opacity: 1;
+  }
+  85%,
+  100% {
+    opacity: 0.4;
+  }
 }
 
 @keyframes ammoEmptyBlink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0.2; }
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0.2;
+  }
 }
 
 @keyframes reloadPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
 @keyframes weaponSwitch {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(0.8); opacity: 0.5; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes ammoPickup {
-  0% { transform: scale(1); color: #ffffff; }
-  50% { transform: scale(1.2); color: #00ff00; }
-  100% { transform: scale(1); color: #ffffff; }
+  0% {
+    transform: scale(1);
+    color: #ffffff;
+  }
+  50% {
+    transform: scale(1.2);
+    color: #00ff00;
+  }
+  100% {
+    transform: scale(1);
+    color: #ffffff;
+  }
 }
 
 /* Classic DOOM-style themes */
@@ -405,7 +446,7 @@ footer {
 
 .ammo-counter-modern {
   color: #00ff00;
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   background: linear-gradient(135deg, rgba(0, 255, 0, 0.1), rgba(0, 100, 0, 0.1));
   border: 1px solid #00ff00;
 }
@@ -441,7 +482,7 @@ footer {
   #crosshair-container .crosshair {
     transform: scale(1.2);
   }
-  
+
   #ammo-container {
     bottom: 80px;
     right: 10px;

@@ -233,7 +233,7 @@ export class WeaponSystem {
    */
   private canFire(
     weapon: WeaponComponent,
-    ammo: AmmoComponent,
+    _ammo: AmmoComponent,
     state: WeaponStateComponent
   ): boolean {
     // Check weapon state
@@ -383,8 +383,8 @@ export class WeaponSystem {
 
   private updateMuzzleFlash(
     weapon: WeaponComponent,
-    state: WeaponStateComponent,
-    deltaTime: number
+    _state: WeaponStateComponent,
+    _deltaTime: number
   ): void {
     if (weapon.muzzleFlashActive) {
       const flashDuration = 50; // ms
@@ -421,7 +421,7 @@ export class WeaponSystem {
       );
 
     if (!this.audioEnabled) {
-      if (this.debugMode) console.log(`[WEAPON_SYSTEM] Audio disabled, returning early`);
+      if (this.debugMode) console.log('[WEAPON_SYSTEM] Audio disabled, returning early');
       return;
     }
 
@@ -458,9 +458,9 @@ export class WeaponSystem {
         spatialContext
       );
       if (this.debugMode)
-        console.log(`[WEAPON_SYSTEM] Successfully called audioManager.playWeaponSound`);
+        console.log('[WEAPON_SYSTEM] Successfully called audioManager.playWeaponSound');
     } catch (error) {
-      console.error(`[WEAPON_SYSTEM] Error calling audioManager.playWeaponSound:`, error);
+      console.error('[WEAPON_SYSTEM] Error calling audioManager.playWeaponSound:', error);
     }
 
     if (this.debugMode) {

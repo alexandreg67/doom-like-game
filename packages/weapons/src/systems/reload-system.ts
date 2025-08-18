@@ -161,7 +161,7 @@ export class ReloadSystem {
     weapon.lastReloadTime = state.reloadStartTime;
   }
 
-  private updateReloadProgress(entity: Entity, deltaTime: number): void {
+  private updateReloadProgress(entity: Entity, _deltaTime: number): void {
     const weapon = entity.components.get('weapon') as WeaponComponent;
     const ammo = entity.components.get('ammo') as AmmoComponent;
     const state = entity.components.get('weaponState') as WeaponStateComponent;
@@ -275,15 +275,17 @@ export class AdvancedReloadSystem extends ReloadSystem {
 
     if (progress < animConfig.ejectPoint) {
       return ReloadState.Start;
-    } else if (progress < animConfig.insertPoint) {
-      return ReloadState.Eject;
-    } else if (progress < animConfig.chamberPoint) {
-      return ReloadState.Insert;
-    } else if (progress < 1.0) {
-      return ReloadState.Chamber;
-    } else {
-      return ReloadState.Complete;
     }
+    if (progress < animConfig.insertPoint) {
+      return ReloadState.Eject;
+    }
+    if (progress < animConfig.chamberPoint) {
+      return ReloadState.Insert;
+    }
+    if (progress < 1.0) {
+      return ReloadState.Chamber;
+    }
+    return ReloadState.Complete;
   }
 }
 

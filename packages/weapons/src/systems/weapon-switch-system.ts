@@ -169,7 +169,7 @@ export class WeaponSwitchSystem {
   /**
    * Update weapon switching state
    */
-  public update(entity: Entity, deltaTime: number): void {
+  public update(entity: Entity, _deltaTime: number): void {
     const state = entity.components.get('weaponState') as WeaponStateComponent;
 
     if (!state || !state.isSwitching) {

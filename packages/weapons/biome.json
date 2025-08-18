@@ -5,13 +5,16 @@
     "rules": {
       "complexity": {
         "noForEach": "warn",
-        "noUselessConstructor": "warn"
+        "noUselessConstructor": "warn",
+        "noStaticOnlyClass": "warn"
       },
       "suspicious": {
         "noExplicitAny": "warn"
       },
       "style": {
-        "noNonNullAssertion": "warn"
+        "noNonNullAssertion": "warn",
+        "useTemplate": "warn",
+        "useExponentiationOperator": "warn"
       },
       "correctness": {
         "noUnusedVariables": "warn"
