@@ -27,6 +27,16 @@ export interface GameKeyMappings {
   readonly nextWeapon: KeyMapping;
   readonly prevWeapon: KeyMapping;
 
+  // Weapon selection (DOOM-style slots 1-8)
+  readonly selectWeapon1: KeyMapping;
+  readonly selectWeapon2: KeyMapping;
+  readonly selectWeapon3: KeyMapping;
+  readonly selectWeapon4: KeyMapping;
+  readonly selectWeapon5: KeyMapping;
+  readonly selectWeapon6: KeyMapping;
+  readonly selectWeapon7: KeyMapping;
+  readonly selectWeapon8: KeyMapping;
+
   // Interface
   readonly pause: KeyMapping;
   readonly map: KeyMapping;
@@ -58,6 +68,16 @@ export namespace KeyMappings {
     nextWeapon: { primary: 'KeyW', displayName: 'W' },
     prevWeapon: { primary: 'KeyA', displayName: 'A' },
 
+    // Weapon selection (DOOM-style slots)
+    selectWeapon1: { primary: 'Digit1', displayName: '1' },
+    selectWeapon2: { primary: 'Digit2', displayName: '2' },
+    selectWeapon3: { primary: 'Digit3', displayName: '3' },
+    selectWeapon4: { primary: 'Digit4', displayName: '4' },
+    selectWeapon5: { primary: 'Digit5', displayName: '5' },
+    selectWeapon6: { primary: 'Digit6', displayName: '6' },
+    selectWeapon7: { primary: 'Digit7', displayName: '7' },
+    selectWeapon8: { primary: 'Digit8', displayName: '8' },
+
     // Interface
     pause: { primary: 'Escape', displayName: 'Échap' },
     map: { primary: 'Tab', displayName: 'Tab' },
@@ -84,6 +104,16 @@ export namespace KeyMappings {
     reload: { primary: 'KeyR', displayName: 'R' },
     nextWeapon: { primary: 'KeyE', displayName: 'E' },
     prevWeapon: { primary: 'KeyQ', displayName: 'Q' },
+
+    // Weapon selection (DOOM-style slots)
+    selectWeapon1: { primary: 'Digit1', displayName: '1' },
+    selectWeapon2: { primary: 'Digit2', displayName: '2' },
+    selectWeapon3: { primary: 'Digit3', displayName: '3' },
+    selectWeapon4: { primary: 'Digit4', displayName: '4' },
+    selectWeapon5: { primary: 'Digit5', displayName: '5' },
+    selectWeapon6: { primary: 'Digit6', displayName: '6' },
+    selectWeapon7: { primary: 'Digit7', displayName: '7' },
+    selectWeapon8: { primary: 'Digit8', displayName: '8' },
 
     // Interface
     pause: { primary: 'Escape', displayName: 'Esc' },

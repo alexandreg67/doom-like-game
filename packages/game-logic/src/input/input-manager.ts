@@ -37,6 +37,16 @@ export class InputManager {
     nextWeapon: false,
     prevWeapon: false,
 
+    // Weapon selection (DOOM-style slots 1-8)
+    selectWeapon1: false,
+    selectWeapon2: false,
+    selectWeapon3: false,
+    selectWeapon4: false,
+    selectWeapon5: false,
+    selectWeapon6: false,
+    selectWeapon7: false,
+    selectWeapon8: false,
+
     // Interface
     pause: false,
     map: false,

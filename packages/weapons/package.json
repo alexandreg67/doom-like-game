@@ -1,0 +1,36 @@
+{
+  "name": "@doom-like/weapons",
+  "version": "0.1.0",
+  "description": "Weapon system and aiming mechanics for DOOM-like game",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "lint": "biome check src",
+    "format": "biome format --write src"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^7.31.1",
+    "@doom-like/engine": "workspace:*",
+    "@doom-like/game-logic": "workspace:*",
+    "@doom-like/assets": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  }
+}

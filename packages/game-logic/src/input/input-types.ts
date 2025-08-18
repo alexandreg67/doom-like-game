@@ -19,6 +19,16 @@ export interface InputState {
   nextWeapon: boolean;
   prevWeapon: boolean;
 
+  // Weapon selection (DOOM-style slots 1-8)
+  selectWeapon1: boolean;
+  selectWeapon2: boolean;
+  selectWeapon3: boolean;
+  selectWeapon4: boolean;
+  selectWeapon5: boolean;
+  selectWeapon6: boolean;
+  selectWeapon7: boolean;
+  selectWeapon8: boolean;
+
   // Interface
   pause: boolean;
   map: boolean;
