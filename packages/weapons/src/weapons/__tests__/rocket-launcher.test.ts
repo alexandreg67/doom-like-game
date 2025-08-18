@@ -298,10 +298,10 @@ describe('RocketLauncher', () => {
         { distance: 120, expectedDamage: Math.floor(directDamage * (1 - 120 / aoeRadius)) },
       ];
 
-      enemyPositions.forEach(({ distance, expectedDamage }) => {
+      for (const { distance, expectedDamage } of enemyPositions) {
         const actualDamage = rocketLauncher.calculateSplashDamage(directDamage, distance);
         expect(actualDamage).toBe(expectedDamage);
-      });
+      }
     });
   });
 });

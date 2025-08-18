@@ -228,7 +228,9 @@ export class WeaponProgression {
     for (let i = 1; i <= level; i++) {
       const weapons = levelUnlocks[i];
       if (weapons) {
-        weapons.forEach((weapon) => this.unlockWeapon(weapon));
+        for (const weapon of weapons) {
+          this.unlockWeapon(weapon);
+        }
       }
     }
   }

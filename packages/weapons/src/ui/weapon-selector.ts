@@ -4,7 +4,7 @@
  */
 
 import type { Entity } from '@doom-like/game-logic';
-import type { WeaponSlotComponent, WeaponComponent } from '../components/weapon-component';
+import type { WeaponComponent, WeaponSlotComponent } from '../components/weapon-component';
 import { WeaponFactory } from '../weapons/weapon-factory';
 
 export interface WeaponSelectorConfig {
@@ -96,9 +96,9 @@ export class WeaponSelector {
    */
   public highlightSlot(slotNumber: number): void {
     // Remove previous highlights
-    this.slotElements.forEach((element) => {
+    for (const element of this.slotElements.values()) {
       element.classList.remove('highlighted');
-    });
+    }
 
     // Add highlight to specified slot
     const slotElement = this.slotElements.get(slotNumber);
