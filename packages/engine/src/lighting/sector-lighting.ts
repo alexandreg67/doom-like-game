@@ -3,7 +3,7 @@ import type { DoomSector } from '../geometry/doom-geometry';
 import { Logger } from '../utils/logger';
 import type { FogManager } from './fog-manager';
 import type { LightManager } from './light-manager';
-import type { FogConfig, LightTransition, SectorLightingConfig } from './types';
+import type { FogConfig, LightInstance, LightTransition, SectorLightingConfig } from './types';
 
 export class SectorLightingManager {
   private scene: Scene;
@@ -195,8 +195,8 @@ export class SectorLightingManager {
     this.setAmbientLighting(config.ambient.color, config.ambient.intensity);
     this.setFog(config.fog);
 
-    for (const [lightId, _light] of this.lightManager.getAllLights()) {
-      const shouldBeEnabled = config.lights.includes(lightId);
+    for (const [lightId, light] of this.lightManager.getAllLights()) {
+      const shouldBeEnabled = this._isGlobalLight(light) || config.lights.includes(lightId);
       this.lightManager.setLightEnabled(lightId, shouldBeEnabled);
     }
   }
@@ -267,7 +267,13 @@ export class SectorLightingManager {
     const fromLights = new Set(from?.lights || []);
     const toLights = new Set(to.lights);
 
-    for (const [lightId] of this.lightManager.getAllLights()) {
+    for (const [lightId, light] of this.lightManager.getAllLights()) {
+      // Keep global lights always enabled as a safety baseline
+      if (this._isGlobalLight(light)) {
+        this.lightManager.setLightEnabled(lightId, true);
+        continue;
+      }
+
       const wasEnabled = fromLights.has(lightId);
       const willBeEnabled = toLights.has(lightId);
 
@@ -285,6 +291,13 @@ export class SectorLightingManager {
         }
       }
     }
+  }
+
+  private _isGlobalLight(light: LightInstance): boolean {
+    return (
+      (light.config.type === 'hemispheric' || light.config.type === 'directional') &&
+      light.config.id.startsWith('global_')
+    );
   }
 
   // Fog transition management is now delegated to FogManager

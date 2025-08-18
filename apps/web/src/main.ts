@@ -15,7 +15,7 @@ const gameState = {
   playerController: null as PlayerController | null,
   cameraController: null as FPSCameraController | null,
   collisionDetector: null as CollisionDetector | null,
-  currentLevel: 'demo_level_phase1',
+  currentLevel: 'test_level_extended',
   gameRunning: false,
 };
 
@@ -151,7 +151,9 @@ async function loadLevel(levelName: string) {
 
     // For now, just update the collision system and player position
     console.log(
-      `[GAME] Collision geometry loaded with ${levelData.lineDefs.length} lines and ${Array.from(levelData.sectors.values()).length} sectors`
+      `[GAME] Collision geometry loaded with ${
+        levelData.lineDefs.length
+      } lines and ${Array.from(levelData.sectors.values()).length} sectors`
     );
 
     gameState.currentLevel = levelName;
@@ -306,7 +308,9 @@ function setupRendererInfo() {
   const capabilities = gameState.engine.getRenderer().getCapabilities();
 
   rendererInfo.innerHTML = `
-    <p><strong>Renderer:</strong> ${rendererType.toUpperCase()} ${capabilities.supported ? '✅' : '⚠️'}</p>
+    <p><strong>Renderer:</strong> ${rendererType.toUpperCase()} ${
+      capabilities.supported ? '✅' : '⚠️'
+    }</p>
     <p><strong>Version:</strong> Babylon.js ${babylonEngine.version}</p>
     <p><strong>FPS:</strong> <span id="fps">--</span></p>
     <p><strong>Level:</strong> <span id="current-level">${gameState.currentLevel}</span></p>
@@ -346,7 +350,9 @@ function updateDisplayMetrics() {
       .getEntity()
       .components.get('transform') as Transform;
     if (transform) {
-      posElement.textContent = `${transform.x.toFixed(1)}, ${transform.y.toFixed(1)}, ${transform.z.toFixed(1)}`;
+      posElement.textContent = `${transform.x.toFixed(
+        1
+      )}, ${transform.y.toFixed(1)}, ${transform.z.toFixed(1)}`;
     }
   }
 
