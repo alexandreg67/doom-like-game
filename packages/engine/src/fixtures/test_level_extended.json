@@ -1371,30 +1371,75 @@
         "enabled": true
       },
       {
+        "id": "exit_light_center",
+        "type": "point",
+        "color": { "r": 1.0, "g": 0.14, "b": 0.14 },
+        "intensity": 0.42,
+        "position": { "x": 0, "y": 2.2, "z": 0 },
+        "range": 24,
+        "enabled": true
+      },
+      {
+        "id": "exit_light_west_entry",
+        "type": "point",
+        "color": { "r": 1.0, "g": 0.14, "b": 0.14 },
+        "intensity": 0.4,
+        "position": { "x": -17, "y": 2.0, "z": -10 },
+        "range": 18,
+        "enabled": true
+      },
+      {
+        "id": "exit_light_west_platform",
+        "type": "point",
+        "color": { "r": 1.0, "g": 0.14, "b": 0.14 },
+        "intensity": 0.4,
+        "position": { "x": -18, "y": 2.0, "z": -20 },
+        "range": 18,
+        "enabled": true
+      },
+      {
+        "id": "exit_light_room_north",
+        "type": "point",
+        "color": { "r": 1.0, "g": 0.14, "b": 0.14 },
+        "intensity": 0.38,
+        "position": { "x": 0, "y": 2.0, "z": 15 },
+        "range": 16,
+        "enabled": true
+      },
+      {
+        "id": "exit_light_secret_room",
+        "type": "point",
+        "color": { "r": 1.0, "g": 0.12, "b": 0.12 },
+        "intensity": 0.34,
+        "position": { "x": 0, "y": 2.0, "z": 22.5 },
+        "range": 14,
+        "enabled": true
+      },
+      {
         "id": "exit_light_glass_corridor",
         "type": "point",
         "color": { "r": 1.0, "g": 0.15, "b": 0.15 },
-        "intensity": 0.4,
+        "intensity": 0.45,
         "position": { "x": -33.5, "y": 2.0, "z": -20 },
-        "range": 12,
+        "range": 18,
         "enabled": true
       },
       {
         "id": "exit_light_control_room",
         "type": "point",
         "color": { "r": 1.0, "g": 0.12, "b": 0.12 },
-        "intensity": 0.35,
+        "intensity": 0.4,
         "position": { "x": -50, "y": 2.0, "z": -20 },
-        "range": 10,
+        "range": 16,
         "enabled": true
       },
       {
         "id": "exit_light_main_corridor",
         "type": "point",
         "color": { "r": 1.0, "g": 0.16, "b": 0.16 },
-        "intensity": 0.35,
+        "intensity": 0.4,
         "position": { "x": 33, "y": 2.0, "z": 0 },
-        "range": 10,
+        "range": 20,
         "enabled": true
       },
       {
@@ -1472,12 +1517,20 @@
     ],
     "sectorLighting": [
       {
+        "sectorId": "room_main",
+        "ambient": {
+          "color": { "r": 0.8, "g": 0.8, "b": 0.85 },
+          "intensity": 0.65
+        },
+        "lights": ["exit_light_center"]
+      },
+      {
         "sectorId": "room_west_corridor",
         "ambient": {
           "color": { "r": 0.9, "g": 0.8, "b": 0.7 },
           "intensity": 0.6
         },
-        "lights": ["torch_west_1", "torch_west_2"]
+        "lights": ["torch_west_1", "torch_west_2", "exit_light_center"]
       },
       {
         "sectorId": "sector_reactor_room",
@@ -1505,7 +1558,7 @@
           "color": { "r": 0.55, "g": 0.2, "b": 0.2 },
           "intensity": 0.35
         },
-  "lights": ["exit_light_glass_corridor"]
+        "lights": ["exit_light_glass_corridor"]
       },
       {
         "sectorId": "sector_control_room",
@@ -1513,7 +1566,7 @@
           "color": { "r": 0.5, "g": 0.18, "b": 0.18 },
           "intensity": 0.32
         },
-  "lights": ["exit_light_control_room"]
+        "lights": ["exit_light_control_room"]
       },
       {
         "sectorId": "room_west_entry",
@@ -1521,7 +1574,7 @@
           "color": { "r": 0.5, "g": 0.22, "b": 0.2 },
           "intensity": 0.33
         },
-        "lights": []
+        "lights": ["exit_light_west_entry"]
       },
       {
         "sectorId": "room_west_platform",
@@ -1529,7 +1582,7 @@
           "color": { "r": 0.5, "g": 0.22, "b": 0.2 },
           "intensity": 0.33
         },
-        "lights": []
+        "lights": ["exit_light_west_platform"]
       },
       {
         "sectorId": "room_corridor",
@@ -1537,7 +1590,7 @@
           "color": { "r": 0.45, "g": 0.2, "b": 0.2 },
           "intensity": 0.28
         },
-  "lights": ["exit_light_main_corridor"]
+        "lights": ["exit_light_main_corridor", "exit_light_center"]
       },
       {
         "sectorId": "room_north",
@@ -1545,7 +1598,7 @@
           "color": { "r": 0.45, "g": 0.18, "b": 0.22 },
           "intensity": 0.3
         },
-        "lights": []
+        "lights": ["exit_light_room_north"]
       },
       {
         "sectorId": "secret_room",
@@ -1553,7 +1606,7 @@
           "color": { "r": 0.3, "g": 0.35, "b": 0.4 },
           "intensity": 0.2
         },
-        "lights": [],
+        "lights": ["exit_light_secret_room"],
         "fog": {
           "enabled": true,
           "mode": "exponential",
@@ -1565,7 +1618,7 @@
     "performance": {
       "maxActiveLights": 8,
       "shadowMapPoolSize": 2,
-      "cullingDistance": 25,
+      "cullingDistance": 35,
       "enableLOD": true
     }
   }
