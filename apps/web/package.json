@@ -22,7 +22,6 @@
     "@doom-like/game-logic": "workspace:*",
     "@doom-like/map-editor": "workspace:*",
     "@doom-like/assets": "workspace:*",
-    "@doom-like/weapons": "workspace:*",
     "@babylonjs/core": "^7.0.0",
     "@babylonjs/materials": "^7.0.0",
     "@babylonjs/loaders": "^7.0.0",

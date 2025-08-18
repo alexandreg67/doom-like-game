@@ -4,8 +4,8 @@
  */
 
 import { Vector2 } from '@babylonjs/core';
+import type { WeaponAudioConfig, WeaponConfig } from '../types';
 import { BaseWeapon } from './base-weapon';
-import type { WeaponConfig, WeaponAudioConfig } from '../types';
 
 export class Pistol extends BaseWeapon {
   constructor() {
@@ -13,26 +13,26 @@ export class Pistol extends BaseWeapon {
       name: 'Pistol',
       type: 'hitscan',
       category: 'pistol',
-      
+
       // Damage (DOOM: 5-15)
       minDamage: 5,
       maxDamage: 15,
       range: 2048, // DOOM hitscan range
-      
+
       // Firing mechanics
       fireRate: 200, // RPM - semi-automatic
-      
+
       // Accuracy (DOOM: first shot accurate, spread increases)
       baseSpread: 0, // Perfect first shot
       maxSpread: 5.5, // Max spread in degrees
       spreadIncrease: 2.0, // Spread per shot
       spreadDecay: 8.0, // Spread decay per second
-      
+
       // Ammo
       ammoType: 'bullets',
       clipSize: 12, // Modern pistol magazine
       reloadTime: 1.5, // seconds
-      
+
       // Visual
       muzzleFlash: true,
       recoil: new Vector2(0.5, 1.0),
@@ -74,26 +74,26 @@ export class EnhancedPistol extends BaseWeapon {
       name: 'Enhanced Pistol',
       type: 'hitscan',
       category: 'pistol',
-      
+
       // Higher damage than basic pistol
       minDamage: 8,
       maxDamage: 20,
       range: 2048,
-      
+
       // Faster fire rate
       fireRate: 300,
-      
+
       // Better accuracy
       baseSpread: 0,
       maxSpread: 4.0,
       spreadIncrease: 1.5,
       spreadDecay: 10.0,
-      
+
       // Larger magazine
       ammoType: 'bullets',
       clipSize: 15,
       reloadTime: 1.8,
-      
+
       muzzleFlash: true,
       recoil: new Vector2(0.7, 1.2),
       crosshairStyle: 'dot',

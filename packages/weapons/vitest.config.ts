@@ -6,12 +6,7 @@ export default defineConfig({
     setupFiles: ['../../tests/setup.ts'],
     coverage: {
       reporter: ['text', 'html'],
-      exclude: [
-        'node_modules/',
-        'dist/',
-        '**/*.test.ts',
-        '**/*.d.ts',
-      ],
+      exclude: ['node_modules/', 'dist/', '**/*.test.ts', '**/*.d.ts'],
     },
   },
 });

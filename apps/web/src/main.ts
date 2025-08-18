@@ -8,16 +8,21 @@ import {
   PlayerController,
   Transform,
 } from '@doom-like/game-logic';
+import { WeaponPlayerController } from './weapon-player-controller';
 import './style.css';
 
 const gameState = {
   engine: null as Engine | null,
   playerController: null as PlayerController | null,
+  weaponPlayerController: null as WeaponPlayerController | null,
   cameraController: null as FPSCameraController | null,
   collisionDetector: null as CollisionDetector | null,
   currentLevel: 'test_level_extended',
   gameRunning: false,
 };
+
+// Make gameState globally accessible for weapon system
+(window as any).gameState = gameState;
 
 async function initializeGame() {
   const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
@@ -75,6 +80,11 @@ async function initializeGame() {
 
     console.log('[GAME] Player systems initialized');
 
+    // Initialize weapon system
+    await initializeWeaponSystem(playerController, engine);
+
+    console.log('[GAME] Weapon system initialized');
+
     // Load initial level
     await loadLevel(gameState.currentLevel);
 
@@ -111,6 +121,100 @@ async function initializeGame() {
       `;
     }
   }
+}
+
+async function initializeWeaponSystem(
+  playerController: PlayerController,
+  engine: Engine
+): Promise<void> {
+  try {
+    // Get or create UI containers for weapon system
+    const crosshairContainer = getOrCreateElement('crosshair-container', 'div', {
+      position: 'fixed',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      'pointer-events': 'none',
+      'z-index': '1000',
+    });
+
+    const ammoContainer = getOrCreateElement('ammo-container', 'div', {
+      position: 'fixed',
+      bottom: '20px',
+      right: '20px',
+      'z-index': '1000',
+      'font-family': '"Courier New", monospace',
+      'font-size': '14px',
+      color: '#ffffff',
+      'background-color': 'rgba(0, 0, 0, 0.7)',
+      padding: '10px',
+      'border-radius': '5px',
+      'min-width': '120px',
+    });
+
+    // Get Babylon.js scene
+    const babylonEngine = engine.getBabylonEngine();
+    const scene = babylonEngine.scenes[0];
+
+    if (!scene) {
+      throw new Error('No Babylon.js scene found');
+    }
+
+    // Debug: Log container creation
+    console.log('[GAME] Crosshair container created:', crosshairContainer);
+    console.log('[GAME] Ammo container created:', ammoContainer);
+    console.log('[GAME] Crosshair container styles:', crosshairContainer.style.cssText);
+
+    // Initialize weapon player controller
+    console.log('[GAME] About to create WeaponPlayerController...');
+    try {
+      const weaponPlayerController = new WeaponPlayerController(
+        playerController,
+        scene,
+        crosshairContainer,
+        ammoContainer
+      );
+
+      gameState.weaponPlayerController = weaponPlayerController;
+      console.log('[GAME] WeaponPlayerController created successfully');
+    } catch (error) {
+      console.error('[GAME] Failed to create WeaponPlayerController:', error);
+      throw error;
+    }
+
+    console.log('[GAME] Weapon system initialized successfully');
+
+    // Debug: Check if crosshair is visible after initialization
+    setTimeout(() => {
+      console.log('[DEBUG] Crosshair container children:', crosshairContainer.children.length);
+      console.log('[DEBUG] Ammo container children:', ammoContainer.children.length);
+      if (crosshairContainer.children.length > 0) {
+        console.log('[DEBUG] First crosshair child:', crosshairContainer.children[0]);
+      }
+    }, 1000);
+  } catch (error) {
+    console.error('[GAME] Failed to initialize weapon system:', error);
+  }
+}
+
+function getOrCreateElement(
+  id: string,
+  tagName: string,
+  styles: Record<string, string>
+): HTMLElement {
+  let element = document.getElementById(id);
+
+  if (!element) {
+    element = document.createElement(tagName);
+    element.id = id;
+
+    // Apply styles
+    Object.assign(element.style, styles);
+
+    document.body.appendChild(element);
+  }
+
+  return element;
 }
 
 async function loadLevel(levelName: string) {
@@ -241,6 +345,11 @@ function startGameLoop() {
     // Update game systems
     gameState.playerController.update(deltaTime);
     gameState.cameraController.update(deltaTime);
+
+    // Update weapon system
+    if (gameState.weaponPlayerController) {
+      gameState.weaponPlayerController.update(deltaTime);
+    }
 
     // Sync with Babylon.js camera
     const babylonScene = gameState.engine.getBabylonEngine().scenes[0];

@@ -55,37 +55,40 @@ export interface WeaponConfig {
   name: string;
   type: WeaponType;
   category: WeaponCategory;
-  
+
   // Damage and range
   minDamage: number;
   maxDamage: number;
   range: number;
-  
+
   // Firing mechanics
   fireRate: number; // rounds per minute
   burstCount?: number;
   burstDelay?: number;
-  
+
   // Accuracy and spread
   baseSpread: number; // in degrees
   maxSpread: number;
   spreadIncrease: number;
   spreadDecay: number;
-  
+
   // Ammo
   ammoType: AmmoType;
   clipSize: number;
   reloadTime: number;
-  
+
   // Visual and audio
   muzzleFlash: boolean;
   recoil: Vector2; // x = horizontal, y = vertical
   crosshairStyle: CrosshairStyle;
-  
+
   // Special properties
   penetration?: number;
   explosionRadius?: number;
   projectileSpeed?: number;
+
+  // Audio configuration
+  audioConfig?: WeaponAudioConfig;
 }
 
 /**
@@ -100,12 +103,12 @@ export interface CrosshairConfig {
   color: string;
   outlineColor?: string;
   opacity: number;
-  
+
   // Dynamic behavior
   expandOnFire?: boolean;
   expandOnMove?: boolean;
   expansionAmount?: number;
-  
+
   // Weapon-specific overrides
   weaponOverrides?: Map<string, Partial<CrosshairConfig>>;
 }

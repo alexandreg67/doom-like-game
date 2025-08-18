@@ -47,13 +47,13 @@ export class WeaponSwitchSystem {
    */
   public switchToNext(entity: Entity): boolean {
     const slots = entity.components.get('weaponSlot') as WeaponSlotComponent;
-    
+
     if (!slots) {
       return false;
     }
 
     const currentSlot = slots.currentSlot;
-    
+
     // Find next weapon slot
     for (let i = 1; i <= 8; i++) {
       const nextSlot = ((currentSlot + i - 1) % 8) + 1;
@@ -70,13 +70,13 @@ export class WeaponSwitchSystem {
    */
   public switchToPrevious(entity: Entity): boolean {
     const slots = entity.components.get('weaponSlot') as WeaponSlotComponent;
-    
+
     if (!slots) {
       return false;
     }
 
     const currentSlot = slots.currentSlot;
-    
+
     // Find previous weapon slot
     for (let i = 1; i <= 8; i++) {
       const prevSlot = ((currentSlot - i - 1 + 8) % 8) + 1;
@@ -93,7 +93,7 @@ export class WeaponSwitchSystem {
    */
   public switchToLast(entity: Entity): boolean {
     const slots = entity.components.get('weaponSlot') as WeaponSlotComponent;
-    
+
     if (!slots) {
       return false;
     }
@@ -106,7 +106,7 @@ export class WeaponSwitchSystem {
    */
   public addWeaponToSlot(entity: Entity, weaponType: WeaponType, slotNumber?: number): boolean {
     const slots = entity.components.get('weaponSlot') as WeaponSlotComponent;
-    
+
     if (!slots) {
       return false;
     }
@@ -125,12 +125,12 @@ export class WeaponSwitchSystem {
 
     // Create weapon component
     const weaponComponent = WeaponFactory.createWeaponComponent(weaponType);
-    
+
     // Add to slot
     slots.slots.set(targetSlot, weaponComponent);
 
     console.log(`[WEAPON] Added ${weaponComponent.config.name} to slot ${targetSlot}`);
-    
+
     // Auto-switch if no current weapon or if adding to current slot
     if (slots.currentSlot === 0 || !slots.slots.get(slots.currentSlot)) {
       this.switchToSlot(entity, targetSlot);
@@ -144,7 +144,7 @@ export class WeaponSwitchSystem {
    */
   public removeWeaponFromSlot(entity: Entity, slotNumber: number): boolean {
     const slots = entity.components.get('weaponSlot') as WeaponSlotComponent;
-    
+
     if (!slots) {
       return false;
     }
@@ -171,7 +171,7 @@ export class WeaponSwitchSystem {
    */
   public update(entity: Entity, deltaTime: number): void {
     const state = entity.components.get('weaponState') as WeaponStateComponent;
-    
+
     if (!state || !state.isSwitching) {
       return;
     }
@@ -185,7 +185,7 @@ export class WeaponSwitchSystem {
    */
   public canSwitchWeapon(entity: Entity): boolean {
     const state = entity.components.get('weaponState') as WeaponStateComponent;
-    
+
     if (!state) {
       return false;
     }
@@ -204,13 +204,13 @@ export class WeaponSwitchSystem {
    */
   public getAvailableSlots(entity: Entity): number[] {
     const slots = entity.components.get('weaponSlot') as WeaponSlotComponent;
-    
+
     if (!slots) {
       return [];
     }
 
     const available: number[] = [];
-    
+
     for (let i = 1; i <= 8; i++) {
       if (slots.slots.get(i)) {
         available.push(i);
@@ -233,7 +233,7 @@ export class WeaponSwitchSystem {
    */
   public getCurrentWeapon(entity: Entity) {
     const slots = entity.components.get('weaponSlot') as WeaponSlotComponent;
-    
+
     if (!slots) {
       return null;
     }
@@ -257,18 +257,18 @@ export class WeaponSwitchSystem {
 
     // Store previous slot
     slots.previousSlot = slots.currentSlot;
-    
+
     // Start switch
     state.isSwitching = true;
     state.switchStartTime = performance.now();
     state.switchProgress = 0;
     slots.switchDuration = this.calculateSwitchDuration(entity, targetSlot);
-    
+
     state.switchFromWeapon = slots.slots.get(slots.currentSlot)?.config.name;
     state.switchToWeapon = slots.slots.get(targetSlot)?.config.name;
 
     console.log(`[WEAPON] Switching from slot ${slots.currentSlot} to slot ${targetSlot}`);
-    
+
     return true;
   }
 
@@ -298,12 +298,12 @@ export class WeaponSwitchSystem {
     }
 
     // Find the target slot from the switch queue or use any switching target
-    const queueEntry = this.switchQueue.find(entry => entry.entity === entity);
+    const queueEntry = this.switchQueue.find((entry) => entry.entity === entity);
     const targetSlot = queueEntry?.targetSlot || slots.currentSlot;
 
     // Complete the switch
     slots.currentSlot = targetSlot;
-    
+
     // Reset switch state
     state.isSwitching = false;
     state.switchProgress = 0;
@@ -311,7 +311,7 @@ export class WeaponSwitchSystem {
     state.switchToWeapon = undefined;
 
     // Remove from queue
-    this.switchQueue = this.switchQueue.filter(entry => entry.entity !== entity);
+    this.switchQueue = this.switchQueue.filter((entry) => entry.entity !== entity);
 
     // Update weapon component reference
     const currentWeapon = slots.slots.get(slots.currentSlot);
@@ -342,7 +342,10 @@ export class WeaponSwitchSystem {
       duration *= 0.7; // Melee weapons switch faster
     }
 
-    if (currentWeapon?.config.category === 'explosive' || targetWeapon?.config.category === 'explosive') {
+    if (
+      currentWeapon?.config.category === 'explosive' ||
+      targetWeapon?.config.category === 'explosive'
+    ) {
       duration *= 1.3; // Heavy weapons switch slower
     }
 
@@ -351,7 +354,7 @@ export class WeaponSwitchSystem {
 
   private findAndSwitchToAvailableWeapon(entity: Entity): void {
     const availableSlots = this.getAvailableSlots(entity);
-    
+
     if (availableSlots.length > 0) {
       // Prefer lower slot numbers (like DOOM)
       const preferredSlot = Math.min(...availableSlots);
@@ -361,10 +364,10 @@ export class WeaponSwitchSystem {
 
   private processQueue(): void {
     const now = performance.now();
-    
+
     // Remove expired entries
-    this.switchQueue = this.switchQueue.filter(entry => 
-      now - entry.timestamp < this.SWITCH_TIMEOUT
+    this.switchQueue = this.switchQueue.filter(
+      (entry) => now - entry.timestamp < this.SWITCH_TIMEOUT
     );
   }
 }

@@ -8,6 +8,7 @@
   "references": [
     { "path": "../../packages/engine" },
     { "path": "../../packages/game-logic" },
+    { "path": "../../packages/weapons" },
     { "path": "../../packages/map-editor" },
     { "path": "../../packages/assets" }
   ]

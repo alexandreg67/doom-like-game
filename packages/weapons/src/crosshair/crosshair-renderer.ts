@@ -14,10 +14,14 @@ export class CrosshairRenderer {
 
   constructor(parentElement: HTMLElement, config: CrosshairConfig) {
     this.config = config;
-    this.container = this.createContainer(parentElement);
+    // Use the provided parent element as our container
+    this.container = parentElement;
+    // Ensure the container has the right styles
+    this.setupContainerStyles();
     this.crosshairElement = this.createCrosshair();
     this.container.appendChild(this.crosshairElement);
     this.updateStyle();
+    console.log('[CROSSHAIR] CrosshairRenderer initialized');
   }
 
   /**
@@ -33,7 +37,13 @@ export class CrosshairRenderer {
    */
   public setVisible(visible: boolean): void {
     this.isVisible = visible;
-    this.container.style.display = visible ? 'block' : 'none';
+    this.container.style.display = visible ? 'flex' : 'none';
+    console.log(
+      '[CROSSHAIR] Visibility changed:',
+      visible,
+      'display:',
+      this.container.style.display
+    );
   }
 
   /**
@@ -44,7 +54,7 @@ export class CrosshairRenderer {
 
     const baseSize = this.config.size;
     const newSize = baseSize * multiplier;
-    
+
     this.crosshairElement.style.setProperty('--crosshair-size', `${newSize}px`);
     this.crosshairElement.style.setProperty('--crosshair-gap', `${this.config.gap * multiplier}px`);
   }
@@ -56,7 +66,7 @@ export class CrosshairRenderer {
     if (!this.config.expandOnFire) return;
 
     const expansionAmount = this.config.expansionAmount || 1.5;
-    
+
     // Cancel any existing animation
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);
@@ -66,18 +76,18 @@ export class CrosshairRenderer {
     const animate = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      
+
       // Ease-out animation
       const easeOut = 1 - Math.pow(1 - progress, 3);
       const currentMultiplier = 1 + (expansionAmount - 1) * (1 - easeOut);
-      
+
       this.setDynamicSize(currentMultiplier);
-      
+
       if (progress < 1) {
         this.animationFrame = requestAnimationFrame(animate);
       }
     };
-    
+
     this.animationFrame = requestAnimationFrame(animate);
   }
 
@@ -98,23 +108,14 @@ export class CrosshairRenderer {
     this.container.remove();
   }
 
-  private createContainer(parent: HTMLElement): HTMLElement {
-    const container = document.createElement('div');
-    container.className = 'crosshair-container';
-    container.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    `;
-    parent.appendChild(container);
-    return container;
+  private setupContainerStyles(): void {
+    this.container.className = 'crosshair-container';
+    // Force the essential display styles
+    this.container.style.display = 'flex';
+    this.container.style.alignItems = 'center';
+    this.container.style.justifyContent = 'center';
+    this.container.style.pointerEvents = 'none';
+    console.log('[CROSSHAIR] Container styles setup, display:', this.container.style.display);
   }
 
   private createCrosshair(): HTMLElement {
@@ -125,7 +126,7 @@ export class CrosshairRenderer {
 
   private updateStyle(): void {
     const { style, size, thickness, gap, color, outlineColor, opacity } = this.config;
-    
+
     // Set CSS custom properties
     this.crosshairElement.style.setProperty('--crosshair-size', `${size}px`);
     this.crosshairElement.style.setProperty('--crosshair-thickness', `${thickness}px`);
@@ -136,7 +137,23 @@ export class CrosshairRenderer {
 
     // Apply style-specific classes
     this.crosshairElement.className = `crosshair crosshair-${style}`;
-    this.crosshairElement.style.cssText = this.getStyleCSS(style);
+
+    // TEMP DEBUG: Force très visible
+    if (style === 'dot') {
+      this.crosshairElement.style.cssText = `
+        position: relative;
+        width: 20px;
+        height: 20px;
+        background-color: red;
+        border: 3px solid yellow;
+        border-radius: 50%;
+        opacity: 1;
+        z-index: 9999;
+      `;
+      console.log('[CROSSHAIR] DEBUG: Forced highly visible dot style');
+    } else {
+      this.crosshairElement.style.cssText = this.getStyleCSS(style);
+    }
   }
 
   private getStyleCSS(style: CrosshairStyle): string {
@@ -149,16 +166,21 @@ export class CrosshairRenderer {
 
     switch (style) {
       case 'dot':
-        return baseCSS + `
+        return (
+          baseCSS +
+          `
           background-color: var(--crosshair-color);
           border-radius: 50%;
           width: var(--crosshair-thickness);
           height: var(--crosshair-thickness);
           box-shadow: 0 0 0 1px var(--crosshair-outline);
-        `;
+        `
+        );
 
       case 'cross':
-        return baseCSS + `
+        return (
+          baseCSS +
+          `
           &::before, &::after {
             content: '';
             position: absolute;
@@ -191,17 +213,21 @@ export class CrosshairRenderer {
               calc(-var(--crosshair-gap) / 2 - var(--crosshair-thickness) / 2) 
               calc(50% + var(--crosshair-gap) / 2) 0 1px var(--crosshair-outline);
           }
-        `;
+        `
+        );
 
       case 'circle':
-        return baseCSS + `
+        return (
+          baseCSS +
+          `
           border: var(--crosshair-thickness) solid var(--crosshair-color);
           border-radius: 50%;
           box-sizing: border-box;
           box-shadow: 
             0 0 0 1px var(--crosshair-outline),
             inset 0 0 0 1px var(--crosshair-outline);
-        `;
+        `
+        );
 
       case 'custom':
         return baseCSS; // Custom styles should be provided via CSS classes

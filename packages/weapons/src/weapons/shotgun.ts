@@ -4,8 +4,8 @@
  */
 
 import { Vector2 } from '@babylonjs/core';
+import type { WeaponAudioConfig, WeaponConfig } from '../types';
 import { BaseWeapon } from './base-weapon';
-import type { WeaponConfig, WeaponAudioConfig } from '../types';
 
 export class Shotgun extends BaseWeapon {
   constructor() {
@@ -13,27 +13,27 @@ export class Shotgun extends BaseWeapon {
       name: 'Shotgun',
       type: 'hitscan',
       category: 'shotgun',
-      
+
       // Damage per pellet (DOOM: 5-15 per pellet, 7 pellets)
       minDamage: 5,
       maxDamage: 15,
       range: 1024, // Shorter effective range than pistol
-      
+
       // Firing mechanics
       fireRate: 60, // Slow pump-action
       burstCount: 7, // Number of pellets
-      
+
       // Accuracy (wide spread for shotgun)
       baseSpread: 5.6, // DOOM shotgun spread
       maxSpread: 8.0,
       spreadIncrease: 0, // No spread accumulation (single shot)
       spreadDecay: 0,
-      
+
       // Ammo
       ammoType: 'shells',
       clipSize: 8, // Tube magazine
       reloadTime: 2.5,
-      
+
       // Visual
       muzzleFlash: true,
       recoil: new Vector2(2.0, 3.0), // Significant recoil
@@ -80,16 +80,16 @@ export class Shotgun extends BaseWeapon {
   public getDamageAtRange(distance: number): number {
     const pelletCount = this.config.burstCount || 7;
     const maxRange = this.config.range;
-    
+
     // Calculate how many pellets hit based on distance and spread
     let hitPellets = pelletCount;
-    
+
     if (distance > maxRange * 0.3) {
       // Start losing pellets at 30% of max range
       const falloffFactor = Math.max(0, 1 - (distance - maxRange * 0.3) / (maxRange * 0.7));
       hitPellets = Math.ceil(pelletCount * falloffFactor);
     }
-    
+
     const avgDamagePerPellet = (this.config.minDamage + this.config.maxDamage) / 2;
     return Math.floor(avgDamagePerPellet * hitPellets);
   }

@@ -2,15 +2,15 @@
  * Weapon factory for creating weapon instances
  */
 
-import { BaseWeapon } from './base-weapon';
-import { Pistol, EnhancedPistol } from './pistol';
-import { Shotgun } from './shotgun';
-import { Chaingun } from './chaingun';
-import { RocketLauncher } from './rocket-launcher';
 import type { WeaponComponent } from '../components/weapon-component';
 import { createWeaponComponent } from '../components/weapon-component';
+import type { BaseWeapon } from './base-weapon';
+import { Chaingun } from './chaingun';
+import { EnhancedPistol, Pistol } from './pistol';
+import { RocketLauncher } from './rocket-launcher';
+import { Shotgun } from './shotgun';
 
-export type WeaponType = 
+export type WeaponType =
   | 'pistol'
   | 'enhanced_pistol'
   | 'shotgun'
@@ -35,11 +35,11 @@ export class WeaponFactory {
    */
   static createWeapon(type: WeaponType): BaseWeapon {
     const WeaponClass = this.weaponClasses.get(type);
-    
+
     if (!WeaponClass) {
       throw new Error(`Unknown weapon type: ${type}`);
     }
-    
+
     return new WeaponClass();
   }
 
@@ -48,7 +48,16 @@ export class WeaponFactory {
    */
   static createWeaponComponent(type: WeaponType): WeaponComponent {
     const weapon = this.createWeapon(type);
-    return createWeaponComponent(weapon.getConfig());
+    const config = weapon.getConfig();
+    const audioConfig = weapon.getAudioConfig();
+
+    // Create weapon component with both configs
+    const component = createWeaponComponent(config);
+
+    // Add audio configuration to the weapon component
+    component.audioConfig = audioConfig;
+
+    return component;
   }
 
   /**
@@ -82,18 +91,18 @@ export class WeaponFactory {
    */
   static getWeaponsBySlot(): Map<number, WeaponType[]> {
     const slotMap = new Map<number, WeaponType[]>();
-    
+
     for (const type of this.weaponClasses.keys()) {
       const weapon = this.createWeapon(type);
       const slot = weapon.getSlotNumber();
-      
+
       if (!slotMap.has(slot)) {
         slotMap.set(slot, []);
       }
-      
+
       slotMap.get(slot)!.push(type);
     }
-    
+
     return slotMap;
   }
 
@@ -116,15 +125,15 @@ export class WeaponFactory {
     reserveAmmo?: number
   ): WeaponComponent {
     const component = this.createWeaponComponent(type);
-    
+
     if (currentAmmo !== undefined) {
       component.currentAmmo = currentAmmo;
     }
-    
+
     if (reserveAmmo !== undefined) {
       component.reserveAmmo = reserveAmmo;
     }
-    
+
     return component;
   }
 
@@ -140,16 +149,16 @@ export class WeaponFactory {
     range: number;
     ammoType: string;
   }> {
-    return this.getAvailableWeaponTypes().map(type => {
+    return this.getAvailableWeaponTypes().map((type) => {
       const weapon = this.createWeapon(type);
       const config = weapon.getConfig();
-      
+
       // Calculate approximate DPS
       const avgDamage = (config.minDamage + config.maxDamage) / 2;
       const shotsPerSecond = config.fireRate / 60;
       const bulletsPerShot = config.burstCount || 1;
       const dps = avgDamage * shotsPerSecond * bulletsPerShot;
-      
+
       return {
         type,
         name: config.name,
@@ -168,14 +177,14 @@ export class WeaponFactory {
  */
 export class WeaponProgression {
   private unlockedWeapons: Set<WeaponType> = new Set(['pistol']);
-  
+
   /**
    * Check if weapon is unlocked
    */
   isWeaponUnlocked(type: WeaponType): boolean {
     return this.unlockedWeapons.has(type);
   }
-  
+
   /**
    * Unlock a weapon
    */
@@ -183,19 +192,19 @@ export class WeaponProgression {
     if (!WeaponFactory.isValidWeaponType(type)) {
       return false;
     }
-    
+
     const wasUnlocked = this.unlockedWeapons.has(type);
     this.unlockedWeapons.add(type);
     return !wasUnlocked; // Return true if newly unlocked
   }
-  
+
   /**
    * Get all unlocked weapons
    */
   getUnlockedWeapons(): WeaponType[] {
     return Array.from(this.unlockedWeapons);
   }
-  
+
   /**
    * Reset progression (new game)
    */
@@ -203,7 +212,7 @@ export class WeaponProgression {
     this.unlockedWeapons.clear();
     this.unlockedWeapons.add('pistol'); // Always start with pistol
   }
-  
+
   /**
    * Unlock weapons by level progression
    */
@@ -215,11 +224,11 @@ export class WeaponProgression {
       4: ['plasma_rifle'],
       5: ['bfg'],
     };
-    
+
     for (let i = 1; i <= level; i++) {
       const weapons = levelUnlocks[i];
       if (weapons) {
-        weapons.forEach(weapon => this.unlockWeapon(weapon));
+        weapons.forEach((weapon) => this.unlockWeapon(weapon));
       }
     }
   }

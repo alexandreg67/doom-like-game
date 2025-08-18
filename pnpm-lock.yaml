@@ -53,6 +53,9 @@ importers:
       '@doom-like/map-editor':
         specifier: workspace:*
         version: link:../../packages/map-editor
+      '@doom-like/weapons':
+        specifier: workspace:*
+        version: link:../../packages/weapons
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.8.3

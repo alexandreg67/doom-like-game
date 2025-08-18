@@ -4,8 +4,8 @@
  */
 
 import type { Entity } from '@doom-like/game-logic';
-import type { WeaponComponent } from '../components/weapon-component';
 import type { AmmoComponent } from '../components/ammo-component';
+import type { WeaponComponent } from '../components/weapon-component';
 
 export interface AmmoCounterConfig {
   position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'custom';
@@ -118,11 +118,11 @@ export class AmmoCounter {
     if (this.config.style !== 'minimal') {
       this.ammoBarElement = document.createElement('div');
       this.ammoBarElement.className = 'ammo-bar';
-      
+
       const barFill = document.createElement('div');
       barFill.className = 'ammo-bar-fill';
       this.ammoBarElement.appendChild(barFill);
-      
+
       this.container.appendChild(this.ammoBarElement);
     }
   }
@@ -160,7 +160,7 @@ export class AmmoCounter {
 
   private updateCurrentAmmo(current: number, max: number): void {
     let displayText = current.toString();
-    
+
     if (this.config.showPercentage) {
       const percentage = Math.round((current / max) * 100);
       displayText += ` (${percentage}%)`;
@@ -187,7 +187,7 @@ export class AmmoCounter {
 
     const percentage = (current / max) * 100;
     const fillElement = this.ammoBarElement.querySelector('.ammo-bar-fill') as HTMLElement;
-    
+
     if (fillElement) {
       fillElement.style.width = `${percentage}%`;
     }
@@ -195,7 +195,7 @@ export class AmmoCounter {
 
   private updateWarningStates(current: number, max: number, reserve: number): void {
     const percentage = (current / max) * 100;
-    
+
     // Remove existing warning classes
     this.container.classList.remove('low-ammo', 'critical-ammo', 'no-ammo');
 
@@ -236,14 +236,14 @@ export class AmmoCounter {
   private applyStyles(): void {
     // Position the container
     this.positionContainer();
-    
+
     // Apply style theme
     this.applyStyleTheme();
   }
 
   private positionContainer(): void {
     const container = this.container;
-    
+
     // Reset positioning
     container.style.position = 'fixed';
     container.style.left = '';
@@ -276,10 +276,10 @@ export class AmmoCounter {
 
   private applyStyleTheme(): void {
     const container = this.container;
-    
+
     // Remove existing theme classes
     container.classList.remove('doom-style', 'modern-style', 'minimal-style');
-    
+
     // Add current theme class
     container.classList.add(`${this.config.style}-style`);
 
@@ -382,7 +382,7 @@ export class AmmoCounter {
         transition: width 0.2s ease;
       }
     `;
-    
+
     if (!document.querySelector('#ammo-counter-styles')) {
       style.id = 'ammo-counter-styles';
       document.head.appendChild(style);

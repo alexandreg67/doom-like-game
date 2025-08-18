@@ -120,19 +120,19 @@ export const WeaponCrosshairOverrides = new Map([
   // Precision weapons
   ['pistol', { style: 'dot', size: 6, color: '#00ff00' }],
   ['sniper', { style: 'dot', size: 4, color: '#ff0080' }],
-  
+
   // Spread weapons
   ['shotgun', { style: 'circle', size: 24, color: '#ffff00', expandOnFire: true }],
   ['supershotgun', { style: 'circle', size: 32, color: '#ff8000', expandOnFire: true }],
-  
+
   // Automatic weapons
   ['chaingun', { style: 'cross', size: 18, expandOnFire: true, expansionAmount: 1.8 }],
   ['minigun', { style: 'cross', size: 20, expandOnFire: true, expansionAmount: 2.0 }],
-  
+
   // Explosive weapons
   ['rocketlauncher', { style: 'cross', size: 22, color: '#ff4444' }],
   ['grenadelauncher', { style: 'circle', size: 28, color: '#ff6600' }],
-  
+
   // Energy weapons
   ['plasmarifle', { style: 'cross', size: 16, color: '#0088ff' }],
   ['bfg', { style: 'circle', size: 36, color: '#00ff00' }],
@@ -143,22 +143,22 @@ export const WeaponCrosshairOverrides = new Map([
  */
 export const CrosshairColors = {
   // High contrast colors
-  green: '#00ff00',      // Best overall visibility
-  cyan: '#00ffff',       // Good on warm maps
-  magenta: '#ff0080',    // Good on green maps
-  yellow: '#ffff00',     // Good on blue maps
-  white: '#ffffff',      // Classic, good on dark maps
-  red: '#ff0000',        // Warning/danger indication
-  
+  green: '#00ff00', // Best overall visibility
+  cyan: '#00ffff', // Good on warm maps
+  magenta: '#ff0080', // Good on green maps
+  yellow: '#ffff00', // Good on blue maps
+  white: '#ffffff', // Classic, good on dark maps
+  red: '#ff0000', // Warning/danger indication
+
   // Professional player favorites
-  proGreen: '#00ff41',   // Slightly different green
-  proCyan: '#00e6ff',    // Slightly blue-shifted cyan
-  proWhite: '#f0f0f0',   // Slightly off-white
-  
+  proGreen: '#00ff41', // Slightly different green
+  proCyan: '#00e6ff', // Slightly blue-shifted cyan
+  proWhite: '#f0f0f0', // Slightly off-white
+
   // Themed colors
-  doomRed: '#ff2222',    // Classic DOOM red
-  doomGreen: '#22ff22',  // Classic DOOM green
-  retro: '#ffaa00',      // Retro orange
+  doomRed: '#ff2222', // Classic DOOM red
+  doomGreen: '#22ff22', // Classic DOOM green
+  retro: '#ffaa00', // Retro orange
 } as const;
 
 /**
@@ -169,11 +169,11 @@ export function createWeaponCrosshair(
   baseConfig: CrosshairConfig = DefaultCrosshairConfigs.professional
 ): CrosshairConfig {
   const override = WeaponCrosshairOverrides.get(weaponName);
-  
+
   if (!override) {
     return baseConfig;
   }
-  
+
   return {
     ...baseConfig,
     ...override,

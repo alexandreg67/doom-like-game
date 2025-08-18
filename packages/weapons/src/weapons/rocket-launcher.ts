@@ -4,8 +4,8 @@
  */
 
 import { Vector2 } from '@babylonjs/core';
+import type { WeaponAudioConfig, WeaponConfig } from '../types';
 import { BaseWeapon } from './base-weapon';
-import type { WeaponConfig, WeaponAudioConfig } from '../types';
 
 export class RocketLauncher extends BaseWeapon {
   constructor() {
@@ -13,30 +13,30 @@ export class RocketLauncher extends BaseWeapon {
       name: 'Rocket Launcher',
       type: 'projectile',
       category: 'explosive',
-      
+
       // Damage (DOOM: 20-160 direct hit + splash)
       minDamage: 20,
       maxDamage: 160,
       range: 2048, // Max projectile travel
-      
+
       // Firing mechanics
       fireRate: 60, // Slow reload between shots
-      
+
       // Accuracy (rockets are accurate but slow)
       baseSpread: 0,
       maxSpread: 0,
       spreadIncrease: 0,
       spreadDecay: 0,
-      
+
       // Ammo
       ammoType: 'rockets',
       clipSize: 1, // Single shot
       reloadTime: 2.0,
-      
+
       // Projectile properties
       projectileSpeed: 20, // Relatively slow
       explosionRadius: 128, // DOOM explosion radius
-      
+
       // Visual
       muzzleFlash: true,
       recoil: new Vector2(3.0, 4.0), // High recoil
@@ -73,30 +73,32 @@ export class RocketLauncher extends BaseWeapon {
    */
   public calculateSplashDamage(directDamage: number, distanceFromExplosion: number): number {
     const explosionRadius = this.config.explosionRadius || 128;
-    
+
     if (distanceFromExplosion >= explosionRadius) {
       return 0; // Outside blast radius
     }
-    
+
     // Linear falloff from full damage at center to 0 at edge
-    const damageRatio = 1 - (distanceFromExplosion / explosionRadius);
+    const damageRatio = 1 - distanceFromExplosion / explosionRadius;
     return Math.floor(directDamage * damageRatio);
   }
 
   /**
    * Check if shot would cause self-damage
    */
-  public wouldCauseSelfDamage(firerPosition: { x: number; y: number; z: number }, 
-                               targetPosition: { x: number; y: number; z: number }): boolean {
+  public wouldCauseSelfDamage(
+    firerPosition: { x: number; y: number; z: number },
+    targetPosition: { x: number; y: number; z: number }
+  ): boolean {
     const distance = Math.sqrt(
       Math.pow(targetPosition.x - firerPosition.x, 2) +
-      Math.pow(targetPosition.y - firerPosition.y, 2) +
-      Math.pow(targetPosition.z - firerPosition.z, 2)
+        Math.pow(targetPosition.y - firerPosition.y, 2) +
+        Math.pow(targetPosition.z - firerPosition.z, 2)
     );
-    
+
     const explosionRadius = this.config.explosionRadius || 128;
     const safeDistance = explosionRadius * 1.2; // 20% safety margin
-    
+
     return distance < safeDistance;
   }
 

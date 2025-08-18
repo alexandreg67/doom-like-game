@@ -2,7 +2,7 @@
  * Base weapon class providing common functionality
  */
 
-import type { WeaponConfig, WeaponAudioConfig } from '../types';
+import type { WeaponAudioConfig, WeaponConfig } from '../types';
 
 export abstract class BaseWeapon {
   protected config: WeaponConfig;
@@ -35,8 +35,8 @@ export abstract class BaseWeapon {
     const range = this.config.maxDamage - this.config.minDamage;
     const steps = Math.floor(range / 5);
     const randomStep = Math.floor(Math.random() * (steps + 1));
-    
-    return this.config.minDamage + (randomStep * 5);
+
+    return this.config.minDamage + randomStep * 5;
   }
 
   /**

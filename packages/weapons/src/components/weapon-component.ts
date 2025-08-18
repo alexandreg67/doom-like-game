@@ -4,34 +4,35 @@
  */
 
 import type { Component } from '@doom-like/game-logic';
-import type { WeaponConfig, WeaponState, AmmoType } from '../types';
+import type { AmmoType, WeaponAudioConfig, WeaponConfig, WeaponState } from '../types';
 
 export interface WeaponComponent extends Component {
   id: 'weapon';
-  
+
   // Weapon configuration
   config: WeaponConfig;
-  
+  audioConfig?: WeaponAudioConfig;
+
   // Current state
   state: WeaponState;
-  
+
   // Firing mechanics
   lastFireTime: number;
   currentSpread: number;
   burstCounter: number;
-  
+
   // Ammo management
   currentAmmo: number;
   reserveAmmo: number;
-  
+
   // Timing
   lastReloadTime: number;
   lastSwitchTime: number;
-  
+
   // Visual state
   muzzleFlashActive: boolean;
   muzzleFlashStartTime: number;
-  
+
   // Performance tracking
   shotsThisSecond: number;
   lastShotCountReset: number;
@@ -64,12 +65,12 @@ export function createWeaponComponent(config: WeaponConfig): WeaponComponent {
  */
 export interface WeaponSlotComponent extends Component {
   id: 'weaponSlot';
-  
+
   // Weapon slots (1-8 like DOOM)
   slots: Map<number, WeaponComponent | null>;
   currentSlot: number;
   previousSlot: number;
-  
+
   // Switching state
   isSwitching: boolean;
   switchStartTime: number;
@@ -81,12 +82,12 @@ export interface WeaponSlotComponent extends Component {
  */
 export function createWeaponSlotComponent(): WeaponSlotComponent {
   const slots = new Map<number, WeaponComponent | null>();
-  
+
   // Initialize 8 weapon slots (DOOM-style)
   for (let i = 1; i <= 8; i++) {
     slots.set(i, null);
   }
-  
+
   return {
     id: 'weaponSlot',
     slots,
@@ -103,7 +104,7 @@ export function createWeaponSlotComponent(): WeaponSlotComponent {
  */
 export interface WeaponPickupComponent extends Component {
   id: 'weaponPickup';
-  
+
   weaponConfig: WeaponConfig;
   ammoAmount: number;
   respawnTime?: number;

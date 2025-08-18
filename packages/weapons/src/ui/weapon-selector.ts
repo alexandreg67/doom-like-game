@@ -37,7 +37,7 @@ export class WeaponSelector {
    */
   public update(entity: Entity): void {
     const slots = entity.components.get('weaponSlot') as WeaponSlotComponent;
-    
+
     if (!slots) {
       this.hide();
       return;
@@ -52,7 +52,7 @@ export class WeaponSelector {
   public show(): void {
     this.isVisible = true;
     this.container.style.display = 'flex';
-    
+
     // Clear auto-hide timeout
     if (this.hideTimeout) {
       clearTimeout(this.hideTimeout);
@@ -73,7 +73,7 @@ export class WeaponSelector {
   public hide(): void {
     this.isVisible = false;
     this.container.style.display = 'none';
-    
+
     if (this.hideTimeout) {
       clearTimeout(this.hideTimeout);
       this.hideTimeout = undefined;
@@ -96,7 +96,7 @@ export class WeaponSelector {
    */
   public highlightSlot(slotNumber: number): void {
     // Remove previous highlights
-    this.slotElements.forEach(element => {
+    this.slotElements.forEach((element) => {
       element.classList.remove('highlighted');
     });
 
@@ -185,18 +185,18 @@ export class WeaponSelector {
     for (let i = 1; i <= 8; i++) {
       const slotElement = this.slotElements.get(i);
       const weapon = slots.slots.get(i);
-      
+
       if (!slotElement) continue;
 
       if (weapon) {
         this.updateSlotWithWeapon(slotElement, weapon, i === slots.currentSlot);
-        
+
         if (this.config.showOnlyAvailable) {
           slotElement.style.display = 'flex';
         }
       } else {
         this.updateSlotEmpty(slotElement);
-        
+
         if (this.config.showOnlyAvailable) {
           slotElement.style.display = 'none';
         }
@@ -206,7 +206,7 @@ export class WeaponSelector {
 
   private updateSlotWithWeapon(slotElement: HTMLElement, weapon: any, isCurrent: boolean): void {
     const weaponDisplay = slotElement.querySelector('.weapon-display') as HTMLElement;
-    
+
     if (!weaponDisplay) return;
 
     // Update weapon name/icon
@@ -229,7 +229,7 @@ export class WeaponSelector {
 
   private updateSlotEmpty(slotElement: HTMLElement): void {
     const weaponDisplay = slotElement.querySelector('.weapon-display') as HTMLElement;
-    
+
     if (!weaponDisplay) return;
 
     weaponDisplay.textContent = '---';
@@ -241,14 +241,14 @@ export class WeaponSelector {
   private getWeaponDisplayName(weaponName: string): string {
     // Abbreviate weapon names for compact display
     const abbreviations: Record<string, string> = {
-      'Pistol': 'PSTL',
+      Pistol: 'PSTL',
       'Enhanced Pistol': 'EPST',
-      'Shotgun': 'SHOT',
+      Shotgun: 'SHOT',
       'Super Shotgun': 'SSHT',
-      'Chaingun': 'CHNG',
+      Chaingun: 'CHNG',
       'Rocket Launcher': 'RCKT',
       'Plasma Rifle': 'PLSM',
-      'BFG': 'BFG9',
+      BFG: 'BFG9',
     };
 
     return abbreviations[weaponName] || weaponName.substring(0, 4).toUpperCase();
@@ -257,7 +257,7 @@ export class WeaponSelector {
   private onSlotClick(slotNumber: number): void {
     // Dispatch custom event for weapon selection
     const event = new CustomEvent('weaponSelect', {
-      detail: { slot: slotNumber }
+      detail: { slot: slotNumber },
     });
     this.container.dispatchEvent(event);
   }
@@ -269,7 +269,7 @@ export class WeaponSelector {
 
   private positionContainer(): void {
     const container = this.container;
-    
+
     // Reset positioning
     container.style.position = 'fixed';
     container.style.left = '';
@@ -307,10 +307,10 @@ export class WeaponSelector {
 
   private applyStyleTheme(): void {
     const container = this.container;
-    
+
     // Remove existing theme classes
     container.classList.remove('doom-style', 'modern-style', 'icons-style');
-    
+
     // Add current theme class
     container.classList.add(`${this.config.style}-style`);
 

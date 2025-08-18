@@ -3,10 +3,10 @@
  */
 
 import type { Entity } from '@doom-like/game-logic';
-import type { WeaponComponent } from '../components/weapon-component';
 import type { AmmoComponent } from '../components/ammo-component';
-import type { WeaponStateComponent } from '../components/weapon-state-component';
 import { AmmoUtils } from '../components/ammo-component';
+import type { WeaponComponent } from '../components/weapon-component';
+import type { WeaponStateComponent } from '../components/weapon-state-component';
 
 export class ReloadSystem {
   /**
@@ -28,7 +28,11 @@ export class ReloadSystem {
 
     // Check if we have ammo to reload
     const availableAmmo = ammo.ammoReserves.get(weapon.config.ammoType) || 0;
-    if (availableAmmo <= 0 && !ammo.infiniteAmmo && !ammo.infiniteAmmoTypes.has(weapon.config.ammoType)) {
+    if (
+      availableAmmo <= 0 &&
+      !ammo.infiniteAmmo &&
+      !ammo.infiniteAmmoTypes.has(weapon.config.ammoType)
+    ) {
       return false; // No ammo available
     }
 
@@ -168,7 +172,7 @@ export class ReloadSystem {
 
     const elapsed = performance.now() - state.reloadStartTime;
     const reloadTime = weapon.config.reloadTime * 1000; // Convert to ms
-    
+
     state.reloadProgress = Math.min(elapsed / reloadTime, 1.0);
 
     // Check if reload is past cancellation point (75% complete)
@@ -194,9 +198,9 @@ export class ReloadSystem {
     // Calculate how much ammo to reload
     const ammoNeeded = weapon.config.clipSize - weapon.currentAmmo;
     const ammoAvailable = ammo.ammoReserves.get(weapon.config.ammoType) || 0;
-    
+
     let ammoToReload = 0;
-    
+
     if (ammo.infiniteAmmo || ammo.infiniteAmmoTypes.has(weapon.config.ammoType)) {
       // Infinite ammo - reload to full capacity
       ammoToReload = ammoNeeded;
@@ -208,7 +212,7 @@ export class ReloadSystem {
     // Apply the reload
     if (ammoToReload > 0) {
       weapon.currentAmmo += ammoToReload;
-      
+
       // Consume ammo from reserves (unless infinite)
       if (!ammo.infiniteAmmo && !ammo.infiniteAmmoTypes.has(weapon.config.ammoType)) {
         AmmoUtils.consumeAmmo(ammo, weapon.config.ammoType, ammoToReload);
@@ -221,7 +225,9 @@ export class ReloadSystem {
     state.canCancelReload = true;
     weapon.state = weapon.currentAmmo > 0 ? 'idle' : 'empty';
 
-    console.log(`[WEAPON] Reload complete: ${weapon.config.name} (${weapon.currentAmmo}/${weapon.config.clipSize})`);
+    console.log(
+      `[WEAPON] Reload complete: ${weapon.config.name} (${weapon.currentAmmo}/${weapon.config.clipSize})`
+    );
   }
 }
 
@@ -233,7 +239,7 @@ export enum ReloadState {
   Eject = 'reload_eject',
   Insert = 'reload_insert',
   Chamber = 'reload_chamber',
-  Complete = 'reload_complete'
+  Complete = 'reload_complete',
 }
 
 /**
@@ -285,8 +291,8 @@ export class AdvancedReloadSystem extends ReloadSystem {
  * Configuration for detailed reload animations
  */
 export interface ReloadAnimationConfig {
-  ejectPoint: number;    // Progress point where magazine ejects (0-1)
-  insertPoint: number;   // Progress point where new magazine inserts (0-1)
-  chamberPoint: number;  // Progress point where weapon chambers round (0-1)
-  cancelPoint: number;   // Progress point where reload can't be cancelled (0-1)
+  ejectPoint: number; // Progress point where magazine ejects (0-1)
+  insertPoint: number; // Progress point where new magazine inserts (0-1)
+  chamberPoint: number; // Progress point where weapon chambers round (0-1)
+  cancelPoint: number; // Progress point where reload can't be cancelled (0-1)
 }

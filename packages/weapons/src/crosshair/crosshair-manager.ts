@@ -2,7 +2,7 @@
  * Crosshair manager handles crosshair state and weapon-specific configurations
  */
 
-import type { WeaponConfig, CrosshairConfig, WeaponState } from '../types';
+import type { CrosshairConfig, WeaponConfig, WeaponState } from '../types';
 import { CrosshairRenderer } from './crosshair-renderer';
 
 export class CrosshairManager {
@@ -61,11 +61,9 @@ export class CrosshairManager {
 
     const maxExpansion = this.baseConfig.expansionAmount || 1.3;
     const normalizedVelocity = Math.min(velocity / 10, 1); // Normalize to 0-1
-    
-    this.movementExpansion = isMoving 
-      ? 1 + (maxExpansion - 1) * normalizedVelocity
-      : 1;
-    
+
+    this.movementExpansion = isMoving ? 1 + (maxExpansion - 1) * normalizedVelocity : 1;
+
     this.updateDynamicSize();
   }
 
@@ -77,7 +75,7 @@ export class CrosshairManager {
 
     const spreadRatio = currentSpread / maxSpread;
     const expansionAmount = this.baseConfig.expansionAmount || 1.5;
-    
+
     this.firingExpansion = 1 + (expansionAmount - 1) * spreadRatio;
     this.updateDynamicSize();
   }
@@ -106,7 +104,7 @@ export class CrosshairManager {
   private onWeaponFire(): void {
     // Trigger expansion animation
     this.renderer.animateExpansion(150);
-    
+
     // Update spread-based expansion if dynamic
     if (this.baseConfig.behavior === 'dynamic' && this.currentWeaponConfig) {
       const spreadIncrease = this.currentWeaponConfig.spreadIncrease;
@@ -137,7 +135,7 @@ export class CrosshairManager {
     if (this.currentWeaponConfig && this.baseConfig.behavior === 'weapon-specific') {
       const weaponName = this.currentWeaponConfig.name;
       const weaponOverride = this.baseConfig.weaponOverrides?.get(weaponName);
-      
+
       if (weaponOverride) {
         effectiveConfig = { ...effectiveConfig, ...weaponOverride };
       }

@@ -6,8 +6,8 @@
 import { Ray, Vector3 } from '@babylonjs/core';
 import type { Scene } from '@babylonjs/core';
 import type { Entity, Transform } from '@doom-like/game-logic';
-import type { WeaponConfig, FiringContext, HitResult } from '../types';
 import type { WeaponComponent } from '../components/weapon-component';
+import type { FiringContext, HitResult, WeaponConfig } from '../types';
 
 export class HitscanSystem {
   private scene: Scene;
@@ -25,22 +25,22 @@ export class HitscanSystem {
   public fire(context: FiringContext): HitResult {
     const { entity, origin, direction, spread } = context;
     const weaponComponent = entity.components.get('weapon') as WeaponComponent;
-    
+
     if (!weaponComponent) {
       return this.createMissResult(origin, direction);
     }
 
     // Apply weapon spread
     const spreadDirection = this.applySpread(direction, spread);
-    
+
     // Perform raycast
     const hitResult = this.performRaycast(origin, spreadDirection, weaponComponent.config);
-    
+
     // Apply DOOM-style damage calculation
     if (hitResult.hit) {
       hitResult.damage = this.calculateDamage(weaponComponent.config);
     }
-    
+
     return hitResult;
   }
 
@@ -50,7 +50,7 @@ export class HitscanSystem {
   public fireSpread(context: FiringContext, pelletCount: number): HitResult[] {
     const results: HitResult[] = [];
     const weaponComponent = context.entity.components.get('weapon') as WeaponComponent;
-    
+
     if (!weaponComponent) {
       return [this.createMissResult(context.origin, context.direction)];
     }
@@ -62,10 +62,10 @@ export class HitscanSystem {
         ...context,
         spread: pelletSpread,
       });
-      
+
       results.push(hitResult);
     }
-    
+
     return results;
   }
 
@@ -75,10 +75,10 @@ export class HitscanSystem {
   public hasLineOfSight(from: Vector3, to: Vector3, maxDistance?: number): boolean {
     const direction = to.subtract(from).normalize();
     const distance = maxDistance || Vector3.Distance(from, to);
-    
+
     const ray = new Ray(from, direction, distance);
     const hit = this.scene.pickWithRay(ray);
-    
+
     return !hit?.hit || hit.distance >= distance;
   }
 
@@ -93,10 +93,10 @@ export class HitscanSystem {
   ): Entity[] {
     const entities: Entity[] = [];
     const halfAngle = angle / 2;
-    
+
     // This would need integration with the ECS system to get all entities
     // For now, return empty array - implementation depends on ECS structure
-    
+
     return entities;
   }
 
@@ -105,7 +105,7 @@ export class HitscanSystem {
    */
   public update(deltaTime: number): void {
     const now = performance.now();
-    
+
     // Clear raycast cache periodically
     if (now - this.lastCacheClear > this.CACHE_DURATION) {
       this.raycastCache.clear();
@@ -116,16 +116,16 @@ export class HitscanSystem {
   private performRaycast(origin: Vector3, direction: Vector3, config: WeaponConfig): HitResult {
     // Create cache key for potential optimization
     const cacheKey = `${origin.x},${origin.y},${origin.z}:${direction.x},${direction.y},${direction.z}`;
-    
+
     if (this.raycastCache.has(cacheKey)) {
       return this.raycastCache.get(cacheKey)!;
     }
 
     const ray = new Ray(origin, direction, config.range);
     const pickInfo = this.scene.pickWithRay(ray);
-    
+
     let result: HitResult;
-    
+
     if (pickInfo?.hit && pickInfo.pickedPoint && pickInfo.getNormal()) {
       result = {
         hit: true,
@@ -138,36 +138,34 @@ export class HitscanSystem {
     } else {
       result = this.createMissResult(origin, direction);
     }
-    
+
     this.raycastCache.set(cacheKey, result);
     return result;
   }
 
   private applySpread(direction: Vector3, spread: number): Vector3 {
     if (spread <= 0) return direction;
-    
+
     // Convert spread from degrees to radians
     const spreadRad = (spread * Math.PI) / 180;
-    
+
     // Generate random spread within cone
     const randomAngle = Math.random() * Math.PI * 2;
     const randomRadius = Math.random() * spreadRad;
-    
+
     // Create spread offset
     const spreadX = Math.cos(randomAngle) * Math.sin(randomRadius);
     const spreadY = Math.sin(randomAngle) * Math.sin(randomRadius);
     const spreadZ = Math.cos(randomRadius);
-    
+
     // Create local coordinate system
     const forward = direction.normalize();
     const right = Vector3.Cross(forward, Vector3.Up()).normalize();
     const up = Vector3.Cross(right, forward).normalize();
-    
+
     // Apply spread
-    const spreadDirection = forward.scale(spreadZ)
-      .add(right.scale(spreadX))
-      .add(up.scale(spreadY));
-    
+    const spreadDirection = forward.scale(spreadZ).add(right.scale(spreadX)).add(up.scale(spreadY));
+
     return spreadDirection.normalize();
   }
 
@@ -176,7 +174,7 @@ export class HitscanSystem {
     const range = config.maxDamage - config.minDamage;
     const randomMultiplier = Math.random();
     const damage = config.minDamage + Math.floor(randomMultiplier * (range / 5)) * 5;
-    
+
     return Math.min(damage, config.maxDamage);
   }
 
@@ -206,14 +204,14 @@ export class HitscanUtils {
     isCrouching: boolean
   ): number {
     let currentSpread = baseSpread + spreadAccumulation;
-    
+
     // Movement affects accuracy
     if (isMoving) {
       currentSpread *= isCrouching ? 1.2 : 1.5;
     } else if (isCrouching) {
       currentSpread *= 0.8; // More accurate when crouching
     }
-    
+
     return Math.min(currentSpread, maxSpread);
   }
 
@@ -229,11 +227,11 @@ export class HitscanUtils {
     if (distance <= maxRange * falloffStart) {
       return baseDamage;
     }
-    
-    const falloffDistance = distance - (maxRange * falloffStart);
+
+    const falloffDistance = distance - maxRange * falloffStart;
     const falloffRange = maxRange * (1 - falloffStart);
     const falloffRatio = Math.min(falloffDistance / falloffRange, 1);
-    
+
     // Linear falloff to 50% damage at max range
     return baseDamage * (1 - falloffRatio * 0.5);
   }
@@ -241,10 +239,14 @@ export class HitscanUtils {
   /**
    * Check if hit was a critical hit (headshot, etc.)
    */
-  static isCriticalHit(hitPosition: Vector3, targetPosition: Vector3, targetHeight: number): boolean {
+  static isCriticalHit(
+    hitPosition: Vector3,
+    targetPosition: Vector3,
+    targetHeight: number
+  ): boolean {
     const relativeHeight = hitPosition.y - targetPosition.y;
     const headHeight = targetHeight * 0.8; // Top 20% is considered head
-    
+
     return relativeHeight >= headHeight;
   }
 
@@ -264,15 +266,15 @@ export class HitscanUtils {
       glass: 0.1,
       flesh: 0.2,
     };
-    
+
     const materialResistance = materialModifiers[surfaceMaterial] || 1.0;
     const requiredPenetration = surfaceThickness * materialResistance;
-    
+
     const canPenetrate = penetrationPower >= requiredPenetration;
-    const remainingDamage = canPenetrate 
+    const remainingDamage = canPenetrate
       ? damage * (1 - requiredPenetration / penetrationPower)
       : 0;
-    
+
     return { canPenetrate, remainingDamage };
   }
 }
