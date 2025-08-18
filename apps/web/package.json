@@ -17,10 +17,12 @@
     "sync-fixtures": "cp -r ../../packages/engine/src/fixtures/*.json public/fixtures/ 2>/dev/null || true"
   },
   "dependencies": {
+    "@doom-like/weapons": "workspace:*",
     "@doom-like/engine": "workspace:*",
     "@doom-like/game-logic": "workspace:*",
     "@doom-like/map-editor": "workspace:*",
     "@doom-like/assets": "workspace:*",
+    "@doom-like/weapons": "workspace:*",
     "@babylonjs/core": "^7.0.0",
     "@babylonjs/materials": "^7.0.0",
     "@babylonjs/loaders": "^7.0.0",
