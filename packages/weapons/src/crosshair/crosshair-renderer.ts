@@ -138,22 +138,8 @@ export class CrosshairRenderer {
     // Apply style-specific classes
     this.crosshairElement.className = `crosshair crosshair-${style}`;
 
-    // TEMP DEBUG: Force très visible
-    if (style === 'dot') {
-      this.crosshairElement.style.cssText = `
-        position: relative;
-        width: 20px;
-        height: 20px;
-        background-color: red;
-        border: 3px solid yellow;
-        border-radius: 50%;
-        opacity: 1;
-        z-index: 9999;
-      `;
-      console.log('[CROSSHAIR] DEBUG: Forced highly visible dot style');
-    } else {
-      this.crosshairElement.style.cssText = this.getStyleCSS(style);
-    }
+    // Apply style-specific CSS
+    this.crosshairElement.style.cssText = this.getStyleCSS(style);
   }
 
   private getStyleCSS(style: CrosshairStyle): string {

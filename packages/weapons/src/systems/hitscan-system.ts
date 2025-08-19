@@ -84,6 +84,13 @@ export class HitscanSystem {
 
   /**
    * Get all entities in a cone (for area effect hitscan)
+   *
+   * TODO: This method requires integration with the ECS (Entity Component System).
+   * Implementation depends on the specific ECS structure being used in the game.
+   * When ECS integration is available, this method should:
+   * 1. Query all entities with position components within maxDistance
+   * 2. Filter entities within the specified cone angle
+   * 3. Return array of entities that can be hit by area effect weapons
    */
   public getEntitiesInCone(
     _origin: Vector3,
@@ -94,8 +101,7 @@ export class HitscanSystem {
     const entities: Entity[] = [];
     const _halfAngle = angle / 2;
 
-    // This would need integration with the ECS system to get all entities
-    // For now, return empty array - implementation depends on ECS structure
+    // ECS integration required: return empty array until ECS system is connected
 
     return entities;
   }

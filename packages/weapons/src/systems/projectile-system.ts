@@ -389,9 +389,20 @@ export class ProjectileSystem {
     animate();
   }
 
+  /**
+   * Apply explosion damage to entities within radius
+   *
+   * TODO: This method requires integration with the ECS (Entity Component System).
+   * Implementation depends on the specific ECS structure being used in the game.
+   * When ECS integration is available, this method should:
+   * 1. Query all entities with health components within explosion radius
+   * 2. Calculate damage based on distance from explosion center
+   * 3. Apply damage to each entity found
+   * 4. Handle damage falloff and line-of-sight checks
+   */
   private applyExplosionDamage(_position: Vector3, _projectile: ProjectileComponent): void {
-    // This would need integration with the ECS system to find and damage entities
-    // Implementation depends on your entity management system
+    // ECS integration required: placeholder method until ECS system is connected
+    // Expected parameters: explosion position, projectile damage, explosion radius
   }
 
   private removeProjectile(entity: Entity): void {

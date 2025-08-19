@@ -5,6 +5,9 @@
 import type { WeaponAudioConfig, WeaponConfig } from '../types';
 
 export abstract class BaseWeapon {
+  /** RPM threshold for determining automatic weapons */
+  private static readonly AUTOMATIC_FIRE_RATE_THRESHOLD = 300;
+
   protected config: WeaponConfig;
   protected audioConfig: WeaponAudioConfig;
 
@@ -62,7 +65,7 @@ export abstract class BaseWeapon {
    * Check if weapon is automatic
    */
   public isAutomatic(): boolean {
-    return this.config.fireRate > 300; // RPM threshold for automatic
+    return this.config.fireRate > BaseWeapon.AUTOMATIC_FIRE_RATE_THRESHOLD;
   }
 
   /**

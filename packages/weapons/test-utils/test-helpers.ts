@@ -259,9 +259,11 @@ export function assertVectorEquals(
 
 /**
  * Helper to generate random damage values following DOOM pattern
+ * @param baseDamage The base damage value
+ * @returns Random damage between (baseDamage-10) and baseDamage, clamped to minimum 5, in multiples of 5
  */
 export function generateDoomDamage(baseDamage: number): number {
-  // DOOM damage calculation: random between baseDamage-10 and baseDamage, in multiples of 5
+  // DOOM damage calculation: ensures minimum damage of 5, even when baseDamage < 15
   const minDamage = Math.max(5, baseDamage - 10);
   const maxDamage = baseDamage;
   const damageRange = (maxDamage - minDamage) / 5;
