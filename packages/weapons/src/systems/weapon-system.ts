@@ -106,11 +106,8 @@ export class WeaponSystem {
       return null;
     }
 
-    // Update weapon state
-    this.updateWeaponOnFire(weapon, weaponState);
-
-    // Consume ammo
-    if (!AmmoUtils.consumeAmmo(ammo, weapon.config.ammoType, 1)) {
+    // Check if we have enough ammo before updating weapon state
+    if (!AmmoUtils.hasAmmo(ammo, weapon.config.ammoType, 1)) {
       weapon.state = 'empty';
       return null;
     }
@@ -150,13 +147,22 @@ export class WeaponSystem {
       result = this.projectileSystem.fire(context, projectileConfig);
     }
 
-    // Play firing sound
-    this.playWeaponSound(weapon, 'fire').catch((err) =>
-      console.warn('[WEAPON_SYSTEM] Failed to play fire sound:', err)
-    );
+    // Only if firing succeeded, consume ammo and update weapon state
+    if (result) {
+      // Update weapon state
+      this.updateWeaponOnFire(weapon, weaponState);
 
-    // Update spread accumulation
-    this.updateSpreadAccumulation(weapon, weaponState);
+      // Consume ammo
+      AmmoUtils.consumeAmmo(ammo, weapon.config.ammoType, 1);
+
+      // Play firing sound
+      this.playWeaponSound(weapon, 'fire').catch((err) =>
+        console.warn('[WEAPON_SYSTEM] Failed to play fire sound:', err)
+      );
+
+      // Update spread accumulation
+      this.updateSpreadAccumulation(weapon, weaponState);
+    }
 
     return result;
   }

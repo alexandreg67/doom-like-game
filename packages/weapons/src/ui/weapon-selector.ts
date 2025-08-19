@@ -215,8 +215,12 @@ export class WeaponSelector {
 
     // Update weapon name/icon
     if (this.config.style === 'icons') {
-      // TODO: Add weapon icons
-      weaponDisplay.innerHTML = `<img src="/icons/${weapon.config.name.toLowerCase()}.png" alt="${weapon.config.name}" />`;
+      // Remove any previous content
+      weaponDisplay.textContent = '';
+      const img = document.createElement('img');
+      img.src = `/icons/${weapon.config.name.toLowerCase()}.png`;
+      img.alt = weapon.config.name;
+      weaponDisplay.appendChild(img);
     } else {
       weaponDisplay.textContent = this.getWeaponDisplayName(weapon.config.name);
     }

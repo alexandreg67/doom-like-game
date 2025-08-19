@@ -403,6 +403,7 @@ export class ProjectileSystem {
   private applyExplosionDamage(_position: Vector3, _projectile: ProjectileComponent): void {
     // ECS integration required: placeholder method until ECS system is connected
     // Expected parameters: explosion position, projectile damage, explosion radius
+    console.warn('applyExplosionDamage called, but ECS integration is not yet implemented.');
   }
 
   private removeProjectile(entity: Entity): void {

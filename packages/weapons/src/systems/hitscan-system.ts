@@ -95,11 +95,11 @@ export class HitscanSystem {
   public getEntitiesInCone(
     _origin: Vector3,
     _direction: Vector3,
-    angle: number,
+    _angle: number,
     _maxDistance: number
   ): Entity[] {
     const entities: Entity[] = [];
-    const _halfAngle = angle / 2;
+    const _halfAngle = _angle / 2;
 
     // ECS integration required: return empty array until ECS system is connected
 

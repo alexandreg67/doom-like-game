@@ -21,6 +21,15 @@ export type WeaponType =
   | 'bfg';
 
 export class WeaponFactory {
+  /** Configuration for weapon unlocks by level */
+  public static readonly levelUnlocksConfig: Record<number, WeaponType[]> = {
+    1: ['shotgun'],
+    2: ['chaingun'],
+    3: ['rocket_launcher'],
+    4: ['plasma_rifle'],
+    5: ['bfg'],
+  };
+
   private static weaponClasses: Map<WeaponType, new () => BaseWeapon> = new Map([
     ['pistol', Pistol],
     ['enhanced_pistol', EnhancedPistol],
@@ -217,16 +226,8 @@ export class WeaponProgression {
    * Unlock weapons by level progression
    */
   unlockWeaponsForLevel(level: number): void {
-    const levelUnlocks: Record<number, WeaponType[]> = {
-      1: ['shotgun'],
-      2: ['chaingun'],
-      3: ['rocket_launcher'],
-      4: ['plasma_rifle'],
-      5: ['bfg'],
-    };
-
     for (let i = 1; i <= level; i++) {
-      const weapons = levelUnlocks[i];
+      const weapons = WeaponFactory.levelUnlocksConfig[i];
       if (weapons) {
         for (const weapon of weapons) {
           this.unlockWeapon(weapon);
