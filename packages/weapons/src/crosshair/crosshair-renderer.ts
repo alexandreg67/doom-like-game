@@ -58,7 +58,10 @@ export class CrosshairRenderer {
   public setDynamicSize(multiplier: number): void {
     if (this.config.behavior === 'static') return;
     // Use scale to avoid recalculating all measurements each frame
-    this.crosshairElement.style.transform = `scale(${multiplier})`;
+    // Preserve any other transforms by stripping an existing scale() and appending a new one
+    const current = this.crosshairElement.style.transform || '';
+    const withoutScale = current.replace(/scale\([^)]+\)/, '').trim();
+    this.crosshairElement.style.transform = `${withoutScale ? `${withoutScale} ` : ''}scale(${multiplier})`;
   }
 
   /**
@@ -131,7 +134,9 @@ export class CrosshairRenderer {
 
   private rebuild(): void {
     // Clear children
-    this.crosshairElement.replaceChildren();
+    while (this.crosshairElement.firstChild) {
+      this.crosshairElement.removeChild(this.crosshairElement.firstChild);
+    }
     this.builtStyle = this.config.style;
     // Build according to current style
     switch (this.config.style) {
@@ -181,7 +186,7 @@ export class CrosshairRenderer {
   }
 
   private updateDot(): void {
-    const dot = this.crosshairElement.firstElementChild as HTMLElement | null;
+    const dot = this.crosshairElement.querySelector('.crosshair-dot') as HTMLElement | null;
     if (!dot) return;
     const { thickness, color, outlineColor } = this.config;
     dot.style.width = `${thickness}px`;
@@ -203,7 +208,7 @@ export class CrosshairRenderer {
   }
 
   private updateCircle(): void {
-    const circle = this.crosshairElement.firstElementChild as HTMLElement | null;
+    const circle = this.crosshairElement.querySelector('.crosshair-circle') as HTMLElement | null;
     if (!circle) return;
     const { size, thickness, color, outlineColor } = this.config;
     circle.style.width = `${size}px`;
@@ -248,7 +253,7 @@ export class CrosshairRenderer {
   }
 
   private updateCross(): void {
-    const root = this.crosshairElement.firstElementChild as HTMLElement | null;
+    const root = this.crosshairElement.querySelector('.crosshair-cross') as HTMLElement | null;
     if (!root) return;
     const { size, thickness, gap, color, outlineColor } = this.config;
 
