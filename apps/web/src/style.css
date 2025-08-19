@@ -225,6 +225,238 @@ footer {
   }
 }
 
+/* Weapon System UI Styles */
+#crosshair-container {
+  user-select: none;
+}
+
+.crosshair {
+  position: relative;
+  transition: all 0.1s ease-out;
+}
+
+.crosshair-dot {
+  width: var(--crosshair-size, 4px);
+  height: var(--crosshair-size, 4px);
+  background: var(--crosshair-color, #ffffff);
+  border-radius: 50%;
+  opacity: var(--crosshair-opacity, 1.0);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.crosshair-cross::before,
+.crosshair-cross::after {
+  content: "";
+  position: absolute;
+  background: var(--crosshair-color, #ffffff);
+  opacity: var(--crosshair-opacity, 1.0);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.crosshair-cross::before {
+  width: var(--crosshair-size, 10px);
+  height: var(--crosshair-thickness, 2px);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.crosshair-cross::after {
+  width: var(--crosshair-thickness, 2px);
+  height: var(--crosshair-size, 10px);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.crosshair-circle {
+  width: var(--crosshair-size, 20px);
+  height: var(--crosshair-size, 20px);
+  border: var(--crosshair-thickness, 2px) solid var(--crosshair-color, #ffffff);
+  border-radius: 50%;
+  opacity: var(--crosshair-opacity, 1.0);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  position: absolute;
+}
+
+/* Dynamic crosshair expansion */
+.crosshair.expanded.dynamic-expansion .crosshair-dot {
+  transform: scale(var(--expansion-amount, 1.5));
+}
+
+.crosshair.expanded.dynamic-expansion .crosshair-cross::before,
+.crosshair.expanded.dynamic-expansion .crosshair-cross::after {
+  transform: translate(-50%, -50%) scale(var(--expansion-amount, 1.5));
+}
+
+.crosshair.expanded.dynamic-expansion .crosshair-circle {
+  transform: translate(-50%, -50%) scale(var(--expansion-amount, 1.5));
+}
+
+/* Hit marker effect */
+.crosshair.hit-marker {
+  animation: hitMarker 0.2s ease-out;
+}
+
+@keyframes hitMarker {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+    filter: brightness(1.5);
+  }
+}
+
+/* Ammo Counter Styles */
+#ammo-container {
+  transition: all 0.2s ease;
+}
+
+.ammo-counter {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ammo-current {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: right;
+  transition: color 0.2s ease;
+}
+
+.ammo-reserve {
+  font-size: 12px;
+  text-align: right;
+  opacity: 0.8;
+  transition: color 0.2s ease;
+}
+
+.ammo-separator {
+  font-size: 14px;
+  opacity: 0.6;
+  margin: 0 4px;
+}
+
+/* Ammo states */
+.ammo-current.ammo-low {
+  color: #ffaa00;
+  animation: ammoLowBlink 1s infinite;
+}
+
+.ammo-current.ammo-empty {
+  color: #ff4444;
+  animation: ammoEmptyBlink 0.5s infinite;
+}
+
+.ammo-reserve.ammo-critical {
+  color: #ff6666;
+}
+
+/* Ammo animations */
+.ammo-current.firing {
+  transform: scale(1.1);
+  color: #ffff88;
+}
+
+.ammo-container.reloading {
+  animation: reloadPulse 2s ease-in-out;
+}
+
+.ammo-container.weapon-switching {
+  animation: weaponSwitch 0.5s ease-in-out;
+}
+
+.ammo-reserve.ammo-pickup {
+  animation: ammoPickup 1s ease-out;
+}
+
+@keyframes ammoLowBlink {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  85%,
+  100% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes ammoEmptyBlink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0.2;
+  }
+}
+
+@keyframes reloadPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes weaponSwitch {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes ammoPickup {
+  0% {
+    transform: scale(1);
+    color: #ffffff;
+  }
+  50% {
+    transform: scale(1.2);
+    color: #00ff00;
+  }
+  100% {
+    transform: scale(1);
+    color: #ffffff;
+  }
+}
+
+/* Classic DOOM-style themes */
+.ammo-counter-classic {
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #000;
+}
+
+.ammo-counter-modern {
+  color: #00ff00;
+  font-family: "Arial", sans-serif;
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.1), rgba(0, 100, 0, 0.1));
+  border: 1px solid #00ff00;
+}
+
+.ammo-counter-minimal {
+  color: #cccccc;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
   header h1 {
@@ -244,5 +476,16 @@ footer {
   #controls,
   #renderer-info {
     font-size: 0.7rem;
+  }
+
+  /* Mobile weapon UI adjustments */
+  #crosshair-container .crosshair {
+    transform: scale(1.2);
+  }
+
+  #ammo-container {
+    bottom: 80px;
+    right: 10px;
+    font-size: 12px;
   }
 }

@@ -1,0 +1,12 @@
+{
+  "pistol_fire": "pistol_fire.mp3",
+  "enhanced_pistol_fire": "pistol_fire.mp3",
+  "pistol_reload": "pistol_reload.mp3",
+  "shotgun_fire": "shotgun_fire.wav",
+  "shotgun_reload": "shotgun_reload.wav",
+  "shotgun_pump": "shotgun_pump.wav",
+  "chaingun_fire": "chaingun_fire.wav",
+  "chaingun_reload": "chaingun_reload.wav",
+  "weapon_empty": "weapon_empty.wav",
+  "weapon_switch": "weapon_switch.wav"
+}

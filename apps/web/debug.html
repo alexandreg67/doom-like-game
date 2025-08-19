@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Weapon System Debug</title>
+  <style>
+    body { margin: 0; padding: 20px; font-family: monospace; background: #000; color: #0f0; }
+    .test-section { margin: 20px 0; padding: 10px; border: 1px solid #0f0; }
+    button { background: #000; color: #0f0; border: 1px solid #0f0; padding: 10px; margin: 5px; cursor: pointer; }
+    #crosshair-test { position: relative; width: 200px; height: 200px; border: 1px solid #555; margin: 20px; }
+    #logs { height: 300px; overflow-y: scroll; background: #111; padding: 10px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>🔫 WEAPON SYSTEM DEBUG</h1>
+  
+  <div class="test-section">
+    <h2>1. Crosshair Test</h2>
+    <div id="crosshair-test">
+      <div id="crosshair-container-test" style="
+        position: absolute; 
+        top: 50%; 
+        left: 50%; 
+        transform: translate(-50%, -50%);
+        width: 20px; 
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <div style="width: 4px; height: 4px; background: white; border-radius: 50%;"></div>
+      </div>
+    </div>
+    <button onclick="testCrosshair()">Toggle Crosshair</button>
+  </div>
+  
+  <div class="test-section">
+    <h2>2. Audio Test</h2>
+    <button onclick="testAudio()">Play Test Sound</button>
+    <button onclick="initAudio()">Initialize AudioContext</button>
+  </div>
+  
+  <div class="test-section">
+    <h2>3. Input Test</h2>
+    <p>Press keys and check logs:</p>
+    <button onclick="startInputTest()">Start Input Test</button>
+    <button onclick="stopInputTest()">Stop Input Test</button>
+  </div>
+  
+  <div class="test-section">
+    <h2>4. Logs</h2>
+    <button onclick="clearLogs()">Clear Logs</button>
+    <div id="logs"></div>
+  </div>
+
+  <script>
+    let audioContext = null;
+    let inputListening = false;
+    
+    function log(message) {
+      const logs = document.getElementById('logs');
+      logs.textContent += new Date().toLocaleTimeString() + ' - ' + message + '\n';
+      logs.scrollTop = logs.scrollHeight;
+    }
+    
+    function clearLogs() {
+      document.getElementById('logs').textContent = '';
+    }
+    
+    function testCrosshair() {
+      const container = document.getElementById('crosshair-container-test');
+      const isVisible = container.style.display !== 'none';
+      container.style.display = isVisible ? 'none' : 'flex';
+      log('Crosshair toggled: ' + (isVisible ? 'hidden' : 'visible'));
+    }
+    
+    async function initAudio() {
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+        log('AudioContext initialized: ' + audioContext.state);
+      } catch (error) {
+        log('AudioContext failed: ' + error.message);
+      }
+    }
+    
+    async function testAudio() {
+      if (!audioContext) {
+        await initAudio();
+      }
+      
+      if (!audioContext) {
+        log('No AudioContext available');
+        return;
+      }
+      
+      try {
+        // Create simple test sound
+        const duration = 0.2;
+        const sampleRate = audioContext.sampleRate;
+        const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+        const data = buffer.getChannelData(0);
+        
+        for (let i = 0; i < data.length; i++) {
+          const t = i / sampleRate;
+          data[i] = (Math.random() - 0.5) * Math.exp(-t * 10) * 0.3; // Gun shot sound
+        }
+        
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start();
+        
+        log('Test sound played');
+      } catch (error) {
+        log('Audio test failed: ' + error.message);
+      }
+    }
+    
+    function startInputTest() {
+      if (inputListening) return;
+      inputListening = true;
+      
+      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('keyup', handleKeyUp);
+      document.addEventListener('click', handleClick);
+      
+      log('Input listening started');
+    }
+    
+    function stopInputTest() {
+      inputListening = false;
+      
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('click', handleClick);
+      
+      log('Input listening stopped');
+    }
+    
+    function handleKeyDown(e) {
+      log('KeyDown: ' + e.code + ' (' + e.key + ')');
+    }
+    
+    function handleKeyUp(e) {
+      log('KeyUp: ' + e.code + ' (' + e.key + ')');
+    }
+    
+    function handleClick(e) {
+      log('Click: button ' + e.button + ' at (' + e.clientX + ',' + e.clientY + ')');
+    }
+    
+    // Auto-initialize
+    log('Debug page loaded');
+  </script>
+</body>
+</html>

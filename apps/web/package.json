@@ -17,6 +17,7 @@
     "sync-fixtures": "cp -r ../../packages/engine/src/fixtures/*.json public/fixtures/ 2>/dev/null || true"
   },
   "dependencies": {
+    "@doom-like/weapons": "workspace:*",
     "@doom-like/engine": "workspace:*",
     "@doom-like/game-logic": "workspace:*",
     "@doom-like/map-editor": "workspace:*",
