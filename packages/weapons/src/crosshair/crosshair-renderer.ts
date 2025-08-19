@@ -58,7 +58,7 @@ export class CrosshairRenderer {
   public setDynamicSize(multiplier: number): void {
     if (this.config.behavior === 'static') return;
     // Use scale to avoid recalculating all measurements each frame
-    (this.crosshairElement.style as any).transform = `scale(${multiplier})`;
+    this.crosshairElement.style.transform = `scale(${multiplier})`;
   }
 
   /**
@@ -144,7 +144,6 @@ export class CrosshairRenderer {
       case 'cross':
         this.crosshairElement.appendChild(this.buildCross());
         break;
-      case 'custom':
       default:
         // Leave empty for user-provided styles
         break;
@@ -164,7 +163,6 @@ export class CrosshairRenderer {
       case 'cross':
         this.updateCross();
         break;
-      case 'custom':
       default:
         break;
     }
