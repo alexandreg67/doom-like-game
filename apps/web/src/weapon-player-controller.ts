@@ -220,7 +220,7 @@ export class WeaponPlayerController implements InputListener {
         break;
 
       case 'selectWeapon2':
-        this.switchToWeapon('pistol'); // Alternative pistol or upgrade
+        this.switchToWeapon('enhanced_pistol'); // Distinct slot 2 pistol variant
         break;
 
       case 'selectWeapon3':
@@ -301,7 +301,13 @@ export class WeaponPlayerController implements InputListener {
    * Switch to next weapon in inventory
    */
   private switchToNextWeapon(): void {
-    const availableWeapons: WeaponType[] = ['pistol', 'shotgun', 'chaingun', 'rocket_launcher'];
+    const availableWeapons: WeaponType[] = [
+      'pistol',
+      'enhanced_pistol',
+      'shotgun',
+      'chaingun',
+      'rocket_launcher',
+    ];
     const currentIndex = availableWeapons.indexOf(this.currentWeaponType);
     const nextIndex = (currentIndex + 1) % availableWeapons.length;
     const nextWeapon: WeaponType = availableWeapons[nextIndex] ?? 'pistol';
@@ -313,7 +319,13 @@ export class WeaponPlayerController implements InputListener {
    * Switch to previous weapon in inventory
    */
   private switchToPreviousWeapon(): void {
-    const availableWeapons: WeaponType[] = ['pistol', 'shotgun', 'chaingun', 'rocket_launcher'];
+    const availableWeapons: WeaponType[] = [
+      'pistol',
+      'enhanced_pistol',
+      'shotgun',
+      'chaingun',
+      'rocket_launcher',
+    ];
     const currentIndex = availableWeapons.indexOf(this.currentWeaponType);
     const prevIndex = currentIndex === 0 ? availableWeapons.length - 1 : currentIndex - 1;
     const prevWeapon: WeaponType = availableWeapons[prevIndex] ?? 'pistol';
@@ -359,13 +371,26 @@ export class WeaponPlayerController implements InputListener {
 
     switch (weaponType) {
       case 'pistol':
-      case 'enhanced_pistol':
         crosshairConfig = {
           style: 'dot',
           size: 4,
           thickness: 2,
           gap: 0,
           color: '#ffffff',
+          opacity: 1.0,
+          behavior: 'dynamic',
+          expandOnFire: true,
+          expansionAmount: 1.2,
+        };
+        break;
+
+      case 'enhanced_pistol':
+        crosshairConfig = {
+          style: 'circle',
+          size: 12,
+          thickness: 2,
+          gap: 0,
+          color: '#00ffff',
           opacity: 1.0,
           behavior: 'dynamic',
           expandOnFire: true,
@@ -389,9 +414,9 @@ export class WeaponPlayerController implements InputListener {
       case 'chaingun':
         crosshairConfig = {
           style: 'cross',
-          size: 12,
-          thickness: 2,
-          gap: 4,
+          size: 18,
+          thickness: 3,
+          gap: 6,
           color: '#ffff00',
           opacity: 1.0,
           behavior: 'dynamic',
