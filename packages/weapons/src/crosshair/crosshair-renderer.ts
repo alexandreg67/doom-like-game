@@ -11,6 +11,7 @@ export class CrosshairRenderer {
   private config: CrosshairConfig;
   private isVisible = true;
   private animationFrame?: number;
+  private builtStyle?: CrosshairStyle;
 
   constructor(parentElement: HTMLElement, config: CrosshairConfig) {
     this.config = config;
@@ -18,9 +19,9 @@ export class CrosshairRenderer {
     this.container = parentElement;
     // Ensure the container has the right styles
     this.setupContainerStyles();
-    this.crosshairElement = this.createCrosshair();
+    this.crosshairElement = this.createRoot();
     this.container.appendChild(this.crosshairElement);
-    this.updateStyle();
+    this.rebuild();
     console.log('[CROSSHAIR] CrosshairRenderer initialized');
   }
 
@@ -29,7 +30,12 @@ export class CrosshairRenderer {
    */
   public updateConfig(newConfig: Partial<CrosshairConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    this.updateStyle();
+    // Rebuild DOM if style changed
+    if (!this.builtStyle || this.builtStyle !== this.config.style) {
+      this.rebuild();
+    } else {
+      this.updateStyle();
+    }
   }
 
   /**
@@ -51,12 +57,11 @@ export class CrosshairRenderer {
    */
   public setDynamicSize(multiplier: number): void {
     if (this.config.behavior === 'static') return;
-
-    const baseSize = this.config.size;
-    const newSize = baseSize * multiplier;
-
-    this.crosshairElement.style.setProperty('--crosshair-size', `${newSize}px`);
-    this.crosshairElement.style.setProperty('--crosshair-gap', `${this.config.gap * multiplier}px`);
+    // Use scale to avoid recalculating all measurements each frame
+    // Preserve any other transforms by stripping an existing scale() and appending a new one
+    const current = this.crosshairElement.style.transform || '';
+    const withoutScale = current.replace(/scale\([^)]+\)/, '').trim();
+    this.crosshairElement.style.transform = `${withoutScale ? `${withoutScale} ` : ''}scale(${multiplier})`;
   }
 
   /**
@@ -118,99 +123,167 @@ export class CrosshairRenderer {
     console.log('[CROSSHAIR] Container styles setup, display:', this.container.style.display);
   }
 
-  private createCrosshair(): HTMLElement {
-    const element = document.createElement('div');
-    element.className = `crosshair crosshair-${this.config.style}`;
-    return element;
+  private createRoot(): HTMLElement {
+    const el = document.createElement('div');
+    el.className = 'crosshair-root';
+    el.style.position = 'relative';
+    el.style.opacity = String(this.config.opacity);
+    el.style.transformOrigin = 'center center';
+    return el;
+  }
+
+  private rebuild(): void {
+    // Clear children
+    while (this.crosshairElement.firstChild) {
+      this.crosshairElement.removeChild(this.crosshairElement.firstChild);
+    }
+    this.builtStyle = this.config.style;
+    // Build according to current style
+    switch (this.config.style) {
+      case 'dot':
+        this.crosshairElement.appendChild(this.buildDot());
+        break;
+      case 'circle':
+        this.crosshairElement.appendChild(this.buildCircle());
+        break;
+      case 'cross':
+        this.crosshairElement.appendChild(this.buildCross());
+        break;
+      default:
+        // Leave empty for user-provided styles
+        break;
+    }
+    this.updateStyle();
   }
 
   private updateStyle(): void {
-    const { style, size, thickness, gap, color, outlineColor, opacity } = this.config;
-
-    // Set CSS custom properties
-    this.crosshairElement.style.setProperty('--crosshair-size', `${size}px`);
-    this.crosshairElement.style.setProperty('--crosshair-thickness', `${thickness}px`);
-    this.crosshairElement.style.setProperty('--crosshair-gap', `${gap}px`);
-    this.crosshairElement.style.setProperty('--crosshair-color', color);
-    this.crosshairElement.style.setProperty('--crosshair-outline', outlineColor || 'transparent');
-    this.crosshairElement.style.setProperty('--crosshair-opacity', opacity.toString());
-
-    // Apply style-specific classes
-    this.crosshairElement.className = `crosshair crosshair-${style}`;
-
-    // Apply style-specific CSS
-    this.crosshairElement.style.cssText = this.getStyleCSS(style);
+    // Update all built parts with current config
+    switch (this.config.style) {
+      case 'dot':
+        this.updateDot();
+        break;
+      case 'circle':
+        this.updateCircle();
+        break;
+      case 'cross':
+        this.updateCross();
+        break;
+      default:
+        break;
+    }
+    // Also update opacity
+    this.crosshairElement.style.opacity = String(this.config.opacity);
   }
 
-  private getStyleCSS(style: CrosshairStyle): string {
-    const baseCSS = `
-      position: relative;
-      width: var(--crosshair-size);
-      height: var(--crosshair-size);
-      opacity: var(--crosshair-opacity);
-    `;
+  private buildDot(): HTMLElement {
+    const dot = document.createElement('div');
+    dot.className = 'crosshair-dot';
+    dot.style.position = 'absolute';
+    dot.style.left = '50%';
+    dot.style.top = '50%';
+    dot.style.transform = 'translate(-50%, -50%)';
+    return dot;
+  }
 
-    switch (style) {
-      case 'dot':
-        return `${baseCSS}
-          background-color: var(--crosshair-color);
-          border-radius: 50%;
-          width: var(--crosshair-thickness);
-          height: var(--crosshair-thickness);
-          box-shadow: 0 0 0 1px var(--crosshair-outline);
-        `;
+  private updateDot(): void {
+    const dot = this.crosshairElement.querySelector('.crosshair-dot') as HTMLElement | null;
+    if (!dot) return;
+    const { thickness, color, outlineColor } = this.config;
+    dot.style.width = `${thickness}px`;
+    dot.style.height = `${thickness}px`;
+    dot.style.borderRadius = '50%';
+    dot.style.backgroundColor = color;
+    dot.style.boxShadow = outlineColor ? `0 0 0 1px ${outlineColor}` : 'none';
+  }
 
-      case 'cross':
-        return `${baseCSS}
-          &::before, &::after {
-            content: '';
-            position: absolute;
-            background-color: var(--crosshair-color);
-            box-shadow: 0 0 0 1px var(--crosshair-outline);
-          }
-          &::before {
-            left: 50%;
-            top: 0;
-            width: var(--crosshair-thickness);
-            height: calc(50% - var(--crosshair-gap) / 2);
-            transform: translateX(-50%);
-          }
-          &::after {
-            left: 50%;
-            bottom: 0;
-            width: var(--crosshair-thickness);
-            height: calc(50% - var(--crosshair-gap) / 2);
-            transform: translateX(-50%);
-          }
-          &::before {
-            box-shadow: 
-              0 0 0 1px var(--crosshair-outline),
-              calc(var(--crosshair-gap) / 2 + var(--crosshair-thickness) / 2) 
-              calc(50% + var(--crosshair-gap) / 2) 0 0 var(--crosshair-color),
-              calc(var(--crosshair-gap) / 2 + var(--crosshair-thickness) / 2) 
-              calc(50% + var(--crosshair-gap) / 2) 0 1px var(--crosshair-outline),
-              calc(-var(--crosshair-gap) / 2 - var(--crosshair-thickness) / 2) 
-              calc(50% + var(--crosshair-gap) / 2) 0 0 var(--crosshair-color),
-              calc(-var(--crosshair-gap) / 2 - var(--crosshair-thickness) / 2) 
-              calc(50% + var(--crosshair-gap) / 2) 0 1px var(--crosshair-outline);
-          }
-        `;
+  private buildCircle(): HTMLElement {
+    const circle = document.createElement('div');
+    circle.className = 'crosshair-circle';
+    circle.style.position = 'absolute';
+    circle.style.left = '50%';
+    circle.style.top = '50%';
+    circle.style.transform = 'translate(-50%, -50%)';
+    circle.style.boxSizing = 'border-box';
+    return circle;
+  }
 
-      case 'circle':
-        return `${baseCSS}
-          border: var(--crosshair-thickness) solid var(--crosshair-color);
-          border-radius: 50%;
-          box-sizing: border-box;
-          box-shadow: 
-            0 0 0 1px var(--crosshair-outline),
-            inset 0 0 0 1px var(--crosshair-outline);
-        `;
+  private updateCircle(): void {
+    const circle = this.crosshairElement.querySelector('.crosshair-circle') as HTMLElement | null;
+    if (!circle) return;
+    const { size, thickness, color, outlineColor } = this.config;
+    circle.style.width = `${size}px`;
+    circle.style.height = `${size}px`;
+    circle.style.border = `${thickness}px solid ${color}`;
+    circle.style.borderRadius = '50%';
+    circle.style.boxShadow = outlineColor
+      ? `0 0 0 1px ${outlineColor}, inset 0 0 0 1px ${outlineColor}`
+      : 'none';
+  }
 
-      case 'custom':
-        return baseCSS; // Custom styles should be provided via CSS classes
+  private buildCross(): HTMLElement {
+    const root = document.createElement('div');
+    root.className = 'crosshair-cross';
+    root.style.position = 'absolute';
+    root.style.left = '50%';
+    root.style.top = '50%';
+    root.style.transform = 'translate(-50%, -50%)';
 
-      default:
-        return baseCSS;
-    }
+    const makeArm = () => {
+      const arm = document.createElement('div');
+      arm.style.position = 'absolute';
+      return arm;
+    };
+
+    const top = makeArm();
+    const bottom = makeArm();
+    const left = makeArm();
+    const right = makeArm();
+
+    top.dataset.arm = 'top';
+    bottom.dataset.arm = 'bottom';
+    left.dataset.arm = 'left';
+    right.dataset.arm = 'right';
+
+    root.appendChild(top);
+    root.appendChild(bottom);
+    root.appendChild(left);
+    root.appendChild(right);
+
+    return root;
+  }
+
+  private updateCross(): void {
+    const root = this.crosshairElement.querySelector('.crosshair-cross') as HTMLElement | null;
+    if (!root) return;
+    const { size, thickness, gap, color, outlineColor } = this.config;
+
+    const half = size / 2;
+    const armLen = Math.max(half - gap / 2, 0);
+
+    const applyArm = (arm: HTMLElement, x: number, y: number, w: number, h: number) => {
+      arm.style.left = `${x}px`;
+      arm.style.top = `${y}px`;
+      arm.style.width = `${w}px`;
+      arm.style.height = `${h}px`;
+      arm.style.backgroundColor = color;
+      arm.style.boxShadow = outlineColor ? `0 0 0 1px ${outlineColor}` : 'none';
+    };
+
+    // Clear any transform from dynamic scaling (applies to root container instead)
+    root.style.width = `${size}px`;
+    root.style.height = `${size}px`;
+
+    const top = root.querySelector('[data-arm="top"]') as HTMLElement;
+    const bottom = root.querySelector('[data-arm="bottom"]') as HTMLElement;
+    const left = root.querySelector('[data-arm="left"]') as HTMLElement;
+    const right = root.querySelector('[data-arm="right"]') as HTMLElement;
+
+    // Vertical arms
+    applyArm(top, half - thickness / 2, 0, thickness, armLen);
+    applyArm(bottom, half - thickness / 2, half + gap / 2, thickness, armLen);
+
+    // Horizontal arms
+    applyArm(left, 0, half - thickness / 2, armLen, thickness);
+    applyArm(right, half + gap / 2, half - thickness / 2, armLen, thickness);
   }
 }
