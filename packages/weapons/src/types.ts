@@ -36,6 +36,22 @@ export type CrosshairStyle = 'dot' | 'cross' | 'circle' | 'custom';
 export type CrosshairBehavior = 'static' | 'dynamic' | 'weapon-specific';
 
 /**
+ * Material types for impact system
+ */
+export type MaterialType = 
+  | 'metal'
+  | 'concrete' 
+  | 'stone'
+  | 'wood'
+  | 'glass'
+  | 'water'
+  | 'flesh'
+  | 'dirt'
+  | 'fabric'
+  | 'plastic'
+  | 'default';
+
+/**
  * Hit result from weapon firing
  */
 export interface HitResult {
@@ -45,6 +61,15 @@ export interface HitResult {
   distance: number;
   entity?: Entity;
   damage: number;
+  
+  // Impact system properties
+  materialType?: MaterialType;
+  surfaceAngle?: number;
+  impactVelocity?: Vector3;
+  meshName?: string;
+  materialName?: string;
+  canPenetrate?: boolean;
+  ricochetAngle?: number;
 }
 
 /**

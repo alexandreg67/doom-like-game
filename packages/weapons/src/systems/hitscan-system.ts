@@ -4,10 +4,10 @@
  */
 
 import { Ray, Vector3 } from '@babylonjs/core';
-import type { Scene } from '@babylonjs/core';
+import type { Scene, AbstractMesh } from '@babylonjs/core';
 import type { Entity, Transform } from '@doom-like/game-logic';
 import type { WeaponComponent } from '../components/weapon-component';
-import type { FiringContext, HitResult, WeaponConfig } from '../types';
+import type { FiringContext, HitResult, WeaponConfig, MaterialType } from '../types';
 
 export class HitscanSystem {
   private scene: Scene;
@@ -136,6 +136,13 @@ export class HitscanSystem {
     if (pickInfo?.hit && pickInfo.pickedPoint && pickInfo.getNormal()) {
       const normal = pickInfo.getNormal();
       if (normal) {
+        // Calculate surface angle and impact properties
+        const surfaceAngle = this.calculateSurfaceAngle(direction, normal);
+        const impactVelocity = direction.scale(config.range / 10); // Rough velocity estimation
+        
+        // Detect material type from mesh
+        const materialType = this.detectMaterialType(pickInfo.pickedMesh);
+        
         result = {
           hit: true,
           position: pickInfo.pickedPoint,
@@ -143,6 +150,15 @@ export class HitscanSystem {
           distance: pickInfo.distance,
           damage: 0, // Will be calculated later
           // entity: this.getEntityFromMesh(pickInfo.pickedMesh), // Need ECS integration
+          
+          // Impact system properties
+          materialType,
+          surfaceAngle,
+          impactVelocity,
+          meshName: pickInfo.pickedMesh?.name,
+          materialName: pickInfo.pickedMesh?.material?.name,
+          canPenetrate: this.canPenetrateMaterial(materialType, config),
+          ricochetAngle: this.calculateRicochetAngle(surfaceAngle, materialType)
         };
       } else {
         result = this.createMissResult(origin, direction);
@@ -288,5 +304,121 @@ export class HitscanUtils {
       : 0;
 
     return { canPenetrate, remainingDamage };
+  }
+
+  /**
+   * Detect material type from mesh properties
+   */
+  private detectMaterialType(mesh?: AbstractMesh | null): MaterialType {
+    if (!mesh) {
+      return 'default';
+    }
+
+    const meshName = mesh.name?.toLowerCase() || '';
+    const materialName = mesh.material?.name?.toLowerCase() || '';
+    
+    // Check mesh name patterns
+    if (meshName.includes('metal') || meshName.includes('steel') || meshName.includes('iron')) {
+      return 'metal';
+    }
+    if (meshName.includes('concrete') || meshName.includes('cement') || meshName.includes('wall')) {
+      return 'concrete';
+    }
+    if (meshName.includes('stone') || meshName.includes('rock') || meshName.includes('brick')) {
+      return 'stone';
+    }
+    if (meshName.includes('wood') || meshName.includes('timber') || meshName.includes('plank')) {
+      return 'wood';
+    }
+    if (meshName.includes('glass') || meshName.includes('window')) {
+      return 'glass';
+    }
+    if (meshName.includes('water') || meshName.includes('liquid')) {
+      return 'water';
+    }
+    if (meshName.includes('dirt') || meshName.includes('soil') || meshName.includes('ground')) {
+      return 'dirt';
+    }
+    if (meshName.includes('fabric') || meshName.includes('cloth') || meshName.includes('carpet')) {
+      return 'fabric';
+    }
+    if (meshName.includes('plastic') || meshName.includes('polymer')) {
+      return 'plastic';
+    }
+
+    // Check material name patterns
+    if (materialName.includes('metal') || materialName.includes('steel')) {
+      return 'metal';
+    }
+    if (materialName.includes('concrete') || materialName.includes('stone')) {
+      return 'concrete';
+    }
+    if (materialName.includes('wood')) {
+      return 'wood';
+    }
+    if (materialName.includes('glass')) {
+      return 'glass';
+    }
+    
+    return 'default';
+  }
+
+  /**
+   * Calculate angle between projectile and surface
+   */
+  private calculateSurfaceAngle(direction: Vector3, normal: Vector3): number {
+    const dot = Vector3.Dot(direction.normalize(), normal.normalize());
+    return Math.acos(Math.abs(dot)); // Angle in radians
+  }
+
+  /**
+   * Determine if projectile can penetrate material
+   */
+  private canPenetrateMaterial(materialType: MaterialType, config: WeaponConfig): boolean {
+    const penetrationPower = config.penetration || 0;
+    
+    const materialResistance = {
+      glass: 0.1,
+      wood: 0.3,
+      fabric: 0.1,
+      plastic: 0.2,
+      dirt: 0.4,
+      flesh: 0.2,
+      default: 0.5,
+      concrete: 0.9,
+      stone: 0.8,
+      metal: 0.7,
+      water: 0.0
+    };
+
+    const resistance = materialResistance[materialType] || materialResistance.default;
+    return penetrationPower > resistance;
+  }
+
+  /**
+   * Calculate ricochet angle based on surface properties
+   */
+  private calculateRicochetAngle(surfaceAngle: number, materialType: MaterialType): number {
+    const ricochetChances = {
+      metal: 0.8,
+      concrete: 0.4,
+      stone: 0.3,
+      water: 0.2,
+      default: 0.3,
+      wood: 0.1,
+      glass: 0.05,
+      fabric: 0.0,
+      plastic: 0.1,
+      dirt: 0.1,
+      flesh: 0.0
+    };
+
+    const chance = ricochetChances[materialType] || ricochetChances.default;
+    
+    // Shallow angles have higher ricochet chance
+    const angleMultiplier = 1 - (surfaceAngle / (Math.PI / 2));
+    const finalChance = chance * angleMultiplier;
+    
+    return Math.random() < finalChance ? surfaceAngle * 2 : 0;
   }
 }

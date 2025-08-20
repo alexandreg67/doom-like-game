@@ -91,6 +91,25 @@ importers:
         specifier: ^1.6.0
         version: 1.6.1(@types/node@20.19.10)(jsdom@26.1.0)
 
+  packages/effects:
+    dependencies:
+      '@babylonjs/core':
+        specifier: ^7.0.0
+        version: 7.54.3
+      '@doom-like/game-logic':
+        specifier: workspace:*
+        version: link:../game-logic
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.10
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.2
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@20.19.10)(jsdom@26.1.0)
+
   packages/engine:
     dependencies:
       '@babylonjs/core':
