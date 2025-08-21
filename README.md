@@ -112,6 +112,17 @@ pnpm format           # Format code with Biome
 pnpm typecheck        # TypeScript type checking
 ```
 
+### Clean build (résoudre les problèmes de cache incrémental)
+
+Si vous voyez des erreurs TypeScript du type "Output file '.../dist/index.d.ts' has not been built from source file ..." lors de l'exécution de `pnpm build`, le cache incrémental peut être obsolète. Utilisez le script helper pour supprimer tous les dossiers `dist` et les fichiers `tsconfig.tsbuildinfo` dans le monorepo avant de reconstruire :
+
+```bash
+pnpm run clean:all
+pnpm build
+```
+
+Ce script est aussi exécuté automatiquement avant `pnpm build` via le script `prebuild` dans `package.json`.
+
 ### Adding New Features
 
 1. Create a feature branch: `git checkout -b feature/my-feature`

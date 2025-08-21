@@ -13,7 +13,9 @@
     "lint": "pnpm --recursive lint",
     "format": "pnpm --recursive format",
     "typecheck": "pnpm --filter './packages/engine' build && pnpm --filter './packages/game-logic' build && pnpm --filter './packages/weapons' build && pnpm --filter './packages/effects' build && pnpm --filter './apps/web' typecheck",
-    "clean": "pnpm --recursive clean"
+    "clean": "pnpm --recursive clean",
+    "clean:all": "node ./scripts/clean-build.js",
+    "prebuild": "pnpm run clean:all"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
