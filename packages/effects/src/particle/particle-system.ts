@@ -144,12 +144,8 @@ export class ImpactParticleSystem {
 
   constructor(scene: Scene) {
     this.scene = scene;
-    try {
-      // Ensure particles are enabled on the scene (safety in case a config disables it)
-      (this.scene as unknown as { particlesEnabled?: boolean }).particlesEnabled = true;
-      const enabled = (this.scene as unknown as { particlesEnabled?: boolean }).particlesEnabled;
-      console.log('🎛️ [PARTICLE_SYSTEM] scene.particlesEnabled =', enabled);
-    } catch {}
+    // No-op: Babylon.js does not expose a public `particlesEnabled` switch on Scene.
+    // Assume particles are processed by default; if not, it should be configured via engine/scene setup.
     // Ensure textures are preloaded so particleTexture lookups succeed
     try {
       this.preloadTextures();
