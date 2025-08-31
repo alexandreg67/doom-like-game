@@ -10,15 +10,15 @@ const isDebug = (() => {
 
 export const logger = {
   debug: (...args: unknown[]): void => {
-    if (isDebug) console.log(...(args as []));
+    if (isDebug) console.log(...args);
   },
   info: (...args: unknown[]): void => {
-    if (isDebug) console.info(...(args as []));
+    if (isDebug) console.info(...args);
   },
   warn: (...args: unknown[]): void => {
-    console.warn(...(args as []));
+    console.warn(...args);
   },
   error: (...args: unknown[]): void => {
-    console.error(...(args as []));
+    console.error(...args);
   },
 };

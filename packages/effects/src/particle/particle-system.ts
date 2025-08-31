@@ -26,8 +26,11 @@ export class ImpactParticleSystem {
   private lastCreateCallInfo: { [key: string]: unknown } | null = null;
   // Debug toggle: when true, always create new ParticleSystem and skip pool reuse.
   // Default to false in production to avoid exhausting the active systems limit
-  // and causing a visible "fenêtre" where no more effects can spawn.
+  // and causing a visible "window" where no more effects can spawn.
   private debugAlwaysCreateNew = false;
+
+  // Maximum number of active particle systems to prevent memory exhaustion
+  private static readonly MAX_ACTIVE_SYSTEMS = 100;
 
   // Debug sampling functions removed
 
@@ -459,7 +462,7 @@ export class ImpactParticleSystem {
       console.log(
         '⚠️ [PARTICLE_SYSTEM] Debug mode: always create NEW particle system (pool disabled)'
       );
-      if (this.activeParticleSystems.size < 100) {
+      if (this.activeParticleSystems.size < ImpactParticleSystem.MAX_ACTIVE_SYSTEMS) {
         const particleSystem = new ParticleSystem(
           `impact_particles_${Date.now()}_${Math.random()}`,
           1000,
@@ -478,8 +481,11 @@ export class ImpactParticleSystem {
         particleSystem.emitter = new Vector3(0, 1, 0);
         particleSystem.minEmitBox = new Vector3(-0.1, -0.1, -0.1);
         particleSystem.maxEmitBox = new Vector3(0.1, 0.1, 0.1);
-        // NOTE: Removed unsafe cast and call to private/internal Babylon.js API.
-        // Particle systems are automatically managed by the scene when created.
+        // NOTE: Previously, this code performed an unsafe cast to access a private/internal Babylon.js API method
+        // (e.g., (this.scene as any).addParticleSystem(particleSystem)) to manually register the particle system.
+        // This was removed because accessing private APIs can break on Babylon.js updates and is not recommended.
+        // Instead, we now rely on Babylon.js to automatically manage particle systems when they are created,
+        // which is safer and more maintainable.
         this.wrapStopLogger(particleSystem);
 
         console.log(
@@ -537,7 +543,7 @@ export class ImpactParticleSystem {
     }
 
     // Create new if we haven't hit limits
-    if (this.activeParticleSystems.size < 100) {
+    if (this.activeParticleSystems.size < ImpactParticleSystem.MAX_ACTIVE_SYSTEMS) {
       const particleSystem = new ParticleSystem(
         `impact_particles_${Date.now()}_${Math.random()}`,
         1000,
