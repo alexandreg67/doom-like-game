@@ -11,6 +11,8 @@ doom-like-game/
 ├── packages/
 │   ├── engine/          # Moteur de rendu 3D (Babylon.js + WebGPU)
 │   ├── game-logic/      # Logique de jeu ECS et gameplay
+│   ├── weapons/         # Système d'armes et tir hitscan/projectiles
+│   ├── effects/         # Effets visuels et audio (impacts, particules)
 │   ├── map-editor/      # Éditeur de cartes web 2D
 │   └── assets/          # Pipeline d'assets et format WAD-like
 ├── apps/
@@ -344,6 +346,191 @@ server: {
 - [WebGPU Spec](https://gpuweb.github.io/gpuweb/)
 - [DOOM Wiki](https://doomwiki.org) (références techniques uniquement)
 - [BSP Trees](https://en.wikipedia.org/wiki/Binary_space_partitioning)
+
+## Système d'impacts d'armes (@doom-like/effects)
+
+Le système d'impacts gère les effets visuels, sonores et physiques lors des impacts d'armes sur les surfaces. Il détecte automatiquement le matériau touché et génère des effets appropriés.
+
+### Architecture
+
+```typescript
+// Manager principal
+const impactManager = new ImpactManager(scene);
+
+// Systèmes spécialisés
+const particleSystem = new ImpactParticleSystem(scene);
+const impactRenderer = new ImpactRenderer(scene);  
+const audioManager = new ImpactAudioManager(scene);
+```
+
+### Types de matériaux supportés
+
+```typescript
+type MaterialType = 
+  | 'metal'     // Étincelles dorées, son métallique
+  | 'concrete'  // Poussière grise, son sourd  
+  | 'stone'     // Éclats rocheux, réverbération
+  | 'wood'      // Copeaux, son mat
+  | 'glass'     // Éclats réfléchissants, bris cristallin
+  | 'water'     // Éclaboussures, ondulations
+  | 'flesh'     // Sang, impact organique (PG-13)
+  | 'dirt'      // Poussière terre, son étouffé
+  | 'fabric'    // Déchirure, particules fibres
+  | 'plastic'   // Éclats, son sec
+  | 'default';  // Effet générique
+```
+
+### Détection automatique des matériaux
+
+La détection se base sur les conventions de nommage :
+
+```typescript
+// Exemples de noms détectés automatiquement
+'metal_wall_01'    → MaterialType.metal
+'concrete_floor'   → MaterialType.concrete  
+'wood_plank_door'  → MaterialType.wood
+'glass_window'     → MaterialType.glass
+'wall_material'    → MaterialType.concrete (fallback)
+```
+
+### Utilisation dans le système d'armes
+
+```typescript
+// Le HitscanSystem enrichit automatiquement les HitResult
+export interface HitResult {
+  hit: boolean;
+  position: Vector3;
+  normal: Vector3;
+  // ... propriétés existantes
+  
+  // Nouvelles propriétés pour impacts
+  materialType?: MaterialType;
+  surfaceAngle?: number;        // Angle projectile/surface
+  impactVelocity?: Vector3;     // Vélocité d'impact
+  meshName?: string;            // Nom du mesh touché
+  canPenetrate?: boolean;       // Pénétration possible
+  ricochetAngle?: number;       // Angle de ricochet
+}
+
+// Traitement automatique dans hitscan-system.ts
+const hitResult = hitscanSystem.fire(context);
+if (hitResult.hit) {
+  // Les propriétés matériau sont déjà calculées
+  impactManager.processImpact({
+    position: hitResult.position,
+    normal: hitResult.normal,
+    materialType: hitResult.materialType,
+    // ...
+  });
+}
+```
+
+### Effets visuels
+
+#### Particules différenciées
+- **Métal** : Étincelles dorées avec trajectoires réalistes
+- **Béton** : Poussière grise + éclats de pierre  
+- **Bois** : Copeaux marron + poussière fine
+- **Verre** : Éclats réfléchissants + fragments
+
+#### Impacts visuels persistants
+- **Trous de balle** : Décals avec variation de taille
+- **Traces de brûlure** : Marques d'explosion 
+- **Fissures** : Motifs de craquelures sur matériaux fragiles
+- **Flash d'impact** : Éclairage momentané à l'impact
+
+### Audio 3D spatial
+
+```typescript
+// Configuration par matériau
+const audioConfig: ImpactAudioConfig = {
+  samples: ['metal_hit_01', 'metal_hit_02'], // Variations
+  volume: 0.9,
+  pitch: 1.0,
+  pitchVariation: 0.2,          // Randomisation
+  maxDistance: 80,              // Portée audible
+  rolloffFactor: 1.0,           // Atténuation distance
+  reverbEnabled: true,          // Réverbération espaces fermés
+  occlusionEnabled: true        // Occlusion obstacles
+};
+
+// Sons spécifiques par événement
+audioManager.playImpactSound(impactData, intensity);
+audioManager.playRicochetSound(position, materialType);
+audioManager.playSparkSound(position, intensity);
+```
+
+### Optimisations performance
+
+#### LOD (Level of Detail)
+```typescript
+const performanceConfig = {
+  highDetailDistance: 20,    // Effets complets
+  mediumDetailDistance: 50,  // Effets réduits  
+  lowDetailDistance: 100,    // Effets minimaux
+  cullingDistance: 200       // Pas d'effets
+};
+```
+
+#### Pool d'objets
+- **Particules** : Réutilisation pour éviter GC
+- **Sons audio** : Pool par type de matériau
+- **Décals** : Réutilisation avec fade-out automatique
+
+#### Limites système
+- Maximum 10 impacts simultanés
+- 50 particules max par impact  
+- 100 décals actifs maximum
+- Cleanup automatique périodique
+
+### Métriques et debug
+
+```typescript
+// Statistiques temps réel
+const stats = impactManager.getStats();
+console.log(`Impacts: ${stats.totalImpacts}`);
+console.log(`Effets actifs: ${stats.activeEffects}`);
+console.log(`Temps moyen: ${stats.averageProcessingTime}ms`);
+
+// Répartition par matériau
+stats.impactsByMaterial.forEach((count, material) => {
+  console.log(`${material}: ${count} impacts`);
+});
+```
+
+### Tests et validation
+
+```bash
+# Tests unitaires système impacts
+pnpm --filter @doom-like/effects test
+
+# Tests avec coverage
+pnpm --filter @doom-like/effects test:coverage
+
+# Tests performance
+pnpm --filter @doom-like/effects test:perf
+```
+
+### Configuration avancée
+
+```typescript
+// Personnalisation matériau
+const customMaterial: ImpactConfig = {
+  materialType: 'custom',
+  hardness: 0.8,              // Dureté (0-1)
+  density: 0.6,               // Densité débris
+  particleEffects: ['sparks', 'debris'],
+  audioType: 'metallic_ping',
+  audioVariations: ['custom_hit_01', 'custom_hit_02'],
+  ricochetChance: 0.7,        // Probabilité ricochet
+  penetrationResistance: 0.5, // Résistance pénétration
+  maxParticles: 40,
+  particleLifetime: 2500
+};
+
+// Enregistrement matériau personnalisé
+impactManager.registerMaterial('custom', customMaterial);
+```
 
 ## Contribution
 

@@ -3,7 +3,7 @@
  * Manages geometry and texture LOD based on distance and screen space size
  */
 
-import { type AbstractMesh, type Camera, type Scene, Vector3 } from '@babylonjs/core';
+import { type AbstractMesh, type Camera, type Scene, type Texture, Vector3 } from '@babylonjs/core';
 import type {
   LODConfig,
   LODCullingData,
@@ -345,7 +345,7 @@ export class LODManager {
     // Get material and apply texture scaling
     const material = mesh.material;
     if (material && 'diffuseTexture' in material) {
-      const texture = (material as any).diffuseTexture;
+      const texture = (material as unknown as { diffuseTexture?: Texture }).diffuseTexture;
       if (texture) {
         // Apply LOD bias to texture
         texture.lodLevelInAlpha = false;

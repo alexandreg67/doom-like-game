@@ -261,8 +261,8 @@ export class ShadowPoolManager {
       generator.usePercentageCloserFiltering = true;
       generator.filteringQuality = ShadowGenerator.QUALITY_HIGH;
       // Note: pcfKernel might not be available in all Babylon.js versions
-      if ('pcfKernel' in generator) {
-        (generator as any).pcfKernel = quality.pcfKernel;
+      if ('pcfKernel' in (generator as unknown as Record<string, unknown>)) {
+        (generator as unknown as { pcfKernel?: number }).pcfKernel = quality.pcfKernel;
       }
     }
 
@@ -274,10 +274,15 @@ export class ShadowPoolManager {
     generator.contactHardeningLightSizeUVRatio = 0.1;
 
     // Enable variance shadow maps for better quality if available
-    if ('useVarianceShadowMap' in generator) {
-      (generator as any).useVarianceShadowMap = true;
-      (generator as any).varianceBias = 0.00003;
-      (generator as any).varianceBlurRatio = 4;
+    const gen = generator as unknown as {
+      useVarianceShadowMap?: boolean;
+      varianceBias?: number;
+      varianceBlurRatio?: number;
+    };
+    if ('useVarianceShadowMap' in (generator as unknown as Record<string, unknown>)) {
+      gen.useVarianceShadowMap = true;
+      gen.varianceBias = 0.00003;
+      gen.varianceBlurRatio = 4;
     }
   }
 
@@ -329,8 +334,8 @@ export class ShadowPoolManager {
     }
 
     // Update generator settings
-    if ('pcfKernel' in shadowMap.generator) {
-      (shadowMap.generator as any).pcfKernel = newQuality.pcfKernel;
+    if ('pcfKernel' in (shadowMap.generator as unknown as Record<string, unknown>)) {
+      (shadowMap.generator as unknown as { pcfKernel?: number }).pcfKernel = newQuality.pcfKernel;
     }
     shadowMap.generator.bias = newQuality.bias;
 

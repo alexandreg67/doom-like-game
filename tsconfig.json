@@ -7,17 +7,12 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
+    
     "jsx": "react-jsx",
 
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": true,
-    "noUncheckedIndexedAccess": true,
-
-    "baseUrl": ".",
     "paths": {
       "@doom-like/engine": ["./packages/engine/src"],
       "@doom-like/engine/*": ["./packages/engine/src/*"],
@@ -26,14 +21,25 @@
       "@doom-like/map-editor": ["./packages/map-editor/src"],
       "@doom-like/map-editor/*": ["./packages/map-editor/src/*"],
       "@doom-like/assets": ["./packages/assets/src"],
-      "@doom-like/assets/*": ["./packages/assets/src/*"]
-    }
+      "@doom-like/assets/*": ["./packages/assets/src/*"],
+      "@doom-like/effects": ["./packages/effects/src"],
+      "@doom-like/effects/*": ["./packages/effects/src/*"],
+      "@doom-like/weapons": ["./packages/weapons/src"],
+      "@doom-like/weapons/*": ["./packages/weapons/src/*"]
+    },
+    "noEmit": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+
+    "baseUrl": ".",
+    
   },
   "include": [],
   "references": [
     { "path": "./packages/engine" },
     { "path": "./packages/game-logic" },
     { "path": "./packages/weapons" },
+    { "path": "./packages/effects" },
     { "path": "./packages/map-editor" },
     { "path": "./packages/assets" },
     { "path": "./apps/web" }

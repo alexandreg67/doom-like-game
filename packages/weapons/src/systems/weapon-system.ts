@@ -16,6 +16,9 @@ import { WeaponFactory } from '../weapons/weapon-factory';
 import { HitscanSystem } from './hitscan-system';
 import { ProjectileSystem } from './projectile-system';
 
+// Import impact system
+import type { ImpactManager } from '@doom-like/effects';
+
 export interface WeaponSystemConfig {
   scene: Scene;
   audioEnabled?: boolean;
@@ -474,6 +477,13 @@ export class WeaponSystem {
         `[WEAPON_SYSTEM] Playing ${soundType} sound: ${soundId} for ${weapon.config.name}`
       );
     }
+  }
+
+  /**
+   * Set the impact manager for weapon impact effects
+   */
+  public setImpactManager(impactManager: ImpactManager): void {
+    this.hitscanSystem.setImpactManager(impactManager);
   }
 
   /**

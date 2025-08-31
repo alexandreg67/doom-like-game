@@ -255,7 +255,7 @@ describe('OptimizedLightingSystem', () => {
 
       // Should not throw when adding shadow caster
       expect(() => {
-        optimizedLighting.addShadowCaster('shadow_light', mockMesh as any);
+        optimizedLighting.addShadowCaster('shadow_light', mockMesh as unknown as AbstractMesh);
       }).not.toThrow();
     });
 
@@ -278,7 +278,7 @@ describe('OptimizedLightingSystem', () => {
         position: Vector3.Zero(),
       };
 
-      optimizedLighting.addShadowReceiver('shadow_light', mockMesh as any);
+      optimizedLighting.addShadowReceiver('shadow_light', mockMesh as unknown as AbstractMesh);
 
       expect(mockMesh.receiveShadows).toBe(true);
     });

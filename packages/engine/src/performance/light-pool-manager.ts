@@ -195,10 +195,14 @@ export class LightPoolManager {
 
       if (isActive && isTooFar) {
         // Move to inactive pool
-        const light = this.activeLights.get(lightId)!;
-        this.activeLights.delete(lightId);
-        this.inactiveLights.set(lightId, light);
-        light.babylonLight.setEnabled(false);
+        const light = this.activeLights.get(lightId);
+        if (light) {
+          this.activeLights.delete(lightId);
+          this.inactiveLights.set(lightId, light);
+        }
+        if (light) {
+          light.babylonLight.setEnabled(false);
+        }
 
         this.culledLights.set(lightId, {
           lightId,
@@ -236,10 +240,14 @@ export class LightPoolManager {
     const lightsToCull = activePriorities.slice(-excessCount);
 
     for (const { lightId, distance } of lightsToCull) {
-      const light = this.activeLights.get(lightId)!;
-      this.activeLights.delete(lightId);
-      this.inactiveLights.set(lightId, light);
-      light.babylonLight.setEnabled(false);
+      const light = this.activeLights.get(lightId);
+      if (light) {
+        this.activeLights.delete(lightId);
+        this.inactiveLights.set(lightId, light);
+      }
+      if (light) {
+        light.babylonLight.setEnabled(false);
+      }
 
       this.culledLights.set(lightId, {
         lightId,
@@ -274,10 +282,14 @@ export class LightPoolManager {
       .slice(0, cullCount);
 
     for (const [lightId, priority] of lightsByImportance) {
-      const light = this.activeLights.get(lightId)!;
-      this.activeLights.delete(lightId);
-      this.inactiveLights.set(lightId, light);
-      light.babylonLight.setEnabled(false);
+      const light = this.activeLights.get(lightId);
+      if (light) {
+        this.activeLights.delete(lightId);
+        this.inactiveLights.set(lightId, light);
+      }
+      if (light) {
+        light.babylonLight.setEnabled(false);
+      }
 
       this.culledLights.set(lightId, {
         lightId,
@@ -375,7 +387,8 @@ export class LightPoolManager {
 
     // Shadow casting lights are more important
     // Note: Using 'shadow' property for shadow configuration
-    if ((config as any).shadow?.enabled) importance *= 1.5;
+    if ((config as unknown as { shadow?: { enabled?: boolean } }).shadow?.enabled)
+      importance *= 1.5;
 
     return importance;
   }

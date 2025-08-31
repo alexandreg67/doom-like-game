@@ -10,6 +10,8 @@ export default defineConfig({
       '@doom-like/game-logic': path.resolve(__dirname, '../../packages/game-logic/src'),
       '@doom-like/map-editor': path.resolve(__dirname, '../../packages/map-editor/src'),
       '@doom-like/assets': path.resolve(__dirname, '../../packages/assets/src'),
+      '@doom-like/weapons': path.resolve(__dirname, '../../packages/weapons/src'),
+      '@doom-like/effects': path.resolve(__dirname, '../../packages/effects/src'),
     },
   },
 

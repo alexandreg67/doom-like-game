@@ -28,6 +28,9 @@
       "path": "../game-logic"
     },
     {
+      "path": "../effects"
+    },
+    {
       "path": "../assets"
     }
   ]

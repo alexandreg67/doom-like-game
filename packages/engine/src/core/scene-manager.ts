@@ -498,6 +498,15 @@ export class SceneManager {
         wallVertexData.positions = wallGeometry.vertices.flatMap((v) => [v.x, v.y, v.z]);
         wallVertexData.indices = wallGeometry.indices;
         wallVertexData.uvs = wallGeometry.uvs.flatMap((uv) => [uv.x, uv.y]);
+
+        // Compute normals for proper lighting and impacts
+        wallVertexData.normals = [];
+        VertexData.ComputeNormals(
+          wallVertexData.positions,
+          wallVertexData.indices,
+          wallVertexData.normals
+        );
+
         wallVertexData.applyToMesh(wallMesh);
 
         // Use different material for door

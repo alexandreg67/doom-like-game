@@ -21,8 +21,8 @@ const gameState = {
   gameRunning: false,
 };
 
-// Make gameState globally accessible for weapon system
-(window as any).gameState = gameState;
+// Make gameState globally accessible for weapon system (typed via global.d.ts)
+window.gameState = gameState;
 
 async function initializeGame() {
   const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;

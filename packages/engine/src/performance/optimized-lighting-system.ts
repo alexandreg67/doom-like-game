@@ -3,7 +3,7 @@
  * Combines light pooling, shadow optimization, and performance monitoring
  */
 
-import { type Scene, Vector3 } from '@babylonjs/core';
+import { type AbstractMesh, type IShadowLight, type Scene, Vector3 } from '@babylonjs/core';
 import type { LightManager } from '../lighting/light-manager';
 import type { LightConfig, LightInstance } from '../lighting/types';
 import { type LightPoolConfig, LightPoolManager } from './light-pool-manager';
@@ -114,7 +114,10 @@ export class OptimizedLightingSystem {
     this.lightPool.addLight(lightInstance, isStatic);
 
     // Set up shadow mapping if needed
-    if ((config as any).shadow?.enabled && this.supportsShadows(lightInstance)) {
+    if (
+      (config as unknown as { shadow?: { enabled?: boolean } }).shadow?.enabled &&
+      this.supportsShadows(lightInstance)
+    ) {
       this.setupShadowMapping(config.id, lightInstance);
     }
 
@@ -175,7 +178,7 @@ export class OptimizedLightingSystem {
     // Get shadow map from pool
     const shadowMap = this.shadowPool.getShadowMapForLight(
       lightId,
-      lightInstance.babylonLight as any,
+      (lightInstance as unknown as { babylonLight: IShadowLight }).babylonLight,
       Vector3.Zero() // Will be updated in next frame
     );
 
@@ -304,7 +307,7 @@ export class OptimizedLightingSystem {
   /**
    * Add shadow caster to a light
    */
-  public addShadowCaster(lightId: string, mesh: any): void {
+  public addShadowCaster(lightId: string, mesh: AbstractMesh): void {
     const success = this.shadowPool.addShadowCaster(lightId, mesh);
     if (!success) {
       // Fallback to light manager
@@ -315,7 +318,7 @@ export class OptimizedLightingSystem {
   /**
    * Add shadow receiver to a light
    */
-  public addShadowReceiver(_lightId: string, mesh: any): void {
+  public addShadowReceiver(_lightId: string, mesh: AbstractMesh): void {
     mesh.receiveShadows = true;
   }
 

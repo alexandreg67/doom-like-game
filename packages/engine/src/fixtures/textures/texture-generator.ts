@@ -213,9 +213,30 @@ function generateConcrete(ctx: CanvasRenderingContext2D, size: number) {
  * These are static data URLs to avoid Canvas dependency in tests
  */
 export const TEXTURE_DATA_URLS = (() => {
-  // Check if we're in a browser environment
-  if (typeof document !== 'undefined' && typeof document.createElement === 'function') {
+  // Detect test environment - compatible with both Node.js and browser
+  const isTestEnv =
+    (typeof process !== 'undefined' && (process.env?.VITEST || process.env?.NODE_ENV === 'test')) ||
+    (typeof globalThis !== 'undefined' && (globalThis as any).vitest) ||
+    (typeof window !== 'undefined' && window.location?.href?.includes('test'));
+
+  // Skip texture generation during tests to avoid Canvas issues
+  if (isTestEnv) {
+    logger.warn('[TextureGenerator] Test environment detected, using fallback data URLs');
+  }
+  // Check if we're in a browser environment and Canvas is fully supported
+  else if (
+    typeof document !== 'undefined' &&
+    typeof document.createElement === 'function' &&
+    typeof HTMLCanvasElement !== 'undefined'
+  ) {
     try {
+      // Test Canvas support before attempting texture generation
+      const testCanvas = document.createElement('canvas');
+      const testCtx = testCanvas.getContext('2d');
+      if (!testCtx) {
+        throw new Error('Canvas 2D context not available');
+      }
+
       return {
         default: generateTexture('checkerboard', {
           color1: '#808080',
