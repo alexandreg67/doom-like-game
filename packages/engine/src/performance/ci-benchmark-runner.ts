@@ -198,7 +198,7 @@ export class CIBenchmarkRunner {
           acc[run.scenarioId] = run.metrics;
           return acc;
         },
-        {} as Record<string, any>
+        {} as Record<string, unknown>
       ),
       overallScore: report.summary.overallScore,
     };

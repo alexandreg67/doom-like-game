@@ -300,7 +300,7 @@ export class ImpactManager {
     return 0;
   }
 
-  private playImpactAudio(impactData: ImpactData, config: ImpactConfig): number {
+  private playImpactAudio(impactData: ImpactData, _config: ImpactConfig): number {
     try {
       console.log('[IMPACT_MANAGER] Playing impact audio for material:', impactData.materialType);
       const audioId = this.audioManager.playImpactSound(impactData);
@@ -327,10 +327,15 @@ export class ImpactManager {
   }
 
   private getMaterialConfig(materialType: MaterialType): ImpactConfig {
-    return (
-      this.materialDatabase.materials.get(materialType) ||
-      this.materialDatabase.materials.get(this.materialDatabase.defaultMaterial)!
-    );
+    const direct = this.materialDatabase.materials.get(materialType);
+    if (direct) return direct;
+    const fallback = this.materialDatabase.materials.get(this.materialDatabase.defaultMaterial);
+    if (fallback) return fallback;
+    // As a last resort, pick the first available config
+    const iterator = this.materialDatabase.materials.values();
+    const first = iterator.next();
+    if (!first.done) return first.value as ImpactConfig;
+    throw new Error('Impact material database is empty');
   }
 
   private getCameraDistance(position: Vector3): number {

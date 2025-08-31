@@ -79,7 +79,7 @@ export class ImpactRenderer {
    */
   public createMuzzleFlash(
     position: Vector3,
-    direction: Vector3,
+    _direction: Vector3,
     intensity = 2.0,
     color: Color3 = new Color3(1, 0.8, 0.4)
   ): string {
@@ -93,7 +93,7 @@ export class ImpactRenderer {
     this.flashLights.set(flashId, light);
 
     // Animate flash intensity
-    const fadeAnimation = Animation.CreateAndStartAnimation(
+    const _fadeAnimation = Animation.CreateAndStartAnimation(
       'flash_fade',
       light,
       'intensity',
@@ -167,7 +167,7 @@ export class ImpactRenderer {
   public createRicochetTrail(
     startPosition: Vector3,
     endPosition: Vector3,
-    intensity = 1.0
+    _intensity = 1.0
   ): string {
     // Create a line mesh for the ricochet trail
     const trailPoints = [startPosition, endPosition];
@@ -182,7 +182,7 @@ export class ImpactRenderer {
     const trailId = this.generateEffectId();
 
     // Animate fade out
-    const fadeAnimation = Animation.CreateAndStartAnimation(
+    const _fadeAnimation = Animation.CreateAndStartAnimation(
       'trail_fade',
       material,
       'alpha',
@@ -351,10 +351,12 @@ export class ImpactRenderer {
   private getOrCreateDecal(): Mesh | null {
     // Try to reuse from pool
     if (this.decalPool.length > 0) {
-      const decal = this.decalPool.pop()!;
-      decal.setEnabled(true);
-      console.log('[IMPACT_RENDERER] Reusing decal from pool:', decal.name);
-      return decal;
+      const decal = this.decalPool.pop();
+      if (decal) {
+        decal.setEnabled(true);
+        console.log('[IMPACT_RENDERER] Reusing decal from pool:', decal.name);
+        return decal;
+      }
     }
 
     // Create new decal if under limit
@@ -422,7 +424,12 @@ export class ImpactRenderer {
   }
 
   private getDecalMaterial(textureName: string): StandardMaterial {
-    return this.decalMaterials.get(textureName) || this.decalMaterials.get('bullet_hole')!;
+    const material = this.decalMaterials.get(textureName);
+    if (material) return material;
+    const fallback = this.decalMaterials.get('bullet_hole');
+    if (fallback) return fallback;
+    // Fallback to a basic material to satisfy lints and avoid null assertions
+    return new StandardMaterial('fallback_decal_material', this.scene);
   }
 
   private createBulletHoleTexture(): Texture {

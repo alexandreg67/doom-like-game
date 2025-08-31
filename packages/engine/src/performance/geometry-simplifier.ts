@@ -69,14 +69,18 @@ export class GeometrySimplifier {
     indices: IndicesArray | null;
   } | null {
     try {
-      const geometry = (mesh as any).geometry;
+      const geometry = (
+        mesh as unknown as {
+          geometry?: { getVerticesData?: (k: string) => unknown; getIndices?: () => unknown };
+        }
+      ).geometry;
       if (!geometry || !geometry.getVerticesData) return null;
 
       return {
-        positions: geometry.getVerticesData('position'),
-        normals: geometry.getVerticesData('normal'),
-        uvs: geometry.getVerticesData('uv'),
-        indices: geometry.getIndices(),
+        positions: geometry.getVerticesData?.('position') as Float32Array | number[] | null,
+        normals: geometry.getVerticesData?.('normal') as Float32Array | number[] | null,
+        uvs: geometry.getVerticesData?.('uv') as Float32Array | number[] | null,
+        indices: geometry.getIndices?.() as IndicesArray | null,
       };
     } catch {
       return null;
@@ -184,7 +188,8 @@ export class GeometrySimplifier {
   private findClosestVertex(originalIndex: number, vertexMap: Map<number, number>): number {
     // First try exact match
     if (vertexMap.has(originalIndex)) {
-      return vertexMap.get(originalIndex)!;
+      const mapped = vertexMap.get(originalIndex);
+      if (typeof mapped === 'number') return mapped;
     }
 
     // Find closest available vertex

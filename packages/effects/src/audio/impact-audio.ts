@@ -284,14 +284,18 @@ export class ImpactAudioManager {
     try {
       sound.maxDistance = config.maxDistance;
       sound.rolloffFactor = config.rolloffFactor;
-    } catch (error) {
+    } catch (_error) {
       // Spatial audio properties might not be available
     }
   }
 
   private getSoundFromPool(sampleName: string): Sound | null {
     const pool = this.audioPool.get(sampleName);
-    return pool && pool.length > 0 ? pool.pop()! : null;
+    if (pool && pool.length > 0) {
+      const s = pool.pop();
+      return s ?? null;
+    }
+    return null;
   }
 
   private returnSoundToPool(materialType: string, sound: Sound): void {
@@ -302,7 +306,7 @@ export class ImpactAudioManager {
       this.audioPool.set(materialType, []);
     }
 
-    const pool = this.audioPool.get(materialType)!;
+    const pool = this.audioPool.get(materialType) as Sound[];
     if (pool.length < 5) {
       // Max 5 sounds per material in pool
       pool.push(sound);

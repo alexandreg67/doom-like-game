@@ -218,7 +218,7 @@ describe('GeometrySimplifier', () => {
     });
 
     it('should handle invalid meshes gracefully', () => {
-      const invalidMesh = {} as any; // Invalid mesh object
+      const invalidMesh = {} as unknown as AbstractMesh; // Invalid mesh object
 
       const simplifiedData = simplifier.simplifyMesh(invalidMesh, 10);
 

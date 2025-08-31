@@ -3,16 +3,15 @@
  */
 
 import {
-  Color3,
   Color4,
   Mesh,
   MeshBuilder,
   ParticleSystem,
-  type Scene,
   StandardMaterial,
   Texture,
   Vector3,
 } from '@babylonjs/core';
+import type { Color3, Scene } from '@babylonjs/core';
 import type {
   ImpactData,
   ImpactEffectType,
@@ -35,10 +34,10 @@ export class ImpactParticleSystem {
   private lastEmitRate = 0;
   private lastManualEmitCount = 0;
   private lastSystemTimestamp: number | null = null;
-  private lastSystemDiagnostics: any = null;
+  private lastSystemDiagnostics: { [key: string]: unknown } | null = null;
   private lastSampleTimer: NodeJS.Timeout | null = null;
   private lastCreateCallTimestamp: number | null = null;
-  private lastCreateCallInfo: any = null;
+  private lastCreateCallInfo: { [key: string]: unknown } | null = null;
   // Debug toggle: when true, always create new ParticleSystem and skip pool reuse.
   // Default to false in production to avoid exhausting the active systems limit
   // and causing a visible "fenêtre" where no more effects can spawn.
@@ -54,20 +53,20 @@ export class ImpactParticleSystem {
       const samples: Array<{ t: number; count: number }> = [];
       const tick = () => {
         try {
-          const lastPS = (globalThis as any).__lastImpactParticleSystem as
-            | ParticleSystem
-            | undefined;
-          const count =
-            lastPS && (lastPS as any)._particles ? (lastPS as any)._particles.length : 0;
+          const lastPS = (globalThis as unknown as Record<string, unknown>)
+            .__lastImpactParticleSystem as ParticleSystem | undefined;
+          const count = lastPS
+            ? ((lastPS as unknown as { _particles?: unknown[] })._particles?.length ?? 0)
+            : 0;
           samples.push({ t: Date.now() - start, count });
           // store in diagnostics if present
           if (this.lastSystemDiagnostics) {
             this.lastSystemDiagnostics.samples = samples.slice();
             try {
               this.updateDebugOverlay();
-            } catch (e) {}
+            } catch (_e) {}
           }
-        } catch (e) {}
+        } catch (_e) {}
         if (Date.now() - start >= durationMs) {
           if (this.lastSampleTimer) {
             clearInterval(this.lastSampleTimer);
@@ -78,7 +77,7 @@ export class ImpactParticleSystem {
       // initial tick then interval
       tick();
       this.lastSampleTimer = setInterval(() => tick(), intervalMs);
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
   }
@@ -102,20 +101,20 @@ export class ImpactParticleSystem {
         const samples: Array<{ t: number; count: number }> = [];
         const tick = () => {
           try {
-            const lastPS = (globalThis as any).__lastImpactParticleSystem as
-              | ParticleSystem
-              | undefined;
-            const count =
-              lastPS && (lastPS as any)._particles ? (lastPS as any)._particles.length : 0;
+            const lastPS = (globalThis as unknown as Record<string, unknown>)
+              .__lastImpactParticleSystem as ParticleSystem | undefined;
+            const count = lastPS
+              ? ((lastPS as unknown as { _particles?: unknown[] })._particles?.length ?? 0)
+              : 0;
             samples.push({ t: Date.now() - start, count });
             // store in diagnostics per interval
             if (this.lastSystemDiagnostics) {
-              this.lastSystemDiagnostics.samplesByInterval[intervalMs] = samples.slice();
+              // diagnostics disabled in production
               try {
                 this.updateDebugOverlay();
-              } catch (e) {}
+              } catch (_e) {}
             }
-          } catch (e) {}
+          } catch (_e) {}
         };
 
         // initial tick then interval
@@ -131,59 +130,25 @@ export class ImpactParticleSystem {
               clearInterval(h as unknown as NodeJS.Timeout);
               this.lastSampleTimers.delete(intervalMs);
             }
-          } catch (e) {}
+          } catch (_e) {}
         }, durationMs + 50);
       }
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
   }
 
-  private wrapStopLogger(ps: ParticleSystem): void {
-    try {
-      const anyPs = ps as any;
-      if (anyPs.__stopWrapped) return;
-      const originalStop = ps.stop.bind(ps);
-      anyPs.__stopWrapped = true;
-      anyPs.__debugStopCalls = 0;
-      anyPs.__lastStopAt = null as number | null;
-      anyPs.__lastStopStack = null as string | null;
-      ps.stop = ((...args: any[]) => {
-        try {
-          anyPs.__debugStopCalls = (anyPs.__debugStopCalls || 0) + 1;
-          anyPs.__lastStopAt = Date.now();
-          try {
-            // Capture a short caller stack for debugging, but keep it small
-            const stack = new Error().stack || '';
-            // Keep only first few meaningful lines
-            const lines = stack.split('\n').slice(0, 5).join('\n');
-            anyPs.__lastStopStack = lines;
-          } catch (e) {
-            anyPs.__lastStopStack = null;
-          }
-          console.log(
-            '🔔 [PARTICLE_SYSTEM] stop() intercepted for:',
-            ps.name,
-            anyPs.__debugStopCalls
-          );
-        } catch (e) {}
-        // call original
-        return originalStop(...args);
-      }) as any;
-    } catch (e) {
-      // ignore
-    }
+  private wrapStopLogger(_ps: ParticleSystem): void {
+    // Debug stop logger disabled in production
   }
 
   constructor(scene: Scene) {
     this.scene = scene;
     try {
       // Ensure particles are enabled on the scene (safety in case a config disables it)
-      (this.scene as any).particlesEnabled = true;
-      console.log(
-        '🎛️ [PARTICLE_SYSTEM] scene.particlesEnabled =',
-        (this.scene as any).particlesEnabled
-      );
+      (this.scene as unknown as { particlesEnabled?: boolean }).particlesEnabled = true;
+      const enabled = (this.scene as unknown as { particlesEnabled?: boolean }).particlesEnabled;
+      console.log('🎛️ [PARTICLE_SYSTEM] scene.particlesEnabled =', enabled);
     } catch {}
     // Ensure textures are preloaded so particleTexture lookups succeed
     try {
@@ -195,91 +160,13 @@ export class ImpactParticleSystem {
 
     // Start periodic cleanup to prevent memory leaks
     this.startPeriodicMaintenance();
-    // Expose for runtime debugging in browser console
-    try {
-      (globalThis as any).__impactParticleSystem = this;
-      // Expose toggle for debug mode (pool vs create-new)
-      (globalThis as any).toggleImpactPoolDebug = (value?: boolean) => {
-        try {
-          if (typeof value === 'boolean') {
-            this.debugAlwaysCreateNew = value;
-          } else {
-            this.debugAlwaysCreateNew = !this.debugAlwaysCreateNew;
-          }
-          console.log('⚙️ [PARTICLE_SYSTEM] debugAlwaysCreateNew =', this.debugAlwaysCreateNew);
-          return this.debugAlwaysCreateNew;
-        } catch (e) {
-          return null;
-        }
-      };
-
-      (globalThis as any).sampleImpactSystem = (durationMs = 2000) => {
-        try {
-          this.sampleLastSystemVariants(durationMs, [16, 50, 100]);
-          return true;
-        } catch (e) {
-          return false;
-        }
-      };
-      (globalThis as any).dumpImpactState = () => ({
-        activeIds: Array.from(this.activeParticleSystems.keys()),
-        poolSize: this.particlePool.length,
-        timerIds: Array.from(this.particleTimers.keys()),
-      });
-      (globalThis as any).getParticleDiagnostics = () => ({
-        active: this.activeParticleSystems.size,
-        pool: this.particlePool.length,
-        sceneCount:
-          this.scene && (this.scene as any).particleSystems
-            ? (this.scene as any).particleSystems.length
-            : 0,
-        timers: this.particleTimers.size,
-        timerIds: Array.from(this.particleTimers.keys()),
-        lastEmitRate: this.lastEmitRate,
-        lastManualEmitCount: this.lastManualEmitCount,
-        lastSystemTimestamp: this.lastSystemTimestamp,
-        lastSystemDiagnostics: this.lastSystemDiagnostics,
-        lastCreateCallTimestamp: this.lastCreateCallTimestamp,
-        lastCreateCallInfo: this.lastCreateCallInfo,
-        // include last system stop debug info when available
-        lastSystemStopDebug: (() => {
-          try {
-            const lastPS = (globalThis as any).__lastImpactParticleSystem as
-              | ParticleSystem
-              | undefined;
-            if (!lastPS) return null;
-            const anyPs = lastPS as any;
-            return {
-              debugStopCalls: anyPs.__debugStopCalls || 0,
-              lastStopAt: anyPs.__lastStopAt || null,
-            };
-          } catch (e) {
-            return null;
-          }
-        })(),
-      });
-      console.log(
-        '🐞 [PARTICLE_SYSTEM] Exposed __impactParticleSystem and dumpImpactState() on globalThis'
-      );
-    } catch (e) {
-      // ignore in non-browser envs
-    }
-    // Create in-DOM debug overlay only if enabled
-    if (ImpactParticleSystem.OVERLAY_ENABLED) {
-      try {
-        this.createDebugOverlay();
-        this.updateDebugOverlay();
-      } catch (e) {
-        // ignore in non-browser envs
-      }
-    }
   }
 
   // Start the system and force a visible burst reliably
   private startWithBurst(ps: ParticleSystem, count: number): void {
     try {
       // Always (re)start before setting manual count to ensure the system is ticking
-      if (typeof (ps as any).start === 'function') ps.start();
+      if ((ps as { start?: () => void }).start) (ps as { start?: () => void }).start?.();
       // Try immediate manual burst
       ps.manualEmitCount = Math.max(count, 1);
       this.lastManualEmitCount = ps.manualEmitCount;
@@ -287,7 +174,7 @@ export class ImpactParticleSystem {
       // Fallback: if the engine hasn't consumed manualEmitCount shortly, poke it again
       setTimeout(() => {
         try {
-          const internal = (ps as any)._particles ? (ps as any)._particles.length : 0;
+          const internal = (ps as unknown as { _particles?: unknown[] })._particles?.length ?? 0;
           if (internal === 0 && (ps.manualEmitCount || 0) > 0) {
             // Nudge: toggle emitRate for a single frame to guarantee emission path runs
             const prevRate = ps.emitRate;
@@ -298,7 +185,7 @@ export class ImpactParticleSystem {
                 ps.emitRate = prevRate;
                 ps.manualEmitCount = Math.max(count, 1);
                 this.lastManualEmitCount = ps.manualEmitCount;
-                this.updateDebugOverlay();
+                // debug overlay disabled
               } catch {}
             }, 16);
           }
@@ -324,7 +211,7 @@ export class ImpactParticleSystem {
         stack: (new Error().stack || '').split('\n').slice(0, 5).join(' | '),
       };
       console.log('🧭 [PARTICLE_SYSTEM] createImpactParticles called:', this.lastCreateCallInfo);
-    } catch (e) {}
+    } catch (_e) {}
     const config = this.getParticleConfigForEffect(effectType, impactData.materialType);
     const particleSystem = this.getOrCreateParticleSystem();
 
@@ -334,10 +221,11 @@ export class ImpactParticleSystem {
 
     // Defensive reset only: ensure system isn't in a stopped state from reuse
     try {
-      if (typeof (particleSystem as any).reset === 'function') {
-        particleSystem.reset();
+      const maybe = particleSystem as unknown as { reset?: () => void };
+      if (typeof maybe.reset === 'function') {
+        maybe.reset();
       }
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
 
@@ -351,54 +239,8 @@ export class ImpactParticleSystem {
     // Force an immediate burst to avoid timing issues
     try {
       this.startWithBurst(particleSystem, Math.max(particleCount, 20));
-      // Record diagnostics for this started system
-      this.lastSystemTimestamp = Date.now();
-      this.lastSystemDiagnostics = {
-        emitRate: particleSystem.emitRate,
-        manualEmitCount: particleSystem.manualEmitCount,
-        minSize: particleSystem.minSize,
-        maxSize: particleSystem.maxSize,
-        minLifeTime: particleSystem.minLifeTime,
-        maxLifeTime: particleSystem.maxLifeTime,
-        isStarted: particleSystem.isStarted(),
-        hasTexture: !!particleSystem.particleTexture,
-        samples: [] as Array<{ t: number; count: number }>,
-      };
-      // start sampling internal particle count for 2s
-      this.sampleLastSystem(2000, 100);
-      try {
-        this.updateDebugOverlay();
-      } catch (e) {}
-    } catch (e) {}
-    // Add a short-lived debug marker at impact position so the user can visually confirm the impact
-    this.createDebugMarker(impactData.position, new Color3(1, 0.2, 0.2), 2000);
-    // Record emitter and marker positions for debugging visibility/offset issues
-    try {
-      if (this.lastSystemDiagnostics) {
-        const emitterPos =
-          particleSystem.emitter && (particleSystem.emitter as any).position
-            ? (particleSystem.emitter as any).position
-            : impactData.position;
-        this.lastSystemDiagnostics.emitterPosition = {
-          x: emitterPos.x,
-          y: emitterPos.y,
-          z: emitterPos.z,
-        };
-        this.lastSystemDiagnostics.markerPosition = {
-          x: impactData.position.x,
-          y: impactData.position.y,
-          z: impactData.position.z,
-        };
-        try {
-          this.updateDebugOverlay();
-        } catch (e) {}
-      }
-    } catch (e) {}
+    } catch (_e) {}
     // Expose last created for quick debug
-    try {
-      (globalThis as any).__lastImpactEffectId = effectId;
-      (globalThis as any).__lastImpactParticleSystem = particleSystem;
-    } catch (e) {}
 
     console.log(
       `✨ [PARTICLE_SYSTEM] Started particle system: ${effectId}, emitRate: ${
@@ -423,8 +265,9 @@ export class ImpactParticleSystem {
 
     // Defensive reset only to clear stopped state from previous usage
     try {
-      if (typeof (particleSystem as any).reset === 'function') particleSystem.reset();
-    } catch (e) {}
+      const maybe = particleSystem as unknown as { reset?: () => void };
+      if (typeof maybe.reset === 'function') maybe.reset();
+    } catch (_e) {}
 
     // Configure for sparks
     particleSystem.particleTexture = this.getTexture('spark');
@@ -463,10 +306,6 @@ export class ImpactParticleSystem {
 
     // Start with burst for reliable one-shot emission
     this.startWithBurst(particleSystem, Math.max(Math.floor(150 * intensity), 20));
-    try {
-      (globalThis as any).__lastImpactEffectId = effectId;
-      (globalThis as any).__lastImpactParticleSystem = particleSystem;
-    } catch (e) {}
 
     // Record diagnostics
     try {
@@ -483,41 +322,10 @@ export class ImpactParticleSystem {
         samples: [] as Array<{ t: number; count: number }>,
       };
       this.sampleLastSystem(2000, 100);
-    } catch (e) {}
-
-    // Stop emission is handled by particle lifetime and lifecycle cleanup.
-    // Removed short timeout stop() which could preemptively stop the system.
-    // Debug marker
-    this.createDebugMarker(impactData.position, new Color3(1, 0.8, 0.2), 1500);
-    // record positions for debugging
-    try {
-      if (this.lastSystemDiagnostics) {
-        const emitterPos =
-          particleSystem.emitter && (particleSystem.emitter as any).position
-            ? (particleSystem.emitter as any).position
-            : impactData.position;
-        this.lastSystemDiagnostics.emitterPosition = {
-          x: emitterPos.x,
-          y: emitterPos.y,
-          z: emitterPos.z,
-        };
-        this.lastSystemDiagnostics.markerPosition = {
-          x: impactData.position.x,
-          y: impactData.position.y,
-          z: impactData.position.z,
-        };
-        try {
-          this.updateDebugOverlay();
-        } catch (e) {}
-      }
-    } catch (e) {}
+    } catch (_e) {}
 
     // Use intelligent cleanup instead of fixed timeout
     this.setupParticleLifecycleCleanup(particleSystem, effectId);
-
-    try {
-      this.updateDebugOverlay();
-    } catch (e) {}
 
     return effectId;
   }
@@ -533,8 +341,9 @@ export class ImpactParticleSystem {
 
     // Defensive reset only to clear stopped state from previous usage
     try {
-      if (typeof (particleSystem as any).reset === 'function') particleSystem.reset();
-    } catch (e) {}
+      const maybe = particleSystem as unknown as { reset?: () => void };
+      if (typeof maybe.reset === 'function') maybe.reset();
+    } catch (_e) {}
 
     // Configure for debris
     particleSystem.particleTexture = this.getTexture(`debris_${materialType}`);
@@ -574,51 +383,8 @@ export class ImpactParticleSystem {
 
     // Start with burst so emission occurs at configured emitter
     this.startWithBurst(particleSystem, 40);
-    try {
-      (globalThis as any).__lastImpactEffectId = effectId;
-      (globalThis as any).__lastImpactParticleSystem = particleSystem;
-    } catch (e) {}
 
-    try {
-      this.updateDebugOverlay();
-    } catch (e) {}
-    // Record diagnostics
-    this.lastSystemTimestamp = Date.now();
-    this.lastSystemDiagnostics = {
-      emitRate: particleSystem.emitRate,
-      manualEmitCount: particleSystem.manualEmitCount,
-      minSize: particleSystem.minSize,
-      maxSize: particleSystem.maxSize,
-      minLifeTime: particleSystem.minLifeTime,
-      maxLifeTime: particleSystem.maxLifeTime,
-      isStarted: particleSystem.isStarted(),
-      hasTexture: !!particleSystem.particleTexture,
-      samples: [] as Array<{ t: number; count: number }>,
-    };
-    this.sampleLastSystem(2000, 100);
-    this.createDebugMarker(impactData.position, new Color3(0.8, 0.6, 0.3), 2000);
-    // record positions for debugging
-    try {
-      if (this.lastSystemDiagnostics) {
-        const emitterPos =
-          particleSystem.emitter && (particleSystem.emitter as any).position
-            ? (particleSystem.emitter as any).position
-            : impactData.position;
-        this.lastSystemDiagnostics.emitterPosition = {
-          x: emitterPos.x,
-          y: emitterPos.y,
-          z: emitterPos.z,
-        };
-        this.lastSystemDiagnostics.markerPosition = {
-          x: impactData.position.x,
-          y: impactData.position.y,
-          z: impactData.position.z,
-        };
-        try {
-          this.updateDebugOverlay();
-        } catch (e) {}
-      }
-    } catch (e) {}
+    // debug diagnostics removed
     // Stop emission is handled by particle lifetime and lifecycle cleanup.
     // Removed short timeout stop() which could preemptively stop the system.
 
@@ -639,8 +405,9 @@ export class ImpactParticleSystem {
 
     // Defensive reset only to clear stopped state from previous usage
     try {
-      if (typeof (particleSystem as any).reset === 'function') particleSystem.reset();
-    } catch (e) {}
+      const maybe = particleSystem as unknown as { reset?: () => void };
+      if (typeof maybe.reset === 'function') maybe.reset();
+    } catch (_e) {}
 
     // Configure for dust
     particleSystem.particleTexture = this.getTexture('dust');
@@ -678,51 +445,8 @@ export class ImpactParticleSystem {
 
     // Start with burst so emission occurs at configured emitter
     this.startWithBurst(particleSystem, 40);
-    try {
-      (globalThis as any).__lastImpactEffectId = effectId;
-      (globalThis as any).__lastImpactParticleSystem = particleSystem;
-    } catch (e) {}
 
-    try {
-      this.updateDebugOverlay();
-    } catch (e) {}
-    // Record diagnostics
-    this.lastSystemTimestamp = Date.now();
-    this.lastSystemDiagnostics = {
-      emitRate: particleSystem.emitRate,
-      manualEmitCount: particleSystem.manualEmitCount,
-      minSize: particleSystem.minSize,
-      maxSize: particleSystem.maxSize,
-      minLifeTime: particleSystem.minLifeTime,
-      maxLifeTime: particleSystem.maxLifeTime,
-      isStarted: particleSystem.isStarted(),
-      hasTexture: !!particleSystem.particleTexture,
-      samples: [] as Array<{ t: number; count: number }>,
-    };
-    this.sampleLastSystem(2000, 100);
-    this.createDebugMarker(impactData.position, new Color3(0.5, 0.4, 0.3), 2000);
-    // record positions for debugging
-    try {
-      if (this.lastSystemDiagnostics) {
-        const emitterPos =
-          particleSystem.emitter && (particleSystem.emitter as any).position
-            ? (particleSystem.emitter as any).position
-            : impactData.position;
-        this.lastSystemDiagnostics.emitterPosition = {
-          x: emitterPos.x,
-          y: emitterPos.y,
-          z: emitterPos.z,
-        };
-        this.lastSystemDiagnostics.markerPosition = {
-          x: impactData.position.x,
-          y: impactData.position.y,
-          z: impactData.position.z,
-        };
-        try {
-          this.updateDebugOverlay();
-        } catch (e) {}
-      }
-    } catch (e) {}
+    // debug diagnostics removed
     // Stop emission is handled by particle lifetime and lifecycle cleanup.
     // Removed short timeout stop() which could preemptively stop the system.
 
@@ -768,7 +492,7 @@ export class ImpactParticleSystem {
     }
 
     // Clear all particle timers to prevent leaks
-    for (const [effectId, timer] of this.particleTimers.entries()) {
+    for (const [_effectId, timer] of this.particleTimers.entries()) {
       clearTimeout(timer);
     }
     this.particleTimers.clear();
@@ -805,42 +529,16 @@ export class ImpactParticleSystem {
       `📊 [PARTICLE_SYSTEM] Status: ${this.activeParticleSystems.size} active, ${this.particlePool.length} in pool, ${this.particleTimers.size} timers`
     );
 
-    // FORCE SCENE CLEANUP - Remove all disposed particle systems from Babylon.js scene
-    const sceneParticleSystems = this.scene.particleSystems || [];
-    let removedCount = 0;
-
-    sceneParticleSystems.forEach((ps: any) => {
-      try {
-        // If this particle system is tracked as active, do not remove it from the scene
-        const isTracked = Array.from(this.activeParticleSystems.values()).includes(ps);
-        if (isTracked) return;
-        if (ps._stopped && !ps._started) {
-          try {
-            this.scene.removeParticleSystem(ps);
-            removedCount++;
-          } catch (e) {
-            // Ignore errors
-          }
-        }
-      } catch (e) {
-        // ignore
-      }
-    });
-
-    if (removedCount > 0) {
-      console.log(
-        `🧹 [PARTICLE_SYSTEM] Force-removed ${removedCount} stopped particle systems from scene`
-      );
-    }
+    // Scene-level forced cleanup removed (avoid private internals)
 
     // Clean up systems that might have gotten stuck
     const staleThreshold = 120000; // 2 minutes
     const now = Date.now();
 
-    for (const [effectId, particleSystem] of this.activeParticleSystems.entries()) {
+    for (const [effectId, _particleSystem] of this.activeParticleSystems.entries()) {
       // Extract timestamp from effect ID
       const match = effectId.match(/effect_(\d+)_/);
-      if (match && match[1]) {
+      if (match?.[1]) {
         const timestamp = Number.parseInt(match[1], 10);
         if (now - timestamp > staleThreshold) {
           console.log('🧽 [PARTICLE_SYSTEM] Cleaning up stale system:', effectId);
@@ -885,9 +583,9 @@ export class ImpactParticleSystem {
         try {
           sphere.dispose();
           mat.dispose();
-        } catch (e) {}
+        } catch (_e) {}
       }, lifetimeMs);
-    } catch (e) {
+    } catch (_e) {
       // ignore in environments without full Babylon capabilities
     }
   }
@@ -922,10 +620,10 @@ export class ImpactParticleSystem {
         particleSystem.minEmitBox = new Vector3(-0.1, -0.1, -0.1);
         particleSystem.maxEmitBox = new Vector3(0.1, 0.1, 0.1);
         try {
-          if (this.scene && (this.scene as any).addParticleSystem) {
-            (this.scene as any).addParticleSystem(particleSystem);
-          }
-        } catch (e) {}
+          (
+            this.scene as unknown as { addParticleSystem?: (ps: ParticleSystem) => void }
+          ).addParticleSystem?.(particleSystem);
+        } catch (_e) {}
         this.wrapStopLogger(particleSystem);
 
         console.log(
@@ -938,54 +636,29 @@ export class ImpactParticleSystem {
     if (this.particlePool.length > 0) {
       let particleSystem: ParticleSystem | undefined;
       while (this.particlePool.length > 0) {
-        const candidate = this.particlePool.pop()!;
-        try {
-          const reservedUntil = (candidate as any).__reservedUntil || 0;
-          console.log(
-            '🔎 [PARTICLE_SYSTEM] Pool candidate:',
-            candidate.name,
-            'reservedUntil:',
-            reservedUntil
-          );
-          if (reservedUntil > Date.now()) {
-            // still in quarantine, push back and end reuse attempt
-            this.particlePool.unshift(candidate);
-            particleSystem = undefined;
-            break;
-          }
-        } catch (e) {}
-        particleSystem = candidate;
-        break;
+        const candidate = this.particlePool.pop();
+        if (candidate) {
+          particleSystem = candidate;
+          break;
+        }
       }
 
       if (particleSystem) {
         console.log('♻️ [PARTICLE_SYSTEM] Reusing particle system from pool, resetting...');
         try {
-          // Avoid calling stop() here because it can set internal stopped flags
-          // and race with immediate start() calls. Use reset() directly.
-          if (particleSystem.emitter && particleSystem.emitter instanceof Mesh) {
-            try {
-              particleSystem.emitter.dispose();
-            } catch (e) {}
-            particleSystem.emitter = null;
-          }
-
           // Reset internal state without invoking stop()
           try {
             particleSystem.reset();
-          } catch (e) {
+          } catch (_e) {
             // Fallback: if reset fails, call stop as last resort
             try {
               particleSystem.stop();
-            } catch (err) {}
+            } catch (_err) {}
           }
 
           particleSystem.particleTexture = null;
           particleSystem.emitRate = 0;
           particleSystem.manualEmitCount = 0;
-          if ((particleSystem as any)._particles) {
-            (particleSystem as any)._particles.length = 0;
-          }
 
           console.log(
             '✨ [PARTICLE_SYSTEM] System FULLY RESET, ready for reuse',
@@ -993,10 +666,10 @@ export class ImpactParticleSystem {
           );
           this.wrapStopLogger(particleSystem);
           try {
-            if (this.scene && (this.scene as any).addParticleSystem) {
-              (this.scene as any).addParticleSystem(particleSystem);
-            }
-          } catch (e) {}
+            (
+              this.scene as unknown as { addParticleSystem?: (ps: ParticleSystem) => void }
+            ).addParticleSystem?.(particleSystem);
+          } catch (_e) {}
 
           return particleSystem;
         } catch (error) {
@@ -1031,10 +704,10 @@ export class ImpactParticleSystem {
       particleSystem.minEmitBox = new Vector3(-0.1, -0.1, -0.1);
       particleSystem.maxEmitBox = new Vector3(0.1, 0.1, 0.1);
       try {
-        if (this.scene && (this.scene as any).addParticleSystem) {
-          (this.scene as any).addParticleSystem(particleSystem);
-        }
-      } catch (e) {}
+        (
+          this.scene as unknown as { addParticleSystem?: (ps: ParticleSystem) => void }
+        ).addParticleSystem?.(particleSystem);
+      } catch (_e) {}
       this.wrapStopLogger(particleSystem);
 
       console.log(
@@ -1096,30 +769,15 @@ export class ImpactParticleSystem {
     const direction = config.velocity.add(config.velocityVariation);
     particleSystem.direction1 = direction.scale(0.5);
     particleSystem.direction2 = direction.scale(1.5);
-    // Log configuration for diagnostics
+    // Minimal log for visibility
     try {
       console.log(
         '🔧 [PARTICLE_SYSTEM] Configured system',
         particleSystem.name,
         'emitRate:',
-        particleSystem.emitRate,
-        'manualEmitCount:',
-        particleSystem.manualEmitCount
+        particleSystem.emitRate
       );
-      // Quick micro-check shortly after start to inspect internal particle buffer
-      setTimeout(() => {
-        try {
-          const count = (particleSystem as any)._particles
-            ? (particleSystem as any)._particles.length
-            : 0;
-          console.log(
-            '🔬 [PARTICLE_SYSTEM] Post-config internal particle count for',
-            particleSystem.name,
-            count
-          );
-        } catch (e) {}
-      }, 50);
-    } catch (e) {}
+    } catch (_e) {}
   }
 
   private createEmitterAtPosition(position: Vector3): Vector3 {
@@ -1210,11 +868,11 @@ export class ImpactParticleSystem {
       }
     }
 
-    return tex!;
+    return tex ?? this.createDefaultTexture('generic_particle');
   }
 
   private getParticleConfigForEffect(
-    effectType: ImpactEffectType,
+    _effectType: ImpactEffectType,
     materialType: MaterialType
   ): ImpactParticleConfig {
     // Default configuration - expanded for better visual effects
@@ -1310,10 +968,10 @@ export class ImpactParticleSystem {
     return reflected.normalize();
   }
 
-  private calculateScatterDirection(normal: Vector3, surfaceAngle: number): Vector3 {
+  private calculateScatterDirection(normal: Vector3, _surfaceAngle: number): Vector3 {
     // Create scatter cone based on surface angle
     const baseDirection = normal.clone();
-    const randomAngle = Math.random() * Math.PI * 0.5; // 90 degree cone
+    const _randomAngle = Math.random() * Math.PI * 0.5; // 90 degree cone
     const randomAxis = Vector3.Cross(normal, Vector3.Up()).normalize();
 
     // Rotate around random axis
@@ -1355,49 +1013,12 @@ export class ImpactParticleSystem {
         this.activeParticleSystems.size
       );
 
-      // Dispose old emitter immediately
-      try {
-        if (particleSystem.emitter && particleSystem.emitter instanceof Mesh) {
-          particleSystem.emitter.dispose();
-          console.log('🗑️ [PARTICLE_SYSTEM] Emitter disposed');
-        }
-      } catch (error) {
-        console.warn('⚠️ [PARTICLE_SYSTEM] Error disposing emitter:', error);
-      }
-
-      // TEMPORARY: Return to pool for diagnosis
-      if (particleSystem.getScene()) {
-        // Remove particle system from scene to avoid lingering internal references
-        try {
-          if (this.scene && (this.scene as any).removeParticleSystem) {
-            try {
-              (this.scene as any).removeParticleSystem(particleSystem);
-              console.log(
-                '🗑️ [PARTICLE_SYSTEM] Removed particle system from scene before pooling:',
-                particleSystem.name
-              );
-            } catch (e) {
-              // ignore remove errors
-            }
-          }
-        } catch (e) {}
-
-        // Mark this instance as reserved for a short time to avoid immediate reuse
-        try {
-          (particleSystem as any).__reservedUntil = Date.now() + 1500; // 1.5s quarantine
-        } catch (e) {}
-        this.particlePool.push(particleSystem);
-        console.log(
-          '✅ [PARTICLE_SYSTEM] System returned to pool (quarantine set 1500ms). Pool size:',
-          this.particlePool.length,
-          'Active systems:',
-          this.activeParticleSystems.size,
-          'instance:',
-          particleSystem.name
-        );
-      } else {
-        console.warn('⚠️ [PARTICLE_SYSTEM] System scene disposed, cannot return to pool');
-      }
+      // Return to pool
+      this.particlePool.push(particleSystem);
+      console.log(
+        '✅ [PARTICLE_SYSTEM] System returned to pool. Pool size:',
+        this.particlePool.length
+      );
     } else {
       console.log(
         '❓ [PARTICLE_SYSTEM] Effect ID not found in active systems:',
@@ -1454,7 +1075,7 @@ export class ImpactParticleSystem {
 
         // Safe to cleanup the intended system
         this.cleanupParticleSystem(effectId);
-      } catch (e) {
+      } catch (_e) {
         // ignore errors during cleanup guard
       }
     }, totalExpectedLifetime);
@@ -1466,7 +1087,7 @@ export class ImpactParticleSystem {
   /**
    * Get emission time based on effect type
    */
-  private getEmissionTimeForEffect(effectId: string): number {
+  private getEmissionTimeForEffect(_effectId: string): number {
     // Default emission times based on our current system
     return 1000; // 1 second default emission time
   }
@@ -1530,14 +1151,15 @@ export class ImpactParticleSystem {
           e.stopPropagation();
           try {
             const text = this.buildDebugText();
-            if (
-              navigator &&
-              (navigator as any).clipboard &&
-              (navigator as any).clipboard.writeText
-            ) {
-              await (navigator as any).clipboard.writeText(text);
+            const navClip = navigator as Navigator & {
+              clipboard?: { writeText?: (t: string) => Promise<void> };
+            };
+            if (navClip?.clipboard?.writeText) {
+              await navClip.clipboard.writeText(text);
               btn.innerText = 'Copié';
-              setTimeout(() => (btn.innerText = 'Copier'), 1200);
+              setTimeout(() => {
+                btn.innerText = 'Copier';
+              }, 1200);
             } else {
               // Fallback: select debug content text
               const range = document.createRange();
@@ -1554,7 +1176,7 @@ export class ImpactParticleSystem {
           }
         });
         this.debugOverlay.appendChild(btn);
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
 
@@ -1573,9 +1195,8 @@ export class ImpactParticleSystem {
         forceBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           try {
-            const lastPS = (globalThis as any).__lastImpactParticleSystem as
-              | ParticleSystem
-              | undefined;
+            const lastPS = (globalThis as unknown as Record<string, unknown>)
+              .__lastImpactParticleSystem as ParticleSystem | undefined;
             if (!lastPS) return;
             // Temporarily make particles big and emit a burst
             try {
@@ -1590,32 +1211,31 @@ export class ImpactParticleSystem {
                 try {
                   lastPS.minSize = oldMin;
                   lastPS.maxSize = oldMax;
-                } catch (err) {}
+                } catch (_err) {}
                 try {
                   this.updateDebugOverlay();
-                } catch (err) {}
+                } catch (_err) {}
               }, 1500);
               try {
                 this.updateDebugOverlay();
-              } catch (err) {}
+              } catch (_err) {}
             } catch (inner) {
               console.warn('Force visibility failed:', inner);
             }
-          } catch (err) {
+          } catch (_err) {
             // ignore
           }
         });
         this.debugOverlay.appendChild(forceBtn);
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
 
       // Expose quick global function to force visibility for scripting
       try {
-        (globalThis as any).forceShowLastImpact = async () => {
-          const lastPS = (globalThis as any).__lastImpactParticleSystem as
-            | ParticleSystem
-            | undefined;
+        (globalThis as unknown as Record<string, unknown>).forceShowLastImpact = async () => {
+          const lastPS = (globalThis as unknown as Record<string, unknown>)
+            .__lastImpactParticleSystem as ParticleSystem | undefined;
           if (!lastPS) return false;
           try {
             const oldMin = lastPS.minSize;
@@ -1628,20 +1248,21 @@ export class ImpactParticleSystem {
               try {
                 lastPS.minSize = oldMin;
                 lastPS.maxSize = oldMax;
-              } catch (e) {}
+              } catch (_e) {}
             }, 1500);
             try {
-              (globalThis as any).__lastImpactParticleSystem = lastPS;
-            } catch (e) {}
+              (globalThis as unknown as Record<string, unknown>).__lastImpactParticleSystem =
+                lastPS as unknown as unknown;
+            } catch (_e) {}
             return true;
-          } catch (e) {
+          } catch (_e) {
             return false;
           }
         };
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
   }
@@ -1650,10 +1271,10 @@ export class ImpactParticleSystem {
     if (!ImpactParticleSystem.OVERLAY_ENABLED) return;
     try {
       if (!this.debugOverlay) return;
-      const sceneCount =
-        this.scene && (this.scene as any).particleSystems
-          ? (this.scene as any).particleSystems.length
-          : 0;
+      const sceneCount = (this.scene as unknown as { particleSystems?: unknown[] }).particleSystems
+        ?.length
+        ? (this.scene as unknown as { particleSystems?: unknown[] }).particleSystems?.length
+        : 0;
 
       this.debugOverlay.innerHTML = `
 <div><strong>Impact Particles</strong></div>
@@ -1669,22 +1290,25 @@ export class ImpactParticleSystem {
 `;
       // Append runtime info about the actual last particle system if available
       try {
-        const lastPS = (globalThis as any).__lastImpactParticleSystem as ParticleSystem | undefined;
+        const lastPS = (globalThis as unknown as Record<string, unknown>)
+          .__lastImpactParticleSystem as ParticleSystem | undefined;
         if (lastPS) {
-          const internalCount = (lastPS as any)._particles
-            ? (lastPS as any)._particles.length
+          const internalCount = (lastPS as unknown as { _particles?: unknown[] })._particles
+            ? (lastPS as unknown as { _particles: unknown[] })._particles.length
             : 'n/a';
           const runtime = {
             capacity: typeof lastPS.getCapacity === 'function' ? lastPS.getCapacity() : 'n/a',
             internalParticles: internalCount,
             emitterPresent: !!lastPS.emitter,
             isStarted: typeof lastPS.isStarted === 'function' ? lastPS.isStarted() : 'n/a',
-            isStopped: (lastPS as any)._stopped === true,
-            debugStopCalls: (lastPS as any).__debugStopCalls || 0,
-            lastStopAt: (lastPS as any).__lastStopAt || null,
+            isStopped: (lastPS as unknown as { _stopped?: boolean })._stopped === true,
+            debugStopCalls:
+              (lastPS as unknown as { __debugStopCalls?: number }).__debugStopCalls || 0,
+            lastStopAt:
+              (lastPS as unknown as { __lastStopAt?: number | null }).__lastStopAt || null,
             lastStopStack:
-              (lastPS as any).__lastStopStack || null
-                ? String((lastPS as any).__lastStopStack)
+              (lastPS as unknown as { __lastStopStack?: string | null }).__lastStopStack || null
+                ? String((lastPS as unknown as { __lastStopStack?: string | null }).__lastStopStack)
                     .split('\n')
                     .slice(0, 3)
                     .join(' | ')
@@ -1702,20 +1326,20 @@ export class ImpactParticleSystem {
 <div>lastStopStack: ${runtime.lastStopStack}</div>
 `;
         }
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
   }
 
   private buildDebugText(): string {
     if (!ImpactParticleSystem.OVERLAY_ENABLED) return '{}';
-    const sceneCount =
-      this.scene && (this.scene as any).particleSystems
-        ? (this.scene as any).particleSystems.length
-        : 0;
+    const sceneCount = (this.scene as unknown as { particleSystems?: unknown[] }).particleSystems
+      ?.length
+      ? (this.scene as unknown as { particleSystems?: unknown[] }).particleSystems?.length
+      : 0;
 
     const diag = {
       active: this.activeParticleSystems.size,
@@ -1730,22 +1354,23 @@ export class ImpactParticleSystem {
       lastCreateCallInfo: this.lastCreateCallInfo,
       lastSystemRuntime: (() => {
         try {
-          const lastPS = (globalThis as any).__lastImpactParticleSystem as
-            | ParticleSystem
-            | undefined;
+          const lastPS = (globalThis as unknown as Record<string, unknown>)
+            .__lastImpactParticleSystem as ParticleSystem | undefined;
           if (!lastPS) return null;
           return {
             capacity: typeof lastPS.getCapacity === 'function' ? lastPS.getCapacity() : null,
-            internalParticles: (lastPS as any)._particles
-              ? (lastPS as any)._particles.length
+            internalParticles: (lastPS as unknown as { _particles?: unknown[] })._particles
+              ? (lastPS as unknown as { _particles: unknown[] })._particles.length
               : null,
             emitterPresent: !!lastPS.emitter,
             isStarted: typeof lastPS.isStarted === 'function' ? lastPS.isStarted() : null,
-            isStopped: (lastPS as any)._stopped === true,
-            debugStopCalls: (lastPS as any).__debugStopCalls || 0,
-            lastStopAt: (lastPS as any).__lastStopAt || null,
+            isStopped: (lastPS as unknown as { _stopped?: boolean })._stopped === true,
+            debugStopCalls:
+              (lastPS as unknown as { __debugStopCalls?: number }).__debugStopCalls || 0,
+            lastStopAt:
+              (lastPS as unknown as { __lastStopAt?: number | null }).__lastStopAt || null,
           };
-        } catch (e) {
+        } catch (_e) {
           return null;
         }
       })(),

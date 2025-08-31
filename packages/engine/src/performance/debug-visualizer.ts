@@ -3,6 +3,7 @@
  * Provides real-time visualization of BSP culling, LOD transitions, lighting, and performance metrics
  */
 
+import type { Camera, Engine, Scene } from '@babylonjs/core';
 import type {
   BSPDebugInfo,
   DebugAnnotation,
@@ -19,7 +20,6 @@ import type {
   PerformanceChart,
 } from './debug-types';
 import type { PerformanceManager } from './performance-manager';
-
 export class DebugVisualizer {
   private config: DebugConfig;
   private visualizations: Map<string, DebugVisualization> = new Map();
@@ -175,12 +175,7 @@ export class DebugVisualizer {
   /**
    * Initialize the debug visualizer with scene context
    */
-  public initialize(
-    scene: unknown,
-    engine: unknown,
-    camera: unknown,
-    canvas: HTMLCanvasElement
-  ): void {
+  public initialize(scene: Scene, engine: Engine, camera: Camera, canvas: HTMLCanvasElement): void {
     this.renderContext = {
       scene,
       engine,

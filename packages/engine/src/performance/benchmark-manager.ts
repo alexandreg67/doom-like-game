@@ -85,7 +85,8 @@ export class BenchmarkManager {
       const scenarioIds = Array.from(this.scenarios.keys());
 
       for (const scenarioId of scenarioIds) {
-        const scenario = this.scenarios.get(scenarioId)!;
+        const scenario = this.scenarios.get(scenarioId);
+        if (!scenario) continue;
 
         this.emitEvent('scenario-start', { scenarioId }, `Starting scenario: ${scenario.name}`);
 
@@ -564,13 +565,17 @@ export class BenchmarkManager {
     });
   }
 
-  private emitEvent(type: BenchmarkEvent['type'], data: any, message: string): void {
-    const event: BenchmarkEvent = {
+  private emitEvent(
+    type: BenchmarkEvent['type'],
+    data: BenchmarkRun | BenchmarkScenario | Error | Record<string, unknown>,
+    message: string
+  ): void {
+    const event = {
       type,
       timestamp: performance.now(),
       data,
       message,
-    };
+    } as unknown as BenchmarkEvent;
 
     this.events.push(event);
 

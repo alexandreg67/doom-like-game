@@ -40,10 +40,10 @@ describe('ImpactManager', () => {
     });
 
     it('should reject invalid impact data', () => {
-      const invalidData = { ...mockImpactData };
-      delete (invalidData as any).position;
+      const invalidData: Partial<ImpactData> = { ...mockImpactData };
+      invalidData.position = undefined;
 
-      const result = impactManager.processImpact(invalidData);
+      const result = impactManager.processImpact(invalidData as ImpactData);
 
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();

@@ -29,9 +29,9 @@ export interface DebugVisualization {
 }
 
 export interface DebugRenderContext {
-  scene: any; // Babylon.js Scene
-  engine: any; // Babylon.js Engine
-  camera: any; // Babylon.js Camera
+  scene: Scene;
+  engine: BabylonEngine;
+  camera: Camera;
   canvas: HTMLCanvasElement;
   ctx2d?: CanvasRenderingContext2D;
   overlay: HTMLElement;
@@ -261,3 +261,4 @@ export interface DebugEvent {
   severity: 'info' | 'warning' | 'error';
   message: string;
 }
+import type { Engine as BabylonEngine, Camera, Scene } from '@babylonjs/core';

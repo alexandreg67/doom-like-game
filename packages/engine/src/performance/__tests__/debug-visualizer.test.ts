@@ -99,10 +99,14 @@ describe('DebugVisualizer', () => {
 
     // Add missing performance methods for test environment
     if (!performance.mark) {
-      (performance as any).mark = vi.fn();
+      (performance as unknown as { mark: (name?: string) => void }).mark = vi.fn();
     }
     if (!performance.measure) {
-      (performance as any).measure = vi.fn(() => ({ duration: 1 }));
+      (
+        performance as unknown as {
+          measure: (name: string, startMark?: string, endMark?: string) => { duration: number };
+        }
+      ).measure = vi.fn(() => ({ duration: 1 }));
     }
 
     const config: Partial<DebugConfig> = {
@@ -442,7 +446,7 @@ describe('DebugVisualizer', () => {
     it('should handle missing DOM elements', () => {
       // Mock document.createElement to return null
       const originalCreateElement = document.createElement;
-      document.createElement = vi.fn(() => null as any);
+      document.createElement = vi.fn(() => null as unknown as HTMLElement);
 
       expect(() => {
         new DebugVisualizer();

@@ -7,7 +7,7 @@ import type { Color3, Vector3 } from '@babylonjs/core';
 // Import Entity type directly to avoid path issues
 export interface Entity {
   id: string;
-  components: Map<string, any>;
+  components: Map<string, unknown>;
 }
 
 /**
