@@ -10,14 +10,6 @@ import type {
   PlayerController,
 } from '@doom-like/game-logic';
 
-// Augment window with typed gameState access to avoid `any`
-declare global {
-  interface Window {
-    gameState?: {
-      cameraController?: FPSCameraController;
-    };
-  }
-}
 import {
   AmmoCounter,
   type AmmoCounterConfig,
