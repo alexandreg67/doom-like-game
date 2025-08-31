@@ -16,12 +16,12 @@ export class ImpactParticleSystem {
   private particlePool: ParticleSystem[] = [];
   private activeParticleSystems: Map<string, ParticleSystem> = new Map();
   private textureCache: Map<string, Texture> = new Map();
-  private maintenanceTimer: NodeJS.Timeout | number | null = null;
-  private particleTimers: Map<string, NodeJS.Timeout | number> = new Map(); // Track timers to prevent leaks
+  private maintenanceTimer: ReturnType<typeof setTimeout> | null = null;
+  private particleTimers: Map<string, ReturnType<typeof setTimeout>> = new Map(); // Track timers to prevent leaks
   private lastEmitRate = 0;
   private lastManualEmitCount = 0;
   private lastSystemTimestamp: number | null = null;
-  private lastSampleTimer: NodeJS.Timeout | number | null = null;
+  private lastSampleTimer: ReturnType<typeof setTimeout> | null = null;
   private lastCreateCallTimestamp: number | null = null;
   private lastCreateCallInfo: { [key: string]: unknown } | null = null;
   // Debug toggle: when true, always create new ParticleSystem and skip pool reuse.
@@ -660,26 +660,33 @@ export class ImpactParticleSystem {
   }
 
   private createDefaultTexture(name: string): Texture {
-    // Create a visible procedural texture for testing
-    const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d');
+    // Only create canvas if in browser environment
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
 
-    if (ctx) {
-      // Create different textures based on name
-      ctx.fillStyle = this.getTextureColor(name);
-      ctx.fillRect(0, 0, 64, 64);
+      if (ctx) {
+        // Create different textures based on name
+        ctx.fillStyle = this.getTextureColor(name);
+        ctx.fillRect(0, 0, 64, 64);
 
-      // Add a white circle for better visibility
-      ctx.beginPath();
-      ctx.arc(32, 32, 28, 0, 2 * Math.PI);
-      ctx.fillStyle = 'white';
-      ctx.fill();
+        // Add a white circle for better visibility
+        ctx.beginPath();
+        ctx.arc(32, 32, 28, 0, 2 * Math.PI);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+      }
+
+      const dataURL = canvas.toDataURL();
+      return new Texture(dataURL, this.scene);
     }
 
-    const dataURL = canvas.toDataURL();
-    return new Texture(dataURL, this.scene);
+    // Fallback: use a default texture data URL for SSR/Node.js environments
+    const transparentPixel =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+F2ZcAAAAASUVORK5CYII=';
+    return new Texture(transparentPixel, this.scene);
   }
 
   private getTextureColor(name: string): string {
