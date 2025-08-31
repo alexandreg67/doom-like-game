@@ -43,100 +43,7 @@ export class ImpactParticleSystem {
   // and causing a visible "fenêtre" where no more effects can spawn.
   private debugAlwaysCreateNew = false;
 
-  private sampleLastSystem(durationMs: number, intervalMs: number): void {
-    try {
-      if (this.lastSampleTimer) {
-        clearInterval(this.lastSampleTimer);
-        this.lastSampleTimer = null;
-      }
-      const start = Date.now();
-      const samples: Array<{ t: number; count: number }> = [];
-      const tick = () => {
-        try {
-          const lastPS = (globalThis as unknown as Record<string, unknown>)
-            .__lastImpactParticleSystem as ParticleSystem | undefined;
-          const count = lastPS
-            ? ((lastPS as unknown as { _particles?: unknown[] })._particles?.length ?? 0)
-            : 0;
-          samples.push({ t: Date.now() - start, count });
-          // store in diagnostics if present
-          if (this.lastSystemDiagnostics) {
-            this.lastSystemDiagnostics.samples = samples.slice();
-            try {
-              this.updateDebugOverlay();
-            } catch (_e) {}
-          }
-        } catch (_e) {}
-        if (Date.now() - start >= durationMs) {
-          if (this.lastSampleTimer) {
-            clearInterval(this.lastSampleTimer);
-            this.lastSampleTimer = null;
-          }
-        }
-      };
-      // initial tick then interval
-      tick();
-      this.lastSampleTimer = setInterval(() => tick(), intervalMs);
-    } catch (_e) {
-      // ignore
-    }
-  }
-
-  // New: support multiple sampling intervals (diagnostic). Stores timers per interval.
-  private lastSampleTimers: Map<number, NodeJS.Timeout> = new Map();
-
-  private sampleLastSystemVariants(durationMs: number, intervals: number[]): void {
-    try {
-      // clear existing variant timers
-      for (const t of this.lastSampleTimers.values()) {
-        clearInterval(t as unknown as NodeJS.Timeout);
-      }
-      this.lastSampleTimers.clear();
-
-      const start = Date.now();
-      if (!this.lastSystemDiagnostics) this.lastSystemDiagnostics = {};
-      this.lastSystemDiagnostics.samplesByInterval = {};
-
-      for (const intervalMs of intervals) {
-        const samples: Array<{ t: number; count: number }> = [];
-        const tick = () => {
-          try {
-            const lastPS = (globalThis as unknown as Record<string, unknown>)
-              .__lastImpactParticleSystem as ParticleSystem | undefined;
-            const count = lastPS
-              ? ((lastPS as unknown as { _particles?: unknown[] })._particles?.length ?? 0)
-              : 0;
-            samples.push({ t: Date.now() - start, count });
-            // store in diagnostics per interval
-            if (this.lastSystemDiagnostics) {
-              // diagnostics disabled in production
-              try {
-                this.updateDebugOverlay();
-              } catch (_e) {}
-            }
-          } catch (_e) {}
-        };
-
-        // initial tick then interval
-        tick();
-        const handle = setInterval(() => tick(), intervalMs);
-        this.lastSampleTimers.set(intervalMs, handle);
-
-        // clear this interval after duration
-        setTimeout(() => {
-          try {
-            const h = this.lastSampleTimers.get(intervalMs);
-            if (h) {
-              clearInterval(h as unknown as NodeJS.Timeout);
-              this.lastSampleTimers.delete(intervalMs);
-            }
-          } catch (_e) {}
-        }, durationMs + 50);
-      }
-    } catch (_e) {
-      // ignore
-    }
-  }
+  // Debug sampling functions removed
 
   private wrapStopLogger(_ps: ParticleSystem): void {
     // Debug stop logger disabled in production
@@ -303,22 +210,7 @@ export class ImpactParticleSystem {
     // Start with burst for reliable one-shot emission
     this.startWithBurst(particleSystem, Math.max(Math.floor(150 * intensity), 20));
 
-    // Record diagnostics
-    try {
-      this.lastSystemTimestamp = Date.now();
-      this.lastSystemDiagnostics = {
-        emitRate: particleSystem.emitRate,
-        manualEmitCount: particleSystem.manualEmitCount,
-        minSize: particleSystem.minSize,
-        maxSize: particleSystem.maxSize,
-        minLifeTime: particleSystem.minLifeTime,
-        maxLifeTime: particleSystem.maxLifeTime,
-        isStarted: particleSystem.isStarted(),
-        hasTexture: !!particleSystem.particleTexture,
-        samples: [] as Array<{ t: number; count: number }>,
-      };
-      this.sampleLastSystem(2000, 100);
-    } catch (_e) {}
+    // Diagnostics removed
 
     // Use intelligent cleanup instead of fixed timeout
     this.setupParticleLifecycleCleanup(particleSystem, effectId);

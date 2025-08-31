@@ -11,6 +11,7 @@ import type { FiringContext, HitResult, MaterialType, WeaponConfig } from '../ty
 
 // Import impact system
 import type { ImpactData, ImpactManager } from '@doom-like/effects';
+import { logger } from '../utils/logger';
 
 export class HitscanSystem {
   private scene: Scene;
@@ -34,7 +35,7 @@ export class HitscanSystem {
    * Fire a hitscan weapon
    */
   public fire(context: FiringContext): HitResult {
-    console.log(
+    logger.debug(
       '[HITSCAN_SYSTEM] Fire called with origin:',
       context.origin,
       'direction:',
@@ -45,7 +46,7 @@ export class HitscanSystem {
     const weaponComponent = entity.components.get('weapon') as WeaponComponent;
 
     if (!weaponComponent) {
-      console.log('[HITSCAN_SYSTEM] No weapon component found');
+      logger.debug('[HITSCAN_SYSTEM] No weapon component found');
       return this.createMissResult(origin, direction);
     }
 
@@ -142,7 +143,7 @@ export class HitscanSystem {
   }
 
   private performRaycast(origin: Vector3, direction: Vector3, config: WeaponConfig): HitResult {
-    console.log(
+    logger.debug(
       '[HITSCAN_SYSTEM] Performing raycast from:',
       origin,
       'to direction:',
@@ -162,7 +163,7 @@ export class HitscanSystem {
     const ray = new Ray(origin, direction, config.range);
     const pickInfo = this.scene.pickWithRay(ray);
 
-    console.log('[HITSCAN_SYSTEM] Raycast result:', {
+    logger.debug('[HITSCAN_SYSTEM] Raycast result:', {
       hit: pickInfo?.hit,
       distance: pickInfo?.distance,
       pickedMesh: pickInfo?.pickedMesh?.name,
@@ -265,7 +266,7 @@ export class HitscanSystem {
     weaponComponent: WeaponComponent,
     context: FiringContext
   ): void {
-    console.log('🎯 [HITSCAN_SYSTEM] processImpact called:', {
+    logger.debug('🎯 [HITSCAN_SYSTEM] processImpact called:', {
       hasImpactManager: !!this.impactManager,
       impactManagerType: this.impactManager ? this.impactManager.constructor.name : 'null',
       hit: hitResult.hit,
@@ -275,12 +276,12 @@ export class HitscanSystem {
     });
 
     if (!this.impactManager) {
-      console.error('❌ [HITSCAN_SYSTEM] No impact manager available!');
+      logger.error('❌ [HITSCAN_SYSTEM] No impact manager available!');
       return;
     }
 
     if (!hitResult.hit) {
-      console.log('🚫 [HITSCAN_SYSTEM] No hit detected, skipping impact');
+      logger.debug('🚫 [HITSCAN_SYSTEM] No hit detected, skipping impact');
       return;
     }
 
@@ -300,7 +301,7 @@ export class HitscanSystem {
     };
 
     // Process the impact through the impact manager
-    console.log('🔥 [HITSCAN_SYSTEM] About to call impactManager.processImpact with:', {
+    logger.debug('🔥 [HITSCAN_SYSTEM] About to call impactManager.processImpact with:', {
       position: impactData.position,
       materialType: impactData.materialType,
       weaponType: impactData.weaponType,
@@ -309,10 +310,10 @@ export class HitscanSystem {
 
     try {
       const result = this.impactManager.processImpact(impactData);
-      console.log('✅ [HITSCAN_SYSTEM] Impact processed successfully:', result);
+      logger.debug('✅ [HITSCAN_SYSTEM] Impact processed successfully:', result);
     } catch (error) {
-      console.error('❌ [HITSCAN_SYSTEM] Failed to process impact:', error);
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
+      logger.error('❌ [HITSCAN_SYSTEM] Failed to process impact:', error);
+      logger.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
     }
   }
 
@@ -328,7 +329,7 @@ export class HitscanSystem {
     const materialName = mesh.material?.name?.toLowerCase() || '';
     const meshId = mesh.id?.toLowerCase() || '';
 
-    console.log('[HITSCAN_SYSTEM] Material detection for:', {
+    logger.debug('[HITSCAN_SYSTEM] Material detection for:', {
       meshName,
       materialName,
       meshId,
@@ -420,7 +421,7 @@ export class HitscanSystem {
       return 'concrete';
     }
 
-    console.log('[HITSCAN_SYSTEM] No material match found, using default');
+    logger.debug('[HITSCAN_SYSTEM] No material match found, using default');
     return 'default';
   }
 
@@ -487,11 +488,11 @@ export class HitscanSystem {
 /**
  * Utility functions for hitscan calculations
  */
-export class HitscanUtils {
+export const HitscanUtils = {
   /**
    * Calculate spread based on weapon state
    */
-  static calculateCurrentSpread(
+  calculateCurrentSpread(
     baseSpread: number,
     spreadAccumulation: number,
     maxSpread: number,
@@ -508,12 +509,12 @@ export class HitscanUtils {
     }
 
     return Math.min(currentSpread, maxSpread);
-  }
+  },
 
   /**
    * Calculate damage falloff over distance
    */
-  static calculateDamageFalloff(
+  calculateDamageFalloff(
     baseDamage: number,
     distance: number,
     maxRange: number,
@@ -529,26 +530,22 @@ export class HitscanUtils {
 
     // Linear falloff to 50% damage at max range
     return baseDamage * (1 - falloffRatio * 0.5);
-  }
+  },
 
   /**
    * Check if hit was a critical hit (headshot, etc.)
    */
-  static isCriticalHit(
-    hitPosition: Vector3,
-    targetPosition: Vector3,
-    targetHeight: number
-  ): boolean {
+  isCriticalHit(hitPosition: Vector3, targetPosition: Vector3, targetHeight: number): boolean {
     const relativeHeight = hitPosition.y - targetPosition.y;
     const headHeight = targetHeight * 0.8; // Top 20% is considered head
 
     return relativeHeight >= headHeight;
-  }
+  },
 
   /**
    * Calculate penetration through surfaces
    */
-  static calculatePenetration(
+  calculatePenetration(
     damage: number,
     penetrationPower: number,
     surfaceThickness: number,
@@ -571,5 +568,5 @@ export class HitscanUtils {
       : 0;
 
     return { canPenetrate, remainingDamage };
-  }
-}
+  },
+} as const;
