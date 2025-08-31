@@ -16,12 +16,12 @@ export class ImpactParticleSystem {
   private particlePool: ParticleSystem[] = [];
   private activeParticleSystems: Map<string, ParticleSystem> = new Map();
   private textureCache: Map<string, Texture> = new Map();
-  private maintenanceTimer: NodeJS.Timeout | null = null;
-  private particleTimers: Map<string, NodeJS.Timeout> = new Map(); // Track timers to prevent leaks
+  private maintenanceTimer: NodeJS.Timeout | number | null = null;
+  private particleTimers: Map<string, NodeJS.Timeout | number> = new Map(); // Track timers to prevent leaks
   private lastEmitRate = 0;
   private lastManualEmitCount = 0;
   private lastSystemTimestamp: number | null = null;
-  private lastSampleTimer: NodeJS.Timeout | null = null;
+  private lastSampleTimer: NodeJS.Timeout | number | null = null;
   private lastCreateCallTimestamp: number | null = null;
   private lastCreateCallInfo: { [key: string]: unknown } | null = null;
   // Debug toggle: when true, always create new ParticleSystem and skip pool reuse.

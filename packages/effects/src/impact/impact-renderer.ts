@@ -22,6 +22,7 @@ export class ImpactRenderer {
   private activeDecals: Map<string, Mesh> = new Map();
   private flashLights: Map<string, Light> = new Map();
   private decalMaterials: Map<string, StandardMaterial> = new Map();
+  private fallbackMaterial: StandardMaterial | null = null;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -235,6 +236,18 @@ export class ImpactRenderer {
    * Dispose all resources
    */
   public dispose(): void {
+    // Dispose fallback material if created
+    if (this.fallbackMaterial) {
+      this.fallbackMaterial.dispose();
+      this.fallbackMaterial = null;
+    }
+
+    // Dispose all cached materials
+    for (const material of this.decalMaterials.values()) {
+      material.dispose();
+    }
+    this.decalMaterials.clear();
+
     // Dispose active decals
     for (const decal of this.activeDecals.values()) {
       decal.dispose();
@@ -428,8 +441,12 @@ export class ImpactRenderer {
     if (material) return material;
     const fallback = this.decalMaterials.get('bullet_hole');
     if (fallback) return fallback;
-    // Fallback to a basic material to satisfy lints and avoid null assertions
-    return new StandardMaterial('fallback_decal_material', this.scene);
+
+    // Create and cache fallback material to avoid memory leaks
+    if (!this.fallbackMaterial) {
+      this.fallbackMaterial = new StandardMaterial('fallback_decal_material', this.scene);
+    }
+    return this.fallbackMaterial;
   }
 
   private createBulletHoleTexture(): Texture {
