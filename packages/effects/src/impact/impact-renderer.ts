@@ -2,25 +2,19 @@
  * Impact Renderer - Handles visual rendering of weapon impacts
  */
 
-import { 
-  Mesh,
-  Scene,
-  Vector3,
-  Color3,
-  StandardMaterial,
-  Texture,
-  DecalMap,
-  DynamicTexture,
-  Light,
-  PointLight,
+import {
   Animation,
-  AnimationKeys
+  Color3,
+  DynamicTexture,
+  type Light,
+  Mesh,
+  PointLight,
+  type Scene,
+  StandardMaterial,
+  type Texture,
+  Vector3,
 } from '@babylonjs/core';
-import type { 
-  ImpactData,
-  ImpactDecalConfig,
-  MaterialType
-} from './impact-types';
+import type { ImpactData, ImpactDecalConfig, MaterialType } from './impact-types';
 
 export class ImpactRenderer {
   private scene: Scene;
@@ -39,8 +33,8 @@ export class ImpactRenderer {
    */
   public createBulletHole(
     impactData: ImpactData,
-    size: number = 0.05,
-    lifetime: number = -1 // -1 for permanent
+    size = 0.05,
+    lifetime = 10000 // 10 seconds
   ): string {
     const decalConfig: ImpactDecalConfig = {
       size: new Vector3(size, size, size),
@@ -51,9 +45,9 @@ export class ImpactRenderer {
       opacity: 0.8,
       fadeRate: 0.01,
       depthBias: 0.001,
-      maxAngle: Math.PI / 3, // 60 degrees
+      maxAngle: Math.PI / 2 + 0.1, // Allow decals on walls
       growthTime: 100,
-      fadeTime: lifetime > 0 ? lifetime * 0.1 : 0
+      fadeTime: lifetime > 0 ? lifetime * 0.1 : 0,
     };
 
     return this.createDecal(impactData, decalConfig, 'bullet_hole');
@@ -62,10 +56,7 @@ export class ImpactRenderer {
   /**
    * Create scorch mark for explosive impacts
    */
-  public createScorchMark(
-    impactData: ImpactData,
-    radius: number = 0.3
-  ): string {
+  public createScorchMark(impactData: ImpactData, radius = 0.3): string {
     const decalConfig: ImpactDecalConfig = {
       size: new Vector3(radius, radius, radius),
       sizeVariation: 0.3,
@@ -77,7 +68,7 @@ export class ImpactRenderer {
       depthBias: 0.002,
       maxAngle: Math.PI / 4, // 45 degrees
       growthTime: 500,
-      fadeTime: 0
+      fadeTime: 0,
     };
 
     return this.createDecal(impactData, decalConfig, 'scorch');
@@ -89,7 +80,7 @@ export class ImpactRenderer {
   public createMuzzleFlash(
     position: Vector3,
     direction: Vector3,
-    intensity: number = 2.0,
+    intensity = 2.0,
     color: Color3 = new Color3(1, 0.8, 0.4)
   ): string {
     const light = new PointLight(`muzzle_flash_${Date.now()}`, position, this.scene);
@@ -97,7 +88,7 @@ export class ImpactRenderer {
     light.diffuse = color;
     light.specular = color;
     light.range = 10;
-    
+
     const flashId = this.generateEffectId();
     this.flashLights.set(flashId, light);
 
@@ -124,19 +115,16 @@ export class ImpactRenderer {
   /**
    * Create impact flash (brief light at hit point)
    */
-  public createImpactFlash(
-    impactData: ImpactData,
-    materialType: MaterialType
-  ): string {
+  public createImpactFlash(impactData: ImpactData, materialType: MaterialType): string {
     const flashConfig = this.getFlashConfigForMaterial(materialType);
     const position = impactData.position.add(impactData.normal.scale(0.01));
-    
+
     const light = new PointLight(`impact_flash_${Date.now()}`, position, this.scene);
     light.intensity = flashConfig.intensity;
     light.diffuse = flashConfig.color;
     light.specular = flashConfig.color;
     light.range = flashConfig.range;
-    
+
     const flashId = this.generateEffectId();
     this.flashLights.set(flashId, light);
 
@@ -154,10 +142,7 @@ export class ImpactRenderer {
   /**
    * Create crack pattern for brittle materials
    */
-  public createCrackPattern(
-    impactData: ImpactData,
-    severity: number = 1.0
-  ): string {
+  public createCrackPattern(impactData: ImpactData, severity = 1.0): string {
     const size = 0.1 * severity;
     const decalConfig: ImpactDecalConfig = {
       size: new Vector3(size, size, size),
@@ -170,7 +155,7 @@ export class ImpactRenderer {
       depthBias: 0.0005,
       maxAngle: Math.PI / 6, // 30 degrees - cracks only on relatively flat surfaces
       growthTime: 200,
-      fadeTime: 0
+      fadeTime: 0,
     };
 
     return this.createDecal(impactData, decalConfig, 'crack');
@@ -182,12 +167,12 @@ export class ImpactRenderer {
   public createRicochetTrail(
     startPosition: Vector3,
     endPosition: Vector3,
-    intensity: number = 1.0
+    intensity = 1.0
   ): string {
     // Create a line mesh for the ricochet trail
     const trailPoints = [startPosition, endPosition];
-    const trail = Mesh.CreateLines('ricochet_trail', trailPoints, this.scene);
-    
+    const trail = Mesh.CreateLines('ricochet_trail', trailPoints, this.scene, false);
+
     // Create glowing material
     const material = new StandardMaterial('ricochet_material', this.scene);
     material.emissiveColor = new Color3(1, 0.8, 0.2);
@@ -195,7 +180,7 @@ export class ImpactRenderer {
     trail.material = material;
 
     const trailId = this.generateEffectId();
-    
+
     // Animate fade out
     const fadeAnimation = Animation.CreateAndStartAnimation(
       'trail_fade',
@@ -242,7 +227,7 @@ export class ImpactRenderer {
     return {
       activeDecals: this.activeDecals.size,
       activeLights: this.flashLights.size,
-      pooledDecals: this.decalPool.length
+      pooledDecals: this.decalPool.length,
     };
   }
 
@@ -275,30 +260,48 @@ export class ImpactRenderer {
     this.decalMaterials.clear();
   }
 
-  private createDecal(
-    impactData: ImpactData,
-    config: ImpactDecalConfig,
-    type: string
-  ): string {
+  private createDecal(impactData: ImpactData, config: ImpactDecalConfig, type: string): string {
+    console.log('[IMPACT_RENDERER] Creating decal:', {
+      type,
+      position: impactData.position,
+      normal: impactData.normal,
+      surfaceAngle: this.getSurfaceAngle(impactData.normal),
+      maxAngle: config.maxAngle,
+    });
+
     // Check if surface angle is suitable for decal
-    if (this.getSurfaceAngle(impactData.normal) > config.maxAngle) {
+    const surfaceAngle = this.getSurfaceAngle(impactData.normal);
+    if (surfaceAngle > config.maxAngle) {
+      console.log(
+        '[IMPACT_RENDERER] Skipping decal - surface too steep:',
+        surfaceAngle,
+        '>',
+        config.maxAngle
+      );
       return ''; // Skip decal on steep surfaces
     }
 
     const decal = this.getOrCreateDecal();
     if (!decal) {
+      console.log('[IMPACT_RENDERER] Failed to create/get decal mesh');
       return '';
     }
 
-    // Position decal
-    const position = impactData.position.add(impactData.normal.scale(config.depthBias));
+    console.log('[IMPACT_RENDERER] Created decal mesh:', decal.name);
+
+    // Enable and show the decal
+    decal.setEnabled(true);
+    decal.isVisible = true;
+
+    // Position decal slightly above surface to prevent z-fighting
+    const position = impactData.position.add(impactData.normal.scale(0.01)); // Increased offset
     decal.position = position;
 
-    // Orient decal to surface
+    // Orient decal to surface (make it face away from surface)
     decal.lookAt(position.add(impactData.normal));
 
-    // Scale decal
-    const size = config.size.x * (1 + (Math.random() - 0.5) * config.sizeVariation);
+    // Scale decal - make it bigger and more visible for testing
+    const size = config.size.x * (1 + (Math.random() - 0.5) * config.sizeVariation) * 2; // Double size for visibility
     decal.scaling = new Vector3(size, size, size);
 
     // Apply material
@@ -307,11 +310,21 @@ export class ImpactRenderer {
     material.alpha = config.opacity;
     decal.material = material;
 
+    console.log('[IMPACT_RENDERER] Decal configured:', {
+      position: decal.position,
+      scaling: decal.scaling,
+      material: material.name,
+      color: material.diffuseColor,
+      alpha: material.alpha,
+      enabled: decal.isEnabled(),
+      visible: decal.isVisible,
+    });
+
     const decalId = this.generateEffectId();
     this.activeDecals.set(decalId, decal);
 
     // Handle growth animation
-    if (config.growthTime > 0) {
+    if (config.growthTime && config.growthTime > 0) {
       decal.scaling = Vector3.Zero();
       Animation.CreateAndStartAnimation(
         'decal_growth',
@@ -338,14 +351,22 @@ export class ImpactRenderer {
   private getOrCreateDecal(): Mesh | null {
     // Try to reuse from pool
     if (this.decalPool.length > 0) {
-      return this.decalPool.pop()!;
+      const decal = this.decalPool.pop()!;
+      decal.setEnabled(true);
+      console.log('[IMPACT_RENDERER] Reusing decal from pool:', decal.name);
+      return decal;
     }
 
     // Create new decal if under limit
-    if (this.activeDecals.size < 100) { // Max 100 active decals
-      return Mesh.CreateGround('impact_decal', 1, 1, 1, this.scene);
+    if (this.activeDecals.size < 100) {
+      // Max 100 active decals - create a plane instead of ground for better visibility
+      const decal = Mesh.CreatePlane('impact_decal', 1, this.scene);
+      decal.billboardMode = Mesh.BILLBOARDMODE_NONE; // Don't billboard, we want it flat on surface
+      console.log('[IMPACT_RENDERER] Created new decal mesh:', decal.name);
+      return decal;
     }
 
+    console.log('[IMPACT_RENDERER] Decal limit reached, cannot create more');
     return null;
   }
 
@@ -386,17 +407,17 @@ export class ImpactRenderer {
     // Create base materials for different decal types
     const bulletHoleMaterial = new StandardMaterial('bullet_hole_material', this.scene);
     bulletHoleMaterial.diffuseTexture = this.createBulletHoleTexture();
-    bulletHoleMaterial.hasAlpha = true;
+    bulletHoleMaterial.useAlphaFromDiffuseTexture = true;
     this.decalMaterials.set('bullet_hole', bulletHoleMaterial);
 
     const scorchMaterial = new StandardMaterial('scorch_material', this.scene);
     scorchMaterial.diffuseTexture = this.createScorchTexture();
-    scorchMaterial.hasAlpha = true;
+    scorchMaterial.useAlphaFromDiffuseTexture = true;
     this.decalMaterials.set('scorch_mark', scorchMaterial);
 
     const crackMaterial = new StandardMaterial('crack_material', this.scene);
     crackMaterial.diffuseTexture = this.createCrackTexture();
-    crackMaterial.hasAlpha = true;
+    crackMaterial.useAlphaFromDiffuseTexture = true;
     this.decalMaterials.set('crack_pattern', crackMaterial);
   }
 
@@ -409,14 +430,16 @@ export class ImpactRenderer {
     const size = 64;
     const dynamicTexture = new DynamicTexture('bullet_hole_texture', size, this.scene);
     const context = dynamicTexture.getContext();
-    
-    // Draw black circle with rough edges
-    context.fillStyle = '#000000';
-    context.beginPath();
-    context.arc(size/2, size/2, size/3, 0, 2 * Math.PI);
-    context.fill();
-    
-    dynamicTexture.update();
+
+    if (context) {
+      // Draw black circle with rough edges
+      context.fillStyle = '#000000';
+      context.beginPath();
+      context.arc(size / 2, size / 2, size / 3, 0, 2 * Math.PI);
+      context.fill();
+
+      dynamicTexture.update();
+    }
     return dynamicTexture;
   }
 
@@ -425,17 +448,26 @@ export class ImpactRenderer {
     const size = 128;
     const dynamicTexture = new DynamicTexture('scorch_texture', size, this.scene);
     const context = dynamicTexture.getContext();
-    
-    // Draw irregular dark pattern
-    const gradient = context.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-    gradient.addColorStop(0, 'rgba(20, 10, 5, 0.8)');
-    gradient.addColorStop(0.7, 'rgba(40, 20, 10, 0.4)');
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, size, size);
-    
-    dynamicTexture.update();
+
+    if (context) {
+      // Draw irregular dark pattern
+      const gradient = context.createRadialGradient(
+        size / 2,
+        size / 2,
+        0,
+        size / 2,
+        size / 2,
+        size / 2
+      );
+      gradient.addColorStop(0, 'rgba(20, 10, 5, 0.8)');
+      gradient.addColorStop(0.7, 'rgba(40, 20, 10, 0.4)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, size, size);
+
+      dynamicTexture.update();
+    }
     return dynamicTexture;
   }
 
@@ -444,18 +476,20 @@ export class ImpactRenderer {
     const size = 64;
     const dynamicTexture = new DynamicTexture('crack_texture', size, this.scene);
     const context = dynamicTexture.getContext();
-    
-    // Draw crack lines
-    context.strokeStyle = 'rgba(0, 0, 0, 0.6)';
-    context.lineWidth = 2;
-    context.beginPath();
-    context.moveTo(size/2, 0);
-    context.lineTo(size/2, size);
-    context.moveTo(0, size/2);
-    context.lineTo(size, size/2);
-    context.stroke();
-    
-    dynamicTexture.update();
+
+    if (context) {
+      // Draw crack lines
+      context.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(size / 2, 0);
+      context.lineTo(size / 2, size);
+      context.moveTo(0, size / 2);
+      context.lineTo(size, size / 2);
+      context.stroke();
+
+      dynamicTexture.update();
+    }
     return dynamicTexture;
   }
 
@@ -466,9 +500,9 @@ export class ImpactRenderer {
       concrete: 'bullet_hole', // Rough holes
       wood: 'bullet_hole', // Splintered holes
       glass: 'bullet_hole', // Spider web cracks
-      default: 'bullet_hole'
+      default: 'bullet_hole',
     };
-    
+
     return textureMap[materialType as keyof typeof textureMap] || textureMap.default;
   }
 
@@ -478,9 +512,9 @@ export class ImpactRenderer {
       concrete: new Color3(0.3, 0.3, 0.3),
       wood: new Color3(0.4, 0.2, 0.1),
       glass: new Color3(0.8, 0.8, 0.9),
-      default: new Color3(0.2, 0.2, 0.2)
+      default: new Color3(0.2, 0.2, 0.2),
     };
-    
+
     return colorMap[materialType as keyof typeof colorMap] || colorMap.default;
   }
 
@@ -490,34 +524,34 @@ export class ImpactRenderer {
         intensity: 3.0,
         color: new Color3(1, 0.9, 0.7),
         range: 8,
-        duration: 50
+        duration: 50,
       },
       concrete: {
         intensity: 1.5,
         color: new Color3(0.9, 0.8, 0.6),
         range: 5,
-        duration: 80
+        duration: 80,
       },
       wood: {
         intensity: 1.0,
         color: new Color3(0.8, 0.6, 0.4),
         range: 4,
-        duration: 60
+        duration: 60,
       },
       glass: {
         intensity: 2.0,
         color: new Color3(0.9, 0.9, 1.0),
         range: 6,
-        duration: 40
+        duration: 40,
       },
       default: {
         intensity: 1.5,
         color: new Color3(1, 0.8, 0.6),
         range: 5,
-        duration: 60
-      }
+        duration: 60,
+      },
     };
-    
+
     return configs[materialType as keyof typeof configs] || configs.default;
   }
 

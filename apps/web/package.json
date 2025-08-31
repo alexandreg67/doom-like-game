@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@doom-like/weapons": "workspace:*",
+    "@doom-like/effects": "workspace:*",
     "@doom-like/engine": "workspace:*",
     "@doom-like/game-logic": "workspace:*",
     "@doom-like/map-editor": "workspace:*",

@@ -2,7 +2,7 @@
  * Types and interfaces for weapon impact system
  */
 
-import type { Vector3, Color3 } from '@babylonjs/core';
+import type { Color3, Vector3 } from '@babylonjs/core';
 
 // Import Entity type directly to avoid path issues
 export interface Entity {
@@ -13,9 +13,9 @@ export interface Entity {
 /**
  * Material types for impact differentiation
  */
-export type MaterialType = 
+export type MaterialType =
   | 'metal'
-  | 'concrete' 
+  | 'concrete'
   | 'stone'
   | 'wood'
   | 'glass'
@@ -29,11 +29,11 @@ export type MaterialType =
 /**
  * Impact effect types
  */
-export type ImpactEffectType = 
+export type ImpactEffectType =
   | 'sparks'
   | 'debris'
   | 'dust'
-  | 'splash' 
+  | 'splash'
   | 'shards'
   | 'smoke'
   | 'blood';
@@ -41,7 +41,7 @@ export type ImpactEffectType =
 /**
  * Audio effect types for impacts
  */
-export type ImpactAudioType = 
+export type ImpactAudioType =
   | 'metallic_ping'
   | 'concrete_crack'
   | 'wood_thud'
@@ -61,20 +61,20 @@ export interface ImpactConfig {
   materialType: MaterialType;
   hardness: number; // 0-1, affects particle count and sound
   density: number; // affects debris mass
-  
+
   // Visual effects
   particleEffects: ImpactEffectType[];
   decalEnabled: boolean;
   scorchMarkEnabled: boolean;
-  
-  // Audio configuration  
+
+  // Audio configuration
   audioType: ImpactAudioType;
   audioVariations: string[];
-  
+
   // Physics properties
   ricochetChance: number; // 0-1
   penetrationResistance: number;
-  
+
   // Performance settings
   maxParticles: number;
   particleLifetime: number;
@@ -89,21 +89,21 @@ export interface ImpactData {
   position: Vector3;
   normal: Vector3;
   velocity: Vector3;
-  
+
   // Surface properties
   materialType: MaterialType;
   surfaceAngle: number; // angle between projectile and surface
   impactForce: number;
-  
+
   // Weapon information
   weaponType: string;
   damage: number;
   caliber?: number;
-  
+
   // Entity context
   hitEntity?: Entity;
   sourceEntity?: Entity;
-  
+
   // Timestamp
   timestamp: number;
 }
@@ -117,23 +117,23 @@ export interface ImpactParticleConfig {
   lifetime: number;
   size: Vector3;
   sizeVariation: number;
-  
+
   // Emission properties
   velocity: Vector3;
   velocityVariation: Vector3;
   acceleration: Vector3;
-  
+
   // Visual properties
-  color: Color3;
-  colorVariation: Color3;
+  color: Vector3;
+  colorVariation: Vector3;
   alpha: number;
   alphaDecay: number;
-  
+
   // Physics
   gravity: number;
   drag: number;
   bounce: number;
-  
+
   // Texture
   texture?: string;
   uvAnimation?: {
@@ -150,17 +150,17 @@ export interface ImpactDecalConfig {
   size: Vector3;
   sizeVariation: number;
   lifetime: number; // -1 for permanent
-  
-  // Visual properties  
+
+  // Visual properties
   texture: string;
   color: Color3;
   opacity: number;
   fadeRate: number;
-  
+
   // Placement
   depthBias: number;
   maxAngle: number; // maximum surface angle for placement
-  
+
   // Animation
   growthTime?: number;
   fadeTime?: number;
@@ -173,17 +173,17 @@ export interface ImpactAudioConfig {
   // Sound selection
   samples: string[];
   randomize: boolean;
-  
+
   // 3D Audio properties
   volume: number;
   pitch: number;
   pitchVariation: number;
-  
+
   // Spatial properties
   maxDistance: number;
   rolloffFactor: number;
   dopplerFactor: number;
-  
+
   // Environmental effects
   reverbEnabled: boolean;
   occlusionEnabled: boolean;
@@ -198,16 +198,16 @@ export interface ImpactPerformanceConfig {
   mediumDetailDistance: number;
   lowDetailDistance: number;
   cullingDistance: number;
-  
+
   // Particle limits
   maxParticlesPerImpact: number;
   maxSimultaneousImpacts: number;
   maxDecalsPerSurface: number;
-  
+
   // Update frequencies
   particleUpdateRate: number;
   audioUpdateRate: number;
-  
+
   // Memory management
   poolSizes: {
     particles: number;
@@ -231,16 +231,16 @@ export interface ImpactResult {
   // Processing status
   success: boolean;
   error?: string;
-  
+
   // Effects created
   particleSystemsCreated: number;
   decalsCreated: number;
   audioSourcesUsed: number;
-  
+
   // Performance metrics
   processingTime: number;
   memoryUsed: number;
-  
+
   // Effect handles for cleanup
   effectIds: string[];
 }
@@ -253,12 +253,12 @@ export interface ImpactSystemStats {
   totalImpacts: number;
   impactsByMaterial: Map<MaterialType, number>;
   activeEffects: number;
-  
+
   // Performance
   averageProcessingTime: number;
   memoryUsage: number;
   frameTime: number;
-  
+
   // Resource usage
   particlePoolUtilization: number;
   decalPoolUtilization: number;

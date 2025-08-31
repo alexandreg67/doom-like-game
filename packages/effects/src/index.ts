@@ -1,6 +1,6 @@
 /**
  * @doom-like/effects - Visual and audio effects system
- * 
+ *
  * Provides impact effects, particle systems, and audio management
  * for weapon impacts and environmental interactions.
  */

@@ -38,9 +38,9 @@ export type CrosshairBehavior = 'static' | 'dynamic' | 'weapon-specific';
 /**
  * Material types for impact system
  */
-export type MaterialType = 
+export type MaterialType =
   | 'metal'
-  | 'concrete' 
+  | 'concrete'
   | 'stone'
   | 'wood'
   | 'glass'
@@ -61,7 +61,7 @@ export interface HitResult {
   distance: number;
   entity?: Entity;
   damage: number;
-  
+
   // Impact system properties
   materialType?: MaterialType;
   surfaceAngle?: number;
@@ -111,6 +111,7 @@ export interface WeaponConfig {
   penetration?: number;
   explosionRadius?: number;
   projectileSpeed?: number;
+  caliber?: number; // weapon caliber for impact calculation
 
   // Audio configuration
   audioConfig?: WeaponAudioConfig;

@@ -20,7 +20,8 @@
     "@babylonjs/core": "^7.31.1",
     "@doom-like/engine": "workspace:*",
     "@doom-like/game-logic": "workspace:*",
-    "@doom-like/assets": "workspace:*"
+    "@doom-like/assets": "workspace:*",
+    "@doom-like/effects": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",

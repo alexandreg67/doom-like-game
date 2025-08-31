@@ -32,11 +32,15 @@ import {
 } from '@doom-like/weapons';
 import type { WeaponType } from '@doom-like/weapons';
 
+// Import impact system
+import { ImpactManager } from '@doom-like/effects';
+
 export class WeaponPlayerController implements InputListener {
   private playerController: PlayerController;
   private weaponSystem: WeaponSystem;
   private crosshairRenderer: CrosshairRenderer;
   private ammoCounter: AmmoCounter;
+  private impactManager: ImpactManager;
   private currentWeaponType: WeaponType = 'pistol';
 
   constructor(
@@ -47,6 +51,10 @@ export class WeaponPlayerController implements InputListener {
   ) {
     this.playerController = playerController;
 
+    // Initialize impact system
+    this.impactManager = new ImpactManager(scene);
+    console.log('[WEAPON_PLAYER] Impact manager initialized');
+
     // Initialize weapon system
     const weaponConfig: WeaponSystemConfig = {
       scene,
@@ -55,6 +63,10 @@ export class WeaponPlayerController implements InputListener {
       debugMode: false,
     };
     this.weaponSystem = new WeaponSystem(weaponConfig);
+
+    // Connect impact manager to weapon system
+    this.weaponSystem.setImpactManager(this.impactManager);
+    console.log('[WEAPON_PLAYER] Impact manager connected to weapon system');
 
     // Initialize UI components
     const crosshairConfig: CrosshairConfig = {
@@ -523,6 +535,7 @@ export class WeaponPlayerController implements InputListener {
     this.weaponSystem.dispose();
     this.crosshairRenderer.dispose();
     this.ammoCounter.dispose();
+    this.impactManager.dispose();
 
     console.log('[WEAPON_PLAYER] WeaponPlayerController disposed');
   }
