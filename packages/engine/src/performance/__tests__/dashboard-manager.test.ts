@@ -9,11 +9,11 @@ import type { DashboardConfig } from '../dashboard-types';
 import type { LODMetrics } from '../lod-types';
 import type { BSPMetrics, LightingMetrics, PerformanceMetrics } from '../types';
 
-// Mock DOM methods
+// Mock DOM methods - prevent infinite loops by not executing callbacks
 Object.defineProperty(window, 'setInterval', {
-  value: vi.fn((fn: () => void, _ms: number) => {
+  value: vi.fn((_fn: () => void, _ms: number) => {
     const id = Math.random();
-    setTimeout(() => fn(), 0); // Execute immediately for testing
+    // Don't execute the callback to prevent infinite loops in tests
     return id;
   }),
 });
