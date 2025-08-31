@@ -2,16 +2,8 @@
  * Particle System for Impact Effects using Babylon.js
  */
 
-import {
-  Color4,
-  Mesh,
-  MeshBuilder,
-  ParticleSystem,
-  StandardMaterial,
-  Texture,
-  Vector3,
-} from '@babylonjs/core';
-import type { Color3, Scene } from '@babylonjs/core';
+import { Color4, ParticleSystem, Texture, Vector3 } from '@babylonjs/core';
+import type { Scene } from '@babylonjs/core';
 import type {
   ImpactData,
   ImpactEffectType,
@@ -20,21 +12,15 @@ import type {
 } from '../impact/impact-types';
 
 export class ImpactParticleSystem {
-  // Debug visuals toggles
-  private static readonly OVERLAY_ENABLED = false; // Disable on production
-  private static readonly MARKERS_ENABLED = false; // Disable debug markers
   private scene: Scene;
   private particlePool: ParticleSystem[] = [];
   private activeParticleSystems: Map<string, ParticleSystem> = new Map();
   private textureCache: Map<string, Texture> = new Map();
   private maintenanceTimer: NodeJS.Timeout | null = null;
   private particleTimers: Map<string, NodeJS.Timeout> = new Map(); // Track timers to prevent leaks
-  private debugOverlay: HTMLElement | null = null;
-  private debugContent: HTMLElement | null = null;
   private lastEmitRate = 0;
   private lastManualEmitCount = 0;
   private lastSystemTimestamp: number | null = null;
-  private lastSystemDiagnostics: { [key: string]: unknown } | null = null;
   private lastSampleTimer: NodeJS.Timeout | null = null;
   private lastCreateCallTimestamp: number | null = null;
   private lastCreateCallInfo: { [key: string]: unknown } | null = null;
@@ -448,35 +434,7 @@ export class ImpactParticleSystem {
     }
   }
 
-  /**
-   * Create a small temporary debug marker (sphere) at impact position
-   */
-  private createDebugMarker(position: Vector3, color: Color3, lifetimeMs: number): void {
-    if (!ImpactParticleSystem.MARKERS_ENABLED) return;
-    try {
-      const mat = new StandardMaterial(`impact_marker_mat_${Date.now()}`, this.scene);
-      mat.emissiveColor = color;
-      // Create small sphere
-      const sphere = MeshBuilder.CreateSphere(
-        `impact_marker_${Date.now()}`,
-        { diameter: 0.08 },
-        this.scene
-      );
-      sphere.material = mat;
-      sphere.position = position.clone();
-      sphere.isPickable = false;
-
-      // Dispose after lifetime
-      setTimeout(() => {
-        try {
-          sphere.dispose();
-          mat.dispose();
-        } catch (_e) {}
-      }, lifetimeMs);
-    } catch (_e) {
-      // ignore in environments without full Babylon capabilities
-    }
-  }
+  // Debug marker removed
 
   private getOrCreateParticleSystem(): ParticleSystem | null {
     console.log('🔄 [PARTICLE_SYSTEM] Pool status:', {
@@ -983,287 +941,9 @@ export class ImpactParticleSystem {
   /**
    * Create a small DOM overlay for debugging particle system state when console is not available
    */
-  private createDebugOverlay(): void {
-    try {
-      if (typeof document === 'undefined') return;
-      if (this.debugOverlay) return;
-
-      const overlay = document.createElement('div');
-      overlay.id = 'impact-particle-debug-overlay';
-      overlay.style.position = 'fixed';
-      overlay.style.right = '8px';
-      overlay.style.top = '8px';
-      overlay.style.zIndex = '9999';
-      overlay.style.background = 'rgba(0,0,0,0.6)';
-      overlay.style.color = '#fff';
-      overlay.style.fontSize = '12px';
-      overlay.style.padding = '8px';
-      overlay.style.borderRadius = '6px';
-      // Allow pointer events so the copy button can be used
-      overlay.style.pointerEvents = 'auto';
-      // Make text selectable and wrapped for easier copy
-      overlay.style.userSelect = 'text';
-      overlay.style.whiteSpace = 'pre-wrap';
-      overlay.style.maxHeight = '40vh';
-      overlay.style.overflow = 'auto';
-      overlay.style.maxWidth = '260px';
-      // create a dedicated content area so buttons are not removed when updating
-      const content = document.createElement('div');
-      content.id = 'impact-particle-debug-content';
-      content.style.pointerEvents = 'none';
-      content.style.userSelect = 'text';
-      content.style.whiteSpace = 'pre-wrap';
-      content.style.maxHeight = '40vh';
-      content.style.overflow = 'auto';
-      content.innerText = 'Impact Particles: initializing...';
-
-      overlay.appendChild(content);
-
-      document.body.appendChild(overlay);
-      this.debugOverlay = overlay;
-      this.debugContent = content;
-
-      // Add a small copy button so the user can copy diagnostics easily
-      try {
-        const btn = document.createElement('button');
-        btn.id = 'impact-particle-debug-copy';
-        btn.innerText = 'Copier';
-        btn.title = 'Copier diagnostics des particules';
-        btn.style.marginTop = '6px';
-        btn.style.fontSize = '11px';
-        btn.style.padding = '4px 6px';
-        btn.style.cursor = 'pointer';
-        btn.style.pointerEvents = 'auto';
-        // Ensure the button doesn't block pointer events for underlying UI too long
-        btn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          try {
-            const text = this.buildDebugText();
-            const navClip = navigator as Navigator & {
-              clipboard?: { writeText?: (t: string) => Promise<void> };
-            };
-            if (navClip?.clipboard?.writeText) {
-              await navClip.clipboard.writeText(text);
-              btn.innerText = 'Copié';
-              setTimeout(() => {
-                btn.innerText = 'Copier';
-              }, 1200);
-            } else {
-              // Fallback: select debug content text
-              const range = document.createRange();
-              const nodeToSelect = (this.debugContent || this.debugOverlay) as Node;
-              range.selectNodeContents(nodeToSelect);
-              const sel = window.getSelection();
-              if (sel) {
-                sel.removeAllRanges();
-                sel.addRange(range);
-              }
-            }
-          } catch (err) {
-            console.warn('Could not copy diagnostics:', err);
-          }
-        });
-        this.debugOverlay.appendChild(btn);
-      } catch (_e) {
-        // ignore
-      }
-
-      // Add force-visibility button
-      try {
-        const forceBtn = document.createElement('button');
-        forceBtn.id = 'impact-particle-debug-force';
-        forceBtn.innerText = 'Forcer visibilité';
-        forceBtn.title = 'Augmente temporairement la taille et émet plus de particules';
-        forceBtn.style.marginTop = '6px';
-        forceBtn.style.marginLeft = '6px';
-        forceBtn.style.fontSize = '11px';
-        forceBtn.style.padding = '4px 6px';
-        forceBtn.style.cursor = 'pointer';
-        forceBtn.style.pointerEvents = 'auto';
-        forceBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          try {
-            const lastPS = (globalThis as unknown as Record<string, unknown>)
-              .__lastImpactParticleSystem as ParticleSystem | undefined;
-            if (!lastPS) return;
-            // Temporarily make particles big and emit a burst
-            try {
-              // store old values
-              const oldMin = lastPS.minSize;
-              const oldMax = lastPS.maxSize;
-              lastPS.minSize = Math.max(0.5, oldMin || 0.5);
-              lastPS.maxSize = Math.max(1.0, oldMax || 1.0);
-              lastPS.manualEmitCount = Math.max(lastPS.manualEmitCount || 0, 200);
-              lastPS.start();
-              setTimeout(() => {
-                try {
-                  lastPS.minSize = oldMin;
-                  lastPS.maxSize = oldMax;
-                } catch (_err) {}
-                try {
-                  this.updateDebugOverlay();
-                } catch (_err) {}
-              }, 1500);
-              try {
-                this.updateDebugOverlay();
-              } catch (_err) {}
-            } catch (inner) {
-              console.warn('Force visibility failed:', inner);
-            }
-          } catch (_err) {
-            // ignore
-          }
-        });
-        this.debugOverlay.appendChild(forceBtn);
-      } catch (_e) {
-        // ignore
-      }
-
-      // Expose quick global function to force visibility for scripting
-      try {
-        (globalThis as unknown as Record<string, unknown>).forceShowLastImpact = async () => {
-          const lastPS = (globalThis as unknown as Record<string, unknown>)
-            .__lastImpactParticleSystem as ParticleSystem | undefined;
-          if (!lastPS) return false;
-          try {
-            const oldMin = lastPS.minSize;
-            const oldMax = lastPS.maxSize;
-            lastPS.minSize = Math.max(0.5, oldMin || 0.5);
-            lastPS.maxSize = Math.max(1.0, oldMax || 1.0);
-            lastPS.manualEmitCount = Math.max(lastPS.manualEmitCount || 0, 200);
-            lastPS.start();
-            setTimeout(() => {
-              try {
-                lastPS.minSize = oldMin;
-                lastPS.maxSize = oldMax;
-              } catch (_e) {}
-            }, 1500);
-            try {
-              (globalThis as unknown as Record<string, unknown>).__lastImpactParticleSystem =
-                lastPS as unknown as unknown;
-            } catch (_e) {}
-            return true;
-          } catch (_e) {
-            return false;
-          }
-        };
-      } catch (_e) {
-        // ignore
-      }
-    } catch (_e) {
-      // ignore
-    }
-  }
-
-  private updateDebugOverlay(): void {
-    if (!ImpactParticleSystem.OVERLAY_ENABLED) return;
-    try {
-      if (!this.debugOverlay) return;
-      const sceneCount = (this.scene as unknown as { particleSystems?: unknown[] }).particleSystems
-        ?.length
-        ? (this.scene as unknown as { particleSystems?: unknown[] }).particleSystems?.length
-        : 0;
-
-      this.debugOverlay.innerHTML = `
-<div><strong>Impact Particles</strong></div>
-<div>Active: ${this.activeParticleSystems.size}</div>
-<div>Pool: ${this.particlePool.length}</div>
-<div>Scene systems: ${sceneCount}</div>
-<div>Timers: ${this.particleTimers.size}</div>
-<div>Last manualEmitCount: ${this.lastManualEmitCount}</div>
-<div>Last system ts: ${this.lastSystemTimestamp || 'n/a'}</div>
-<div>Last system diag: ${
-        this.lastSystemDiagnostics ? JSON.stringify(this.lastSystemDiagnostics) : 'n/a'
-      }</div>
-`;
-      // Append runtime info about the actual last particle system if available
-      try {
-        const lastPS = (globalThis as unknown as Record<string, unknown>)
-          .__lastImpactParticleSystem as ParticleSystem | undefined;
-        if (lastPS) {
-          const internalCount = (lastPS as unknown as { _particles?: unknown[] })._particles
-            ? (lastPS as unknown as { _particles: unknown[] })._particles.length
-            : 'n/a';
-          const runtime = {
-            capacity: typeof lastPS.getCapacity === 'function' ? lastPS.getCapacity() : 'n/a',
-            internalParticles: internalCount,
-            emitterPresent: !!lastPS.emitter,
-            isStarted: typeof lastPS.isStarted === 'function' ? lastPS.isStarted() : 'n/a',
-            isStopped: (lastPS as unknown as { _stopped?: boolean })._stopped === true,
-            debugStopCalls:
-              (lastPS as unknown as { __debugStopCalls?: number }).__debugStopCalls || 0,
-            lastStopAt:
-              (lastPS as unknown as { __lastStopAt?: number | null }).__lastStopAt || null,
-            lastStopStack:
-              (lastPS as unknown as { __lastStopStack?: string | null }).__lastStopStack || null
-                ? String((lastPS as unknown as { __lastStopStack?: string | null }).__lastStopStack)
-                    .split('\n')
-                    .slice(0, 3)
-                    .join(' | ')
-                : null,
-          };
-          this.debugOverlay.innerHTML += `
-<div><strong>Runtime last system</strong></div>
-<div>capacity: ${runtime.capacity}</div>
-<div>internalParticles: ${runtime.internalParticles}</div>
-<div>emitterPresent: ${runtime.emitterPresent}</div>
-<div>isStarted: ${runtime.isStarted}</div>
-<div>isStopped: ${runtime.isStopped}</div>
-<div>debugStopCalls: ${runtime.debugStopCalls}</div>
-<div>lastStopAt: ${runtime.lastStopAt}</div>
-<div>lastStopStack: ${runtime.lastStopStack}</div>
-`;
-        }
-      } catch (_e) {
-        // ignore
-      }
-    } catch (_e) {
-      // ignore
-    }
-  }
-
+  private createDebugOverlay(): void {}
+  private updateDebugOverlay(): void {}
   private buildDebugText(): string {
-    if (!ImpactParticleSystem.OVERLAY_ENABLED) return '{}';
-    const sceneCount = (this.scene as unknown as { particleSystems?: unknown[] }).particleSystems
-      ?.length
-      ? (this.scene as unknown as { particleSystems?: unknown[] }).particleSystems?.length
-      : 0;
-
-    const diag = {
-      active: this.activeParticleSystems.size,
-      pool: this.particlePool.length,
-      sceneSystems: sceneCount,
-      timers: this.particleTimers.size,
-      timerIds: Array.from(this.particleTimers.keys()),
-      lastManualEmitCount: this.lastManualEmitCount,
-      lastSystemTimestamp: this.lastSystemTimestamp,
-      lastSystemDiagnostics: this.lastSystemDiagnostics,
-      lastCreateCallTimestamp: this.lastCreateCallTimestamp,
-      lastCreateCallInfo: this.lastCreateCallInfo,
-      lastSystemRuntime: (() => {
-        try {
-          const lastPS = (globalThis as unknown as Record<string, unknown>)
-            .__lastImpactParticleSystem as ParticleSystem | undefined;
-          if (!lastPS) return null;
-          return {
-            capacity: typeof lastPS.getCapacity === 'function' ? lastPS.getCapacity() : null,
-            internalParticles: (lastPS as unknown as { _particles?: unknown[] })._particles
-              ? (lastPS as unknown as { _particles: unknown[] })._particles.length
-              : null,
-            emitterPresent: !!lastPS.emitter,
-            isStarted: typeof lastPS.isStarted === 'function' ? lastPS.isStarted() : null,
-            isStopped: (lastPS as unknown as { _stopped?: boolean })._stopped === true,
-            debugStopCalls:
-              (lastPS as unknown as { __debugStopCalls?: number }).__debugStopCalls || 0,
-            lastStopAt:
-              (lastPS as unknown as { __lastStopAt?: number | null }).__lastStopAt || null,
-          };
-        } catch (_e) {
-          return null;
-        }
-      })(),
-    };
-
-    return JSON.stringify(diag, null, 2);
+    return '{}';
   }
 }
