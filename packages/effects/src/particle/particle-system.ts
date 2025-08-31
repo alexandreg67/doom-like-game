@@ -35,6 +35,19 @@ export class ImpactParticleSystem {
     // Debug stop logger disabled in production
   }
 
+  /**
+   * Safely start a particle system with type guard
+   */
+  private safeStartParticleSystem(ps: ParticleSystem): void {
+    try {
+      if ('start' in ps && typeof ps.start === 'function') {
+        ps.start();
+      }
+    } catch (error) {
+      console.warn('[PARTICLE_SYSTEM] Failed to start particle system:', error);
+    }
+  }
+
   constructor(scene: Scene) {
     this.scene = scene;
     // No-op: Babylon.js does not expose a public `particlesEnabled` switch on Scene.
@@ -55,7 +68,7 @@ export class ImpactParticleSystem {
   private startWithBurst(ps: ParticleSystem, count: number): void {
     try {
       // Always (re)start before setting manual count to ensure the system is ticking
-      if ((ps as { start?: () => void }).start) (ps as { start?: () => void }).start?.();
+      this.safeStartParticleSystem(ps);
       // Try immediate manual burst
       ps.manualEmitCount = Math.max(count, 1);
       this.lastManualEmitCount = ps.manualEmitCount;
@@ -465,11 +478,8 @@ export class ImpactParticleSystem {
         particleSystem.emitter = new Vector3(0, 1, 0);
         particleSystem.minEmitBox = new Vector3(-0.1, -0.1, -0.1);
         particleSystem.maxEmitBox = new Vector3(0.1, 0.1, 0.1);
-        try {
-          (
-            this.scene as unknown as { addParticleSystem?: (ps: ParticleSystem) => void }
-          ).addParticleSystem?.(particleSystem);
-        } catch (_e) {}
+        // NOTE: Removed unsafe cast and call to private/internal Babylon.js API.
+        // Particle systems are automatically managed by the scene when created.
         this.wrapStopLogger(particleSystem);
 
         console.log(
@@ -511,11 +521,8 @@ export class ImpactParticleSystem {
             particleSystem.name
           );
           this.wrapStopLogger(particleSystem);
-          try {
-            (
-              this.scene as unknown as { addParticleSystem?: (ps: ParticleSystem) => void }
-            ).addParticleSystem?.(particleSystem);
-          } catch (_e) {}
+          // NOTE: Removed unsafe cast and call to private/internal Babylon.js API.
+          // Particle systems are automatically managed by the scene when created.
 
           return particleSystem;
         } catch (error) {
@@ -549,11 +556,8 @@ export class ImpactParticleSystem {
       particleSystem.emitter = new Vector3(0, 1, 0);
       particleSystem.minEmitBox = new Vector3(-0.1, -0.1, -0.1);
       particleSystem.maxEmitBox = new Vector3(0.1, 0.1, 0.1);
-      try {
-        (
-          this.scene as unknown as { addParticleSystem?: (ps: ParticleSystem) => void }
-        ).addParticleSystem?.(particleSystem);
-      } catch (_e) {}
+      // NOTE: Removed unsafe cast and call to private/internal Babylon.js API.
+      // Particle systems are automatically managed by the scene when created.
       this.wrapStopLogger(particleSystem);
 
       console.log(
@@ -817,7 +821,7 @@ export class ImpactParticleSystem {
   private calculateScatterDirection(normal: Vector3, _surfaceAngle: number): Vector3 {
     // Create scatter cone based on surface angle
     const baseDirection = normal.clone();
-    const _randomAngle = Math.random() * Math.PI * 0.5; // 90 degree cone
+    // Random angle for 90 degree cone
     const randomAxis = Vector3.Cross(normal, Vector3.Up()).normalize();
 
     // Rotate around random axis
@@ -938,12 +942,5 @@ export class ImpactParticleSystem {
     return 1000; // 1 second default emission time
   }
 
-  /**
-   * Create a small DOM overlay for debugging particle system state when console is not available
-   */
-  private createDebugOverlay(): void {}
-  private updateDebugOverlay(): void {}
-  private buildDebugText(): string {
-    return '{}';
-  }
+  // Debug overlay methods removed as they were not used
 }
