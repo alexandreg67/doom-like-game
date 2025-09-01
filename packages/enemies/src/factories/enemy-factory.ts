@@ -167,7 +167,7 @@ export class EnemyFactory {
     const transform = entity.components.get('transform') as Transform;
 
     if (!identityComponent || !stateComponent || !transform) {
-      console.error(`[ENEMY_FACTORY] Missing required components for enemy instance`);
+      console.error('[ENEMY_FACTORY] Missing required components for enemy instance');
       return null;
     }
 
@@ -275,7 +275,7 @@ export class EnemyFactory {
   public clearDefinitions(): void {
     this.enemyDefinitions.clear();
     this.entityIdCounter = 0;
-    console.log(`[ENEMY_FACTORY] Cleared all enemy definitions`);
+    console.log('[ENEMY_FACTORY] Cleared all enemy definitions');
   }
 
   /**
