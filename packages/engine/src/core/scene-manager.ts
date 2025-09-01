@@ -32,6 +32,11 @@ import {
 } from '../physics';
 import { Logger } from '../utils/logger';
 
+// Enemy system imports for Phase 3 integration  
+// TODO: Re-enable once @doom-like/enemies package is properly built
+// import type { Entity } from '@doom-like/game-logic';
+// import { EnemyRenderSystem, type EnemyRenderSystemConfig, type EnemyRenderMetrics } from '@doom-like/enemies';
+
 export interface RenderMetrics {
   frameTime: number;
   culledSectors: number;
@@ -44,6 +49,15 @@ export interface RenderMetrics {
   totalLines: number;
   lightingTime?: number;
   activeLights?: number;
+  
+  // Enemy rendering metrics (Phase 3)
+  enemyMetrics?: {
+    totalEnemies: number;
+    renderedEnemies: number;
+    culledEnemies: number;
+    animatedEnemies: number;
+    enemyRenderTime: number;
+  };
 }
 
 export class SceneManager {
@@ -62,6 +76,11 @@ export class SceneManager {
   private sectorLightingManager: SectorLightingManager | null = null;
   private fogManager: FogManager | null = null;
   private lightingDebugUI: LightingDebugUI | null = null;
+  
+  // Enemy rendering system (Phase 3)
+  // TODO: Re-enable once @doom-like/enemies package is properly built
+  // private enemyRenderSystem: EnemyRenderSystem | null = null;
+  // private enemyEntities: Entity[] = []; // Temporary storage for enemy entities
 
   /**
    * Physics configuration for the game
@@ -138,6 +157,10 @@ export class SceneManager {
 
     // Initialize new lighting system
     this.initializeLightingSystem(scene);
+    
+    // Initialize enemy rendering system (Phase 3)
+    // TODO: Re-enable once @doom-like/enemies package is properly built
+    // this.initializeEnemyRenderingSystem(scene);
 
     // Load the demo level
     await this.loadDemoLevel(scene);
@@ -705,6 +728,22 @@ export class SceneManager {
     const frameEndTime = performance.now();
     const frameTime = frameEndTime - frameStartTime;
 
+    // Collect enemy metrics if available
+    // TODO: Re-enable once @doom-like/enemies package is properly built
+    /*
+    let enemyMetrics = undefined;
+    if (this.enemyRenderSystem) {
+      const enemyStats = this.enemyRenderSystem.getMetrics();
+      enemyMetrics = {
+        totalEnemies: enemyStats.totalEnemies,
+        renderedEnemies: enemyStats.renderedEnemies,
+        culledEnemies: enemyStats.culledEnemies,
+        animatedEnemies: enemyStats.animatedEnemies,
+        enemyRenderTime: enemyStats.frameTime,
+      };
+    }
+    */
+
     const metrics: RenderMetrics = {
       frameTime,
       culledSectors: Math.max(0, culledSectors),
@@ -715,6 +754,8 @@ export class SceneManager {
       totalGeometry: totalSectors + totalLines,
       totalSectors,
       totalLines,
+      // TODO: Re-enable once @doom-like/enemies package is properly built
+      // ...(enemyMetrics && { enemyMetrics }),
     };
 
     this.lastMetrics = metrics;
@@ -769,6 +810,15 @@ export class SceneManager {
         )}%`
       );
     }
+
+    // Log enemy metrics if available
+    if (metrics.enemyMetrics) {
+      console.log('  Enemy Rendering:');
+      console.log(`    Enemies: ${metrics.enemyMetrics.renderedEnemies} / ${metrics.enemyMetrics.totalEnemies} rendered`);
+      console.log(`    Culled enemies: ${metrics.enemyMetrics.culledEnemies}`);
+      console.log(`    Animated enemies: ${metrics.enemyMetrics.animatedEnemies}`);
+      console.log(`    Enemy render time: ${metrics.enemyMetrics.enemyRenderTime.toFixed(3)}ms`);
+    }
   }
 
   public render(): void {
@@ -776,6 +826,66 @@ export class SceneManager {
       this.currentScene.render();
     }
   }
+
+  /**
+   * Updates all systems before rendering (Phase 3 addition)
+   */
+  public updateSystems(deltaTime: number): void {
+    if (!this.currentScene || !this.camera) return;
+
+    // Update enemy rendering system
+    // TODO: Re-enable once @doom-like/enemies package is properly built
+    // if (this.enemyRenderSystem && this.enemyEntities.length > 0) {
+    //   this.enemyRenderSystem.update(this.enemyEntities, deltaTime);
+    // }
+
+    // Update lighting system
+    this.updateLighting(deltaTime, this.camera.position);
+  }
+
+  /**
+   * Enemy entity management methods (Phase 3)
+   * TODO: Re-enable once @doom-like/enemies package is properly built
+   */
+  /*
+  public setEnemyEntities(entities: Entity[]): void {
+    this.enemyEntities = entities;
+    Logger.debug(`[ENGINE] Updated enemy entities count: ${entities.length}`);
+  }
+
+  public addEnemyEntity(entity: Entity): void {
+    if (!this.enemyEntities.find(e => e.id === entity.id)) {
+      this.enemyEntities.push(entity);
+      Logger.debug(`[ENGINE] Added enemy entity: ${entity.id}`);
+    }
+  }
+
+  public removeEnemyEntity(entityId: string): void {
+    const initialCount = this.enemyEntities.length;
+    this.enemyEntities = this.enemyEntities.filter(e => e.id !== entityId);
+    
+    if (this.enemyEntities.length < initialCount) {
+      Logger.debug(`[ENGINE] Removed enemy entity: ${entityId}`);
+    }
+  }
+  */
+
+  /**
+   * Gets enemy rendering system metrics (Phase 3)
+   * TODO: Re-enable once @doom-like/enemies package is properly built
+   */
+  /*
+  public getEnemyRenderingMetrics(): EnemyRenderMetrics | null {
+    return this.enemyRenderSystem?.getMetrics() || null;
+  }
+
+  public configureEnemyRendering(config: Partial<EnemyRenderSystemConfig>): void {
+    if (this.enemyRenderSystem) {
+      this.enemyRenderSystem.updateConfig(config);
+      Logger.info('[ENGINE] Enemy rendering configuration updated');
+    }
+  }
+  */
 
   public getCurrentScene(): Scene {
     if (!this.currentScene) {
@@ -809,6 +919,39 @@ export class SceneManager {
 
     Logger.info('[ENGINE] Advanced lighting system initialized');
   }
+
+  /**
+   * Initializes the enemy rendering system (Phase 3)
+   * TODO: Re-enable once @doom-like/enemies package is properly built
+   */
+  /*
+  private initializeEnemyRenderingSystem(scene: Scene): void {
+    Logger.info('[ENGINE] Initializing enemy rendering system (Phase 3)...');
+
+    if (!this.camera) {
+      Logger.warn('[ENGINE] Cannot initialize enemy rendering: no camera available');
+      return;
+    }
+
+    try {
+      // Create enemy render system with default configuration
+      const renderConfig: Partial<EnemyRenderSystemConfig> = {
+        maxRenderedEnemies: 20,
+        enableLOD: true,
+        enableAnimations: true,
+        enableDebug: false,
+        optimizationLevel: 'medium',
+      };
+
+      this.enemyRenderSystem = new EnemyRenderSystem(scene, this.camera, renderConfig);
+      
+      Logger.info('[ENGINE] Enemy rendering system initialized successfully');
+    } catch (error) {
+      Logger.error('[ENGINE] Failed to initialize enemy rendering system:', error);
+      this.enemyRenderSystem = null;
+    }
+  }
+  */
 
   /**
    * Loads default lighting configuration
@@ -1268,6 +1411,12 @@ export class SceneManager {
     // Dispose physics system
     this.physicsController?.dispose();
     this.physicsController = null;
+
+    // Dispose enemy rendering system (Phase 3)
+    // TODO: Re-enable once @doom-like/enemies package is properly built
+    // this.enemyRenderSystem?.dispose();
+    // this.enemyRenderSystem = null;
+    // this.enemyEntities = [];
 
     // Dispose lighting system
     this.lightingDebugUI?.hide();

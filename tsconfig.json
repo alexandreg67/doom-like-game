@@ -25,7 +25,9 @@
       "@doom-like/effects": ["./packages/effects/src"],
       "@doom-like/effects/*": ["./packages/effects/src/*"],
       "@doom-like/weapons": ["./packages/weapons/src"],
-      "@doom-like/weapons/*": ["./packages/weapons/src/*"]
+      "@doom-like/weapons/*": ["./packages/weapons/src/*"],
+      "@doom-like/enemies": ["./packages/enemies/src"],
+      "@doom-like/enemies/*": ["./packages/enemies/src/*"]
     },
     "noEmit": true,
     "exactOptionalPropertyTypes": true,
@@ -42,6 +44,7 @@
     { "path": "./packages/effects" },
     { "path": "./packages/map-editor" },
     { "path": "./packages/assets" },
+    { "path": "./packages/enemies" },
     { "path": "./apps/web" }
   ]
 }
