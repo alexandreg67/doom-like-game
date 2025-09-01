@@ -20,6 +20,9 @@ export interface EnemyAIComponent extends Component {
   /** Time when target was last seen */
   lastSeenTime: number;
 
+  /** Time when last attack was performed */
+  lastAttackTime: number;
+
   /** Whether enemy currently has line of sight to target */
   hasLineOfSight: boolean;
 
@@ -69,6 +72,7 @@ export function createEnemyAIComponent(
     targetId: null,
     lastKnownTargetPosition: null,
     lastSeenTime: 0,
+    lastAttackTime: 0,
     hasLineOfSight: false,
     distanceToTarget: Number.MAX_VALUE,
     isTargetInAggroRange: false,
@@ -198,6 +202,14 @@ function setBehaviorFlag(
   aiComponent.behaviorFlags[flag] = value;
 }
 
+/**
+ * Record that an attack was just performed
+ * Updates the lastAttackTime to enforce proper cooldown
+ */
+function recordAttack(aiComponent: EnemyAIComponent): void {
+  aiComponent.lastAttackTime = performance.now();
+}
+
 function hasBehaviorFlag(
   aiComponent: EnemyAIComponent,
   flag: keyof EnemyAIComponent['behaviorFlags']
@@ -210,10 +222,16 @@ function getAttackTiming(aiComponent: EnemyAIComponent): {
   timeUntilNextAttack: number;
 } {
   const now = performance.now();
+  const timeSinceLastAttack = (now - aiComponent.lastAttackTime) / 1000;
   const timeSinceLastSeen = (now - aiComponent.lastSeenTime) / 1000;
+
+  // Can only attack if cooldown has passed AND target was recently seen
+  const cooldownPassed = timeSinceLastAttack >= aiComponent.params.attackCooldown;
+  const targetRecentlySeen = timeSinceLastSeen < 0.5;
+
   return {
-    shouldStartAttack: canAttack(aiComponent) && timeSinceLastSeen < 0.5,
-    timeUntilNextAttack: Math.max(0, aiComponent.params.attackCooldown - timeSinceLastSeen),
+    shouldStartAttack: canAttack(aiComponent) && cooldownPassed && targetRecentlySeen,
+    timeUntilNextAttack: Math.max(0, aiComponent.params.attackCooldown - timeSinceLastAttack),
   };
 }
 
@@ -228,4 +246,5 @@ export const EnemyAIUtils = {
   setBehaviorFlag,
   hasBehaviorFlag,
   getAttackTiming,
+  recordAttack,
 } as const;

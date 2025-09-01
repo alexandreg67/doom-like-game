@@ -168,8 +168,8 @@ export class EnemyCombatSystem implements System {
 
     this.damageEvents.push(damageEvent);
 
-    // Update last attack time for AI system
-    aiComponent.lastSeenTime = currentTime;
+    // Record attack time for proper cooldown enforcement
+    EnemyAIUtils.recordAttack(aiComponent);
 
     console.log(`[COMBAT] ${attackerIdentity.instanceId} dealt ${damage} melee damage to player`);
   }
