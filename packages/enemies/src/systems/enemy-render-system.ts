@@ -168,7 +168,7 @@ export class EnemyRenderSystem implements System {
       await this.ensureEnemyMesh(renderComp, identityComp, transform);
 
       // Update sprite direction
-      this.updateSpriteDirection(renderComp, transform, cameraPosition);
+      this.updateSpriteDirection(renderComp, transform, cameraPosition, identityComp);
 
       // Update animation
       if (this.config.enableAnimations) {
@@ -238,7 +238,8 @@ export class EnemyRenderSystem implements System {
         spriteSheet,
         EnemyState.IDLE,
         renderComp.currentDirection,
-        0
+        0,
+        identityComp.type
       );
 
       if (initialTexture) {
@@ -353,7 +354,8 @@ export class EnemyRenderSystem implements System {
   private updateSpriteDirection(
     renderComp: EnemyRenderComponent,
     transform: Transform,
-    cameraPosition: Vector3
+    cameraPosition: Vector3,
+    identityComp?: EnemyIdentityComponent
   ): void {
     if (renderComp.billboardMode === BillboardMode.ALL) {
       // Full billboard - no direction needed
@@ -372,7 +374,7 @@ export class EnemyRenderSystem implements System {
       renderComp.renderStats.directionChanges++;
 
       // Update texture for new direction
-      this.updateSpriteTexture(renderComp);
+      this.updateSpriteTexture(renderComp, identityComp);
     }
   }
 
@@ -394,7 +396,7 @@ export class EnemyRenderSystem implements System {
     // Update animation timing
     if (updateAnimation(renderComp.animationState, deltaTime)) {
       renderComp.renderStats.animationFrameChanges++;
-      this.updateSpriteTexture(renderComp);
+      this.updateSpriteTexture(renderComp, identityComp);
     }
   }
 
@@ -429,7 +431,10 @@ export class EnemyRenderSystem implements System {
   /**
    * Updates sprite texture based on current state/direction/frame
    */
-  private updateSpriteTexture(renderComp: EnemyRenderComponent): void {
+  private updateSpriteTexture(
+    renderComp: EnemyRenderComponent,
+    identityComp?: EnemyIdentityComponent
+  ): void {
     if (!renderComp.spriteSheet || !renderComp.material || !renderComp.lastFSMState) {
       return;
     }
@@ -438,7 +443,8 @@ export class EnemyRenderSystem implements System {
       renderComp.spriteSheet,
       renderComp.lastFSMState,
       renderComp.currentDirection,
-      renderComp.animationState.currentFrame
+      renderComp.animationState.currentFrame,
+      identityComp?.type
     );
 
     if (texture && texture !== renderComp.material.diffuseTexture) {

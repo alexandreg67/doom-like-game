@@ -58,6 +58,7 @@ export class EnemySpriteManager {
   private scene: Scene;
   private cache: SpriteCache;
   private spriteConfigs: Map<EnemyType, SpriteConfig>;
+  private stateToSequenceMappings: Map<EnemyType, Partial<Record<EnemyState, string>>>;
   private readonly cacheTimeout = 5 * 60 * 1000; // 5 minutes
 
   constructor(scene: Scene) {
@@ -68,6 +69,7 @@ export class EnemySpriteManager {
       lastAccessed: new Map(),
     };
     this.spriteConfigs = new Map();
+    this.stateToSequenceMappings = new Map();
 
     // Initialize default sprite configurations
     this.initializeDefaultConfigs();
@@ -327,9 +329,10 @@ export class EnemySpriteManager {
     spriteSheet: SpriteSheet,
     state: EnemyState,
     direction: SpriteDirection,
-    frameIndex = 0
+    frameIndex = 0,
+    enemyType?: EnemyType
   ): Texture | null {
-    const sequenceName = this.mapStateToSequence(state);
+    const sequenceName = this.mapStateToSequence(state, enemyType);
     const frameKey = `${sequenceName}_${direction}`;
 
     const frames = spriteSheet.frames.get(frameKey);
@@ -344,25 +347,47 @@ export class EnemySpriteManager {
   }
 
   /**
-   * Maps enemy FSM state to sprite sequence name
+   * Default state-to-sequence mapping configuration
+   * Can be overridden per enemy type for customization
    */
-  private mapStateToSequence(state: EnemyState): string {
-    switch (state) {
-      case EnemyState.IDLE:
-        return 'idle';
-      case EnemyState.SEEKING:
-        return 'walk';
-      case EnemyState.CHASE:
-        return 'run';
-      case EnemyState.ATTACK:
-        return 'attack';
-      case EnemyState.HURT:
-        return 'pain';
-      case EnemyState.DEATH:
-        return 'death';
-      default:
-        return 'idle';
+  private static readonly STATE_TO_SEQUENCE_MAP: Record<EnemyState, string> = {
+    [EnemyState.IDLE]: 'idle',
+    [EnemyState.SEEKING]: 'walk',
+    [EnemyState.CHASE]: 'run',
+    [EnemyState.ATTACK]: 'attack',
+    [EnemyState.HURT]: 'pain',
+    [EnemyState.DEATH]: 'death',
+  } as const;
+
+  /**
+   * Maps enemy FSM state to sprite sequence name
+   * Uses configurable mapping for flexibility
+   */
+  private mapStateToSequence(state: EnemyState, enemyType?: EnemyType): string {
+    // Check for enemy-type-specific mapping first
+    if (enemyType) {
+      const customMapping = this.stateToSequenceMappings.get(enemyType);
+      const customSequence = customMapping?.[state];
+      if (customSequence) {
+        return customSequence;
+      }
     }
+
+    // Fall back to default mapping
+    return EnemySpriteManager.STATE_TO_SEQUENCE_MAP[state] || 'idle';
+  }
+
+  /**
+   * Configures custom state-to-sequence mapping for a specific enemy type
+   * @param enemyType The enemy type to configure
+   * @param mapping Partial mapping of states to sequence names (overrides defaults)
+   */
+  setStateToSequenceMapping(
+    enemyType: EnemyType,
+    mapping: Partial<Record<EnemyState, string>>
+  ): void {
+    this.stateToSequenceMappings.set(enemyType, mapping);
+    console.log(`[SPRITE_MANAGER] Custom mapping configured for ${enemyType}:`, mapping);
   }
 
   /**
@@ -372,7 +397,7 @@ export class EnemySpriteManager {
     const config = this.spriteConfigs.get(enemyType);
     if (!config) return null;
 
-    const sequenceName = this.mapStateToSequence(state);
+    const sequenceName = this.mapStateToSequence(state, enemyType);
     return config.sequences[sequenceName] || null;
   }
 
@@ -389,7 +414,7 @@ export class EnemySpriteManager {
       frameTimer: 0,
       loop: config?.loop ?? true,
       isPlaying: true,
-      sequenceName: this.mapStateToSequence(state),
+      sequenceName: this.mapStateToSequence(state, enemyType),
     };
   }
 
@@ -469,6 +494,7 @@ export class EnemySpriteManager {
     this.cache.spriteSheets.clear();
     this.cache.lastAccessed.clear();
     this.spriteConfigs.clear();
+    this.stateToSequenceMappings.clear();
 
     console.log('[SPRITE_MANAGER] EnemySpriteManager disposed');
   }
