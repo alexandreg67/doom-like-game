@@ -95,23 +95,21 @@ export class EnemyFactory {
       entity.components.set('transform', transform);
 
       // Add EnemyIdentity component
-      const identityOverrides = {
-        ...(spawnConfig.aiOverrides !== undefined ? { aiOverrides: spawnConfig.aiOverrides } : {}),
-        ...(spawnConfig.statsOverrides !== undefined
-          ? { statsOverrides: spawnConfig.statsOverrides }
-          : {}),
-      } as
-        | {
-            aiOverrides?: Partial<EnemyDefinition['ai']>;
-            statsOverrides?: Partial<EnemyDefinition['stats']>;
-          }
-        | undefined;
+      const hasAiOverrides = spawnConfig.aiOverrides !== undefined;
+      const hasStatsOverrides = spawnConfig.statsOverrides !== undefined;
+      const identityOverrides =
+        hasAiOverrides || hasStatsOverrides
+          ? {
+              ...(hasAiOverrides ? { aiOverrides: spawnConfig.aiOverrides } : {}),
+              ...(hasStatsOverrides ? { statsOverrides: spawnConfig.statsOverrides } : {}),
+            }
+          : undefined;
 
       const identityComponent = createEnemyIdentityComponent(
         entityId,
         spawnConfig.type,
         definition,
-        Object.keys(identityOverrides).length ? identityOverrides : undefined
+        identityOverrides
       );
       entity.components.set('enemyIdentity', identityComponent);
 

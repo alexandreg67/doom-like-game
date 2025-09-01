@@ -126,14 +126,14 @@ function normalizeAngle(angle: number): number {
 }
 function setTarget(
   movementComponent: EnemyMovementComponent,
-  targetPosition: Vector3 | null
+  targetPosition: Vector3 | null,
+  currentPosition?: Vector3
 ): void {
   movementComponent.targetPosition = targetPosition ? targetPosition.clone() : null;
   movementComponent.isMoving = targetPosition !== null;
 
-  if (targetPosition) {
-    const currentPos = new Vector3(0, 0, 0);
-    const direction = targetPosition.subtract(currentPos);
+  if (targetPosition && currentPosition) {
+    const direction = targetPosition.subtract(currentPosition);
     if (direction.length() > 0.01) {
       movementComponent.targetFacingAngle = Math.atan2(direction.x, direction.z);
     }
