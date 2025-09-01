@@ -1,0 +1,32 @@
+{
+  "name": "@doom-like/enemies",
+  "version": "0.1.0",
+  "description": "Enemy system for DOOM-like game with ECS architecture",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "lint": "biome check src",
+    "format": "biome format --write src"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^7.0.0",
+    "@doom-like/game-logic": "workspace:*",
+    "@doom-like/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^1.6.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/ui": "^1.6.0",
+    "happy-dom": "^15.0.0"
+  },
+  "keywords": ["game", "enemies", "ai", "ecs", "doom", "typescript"],
+  "author": "DOOM-like Game Team",
+  "license": "MIT"
+}
