@@ -8,13 +8,7 @@ import {
   createEnemyStateComponent,
   createEnemyStatsComponent,
 } from '../components';
-import type {
-  EnemyAIComponent,
-  EnemyIdentityComponent,
-  EnemyMovementComponent,
-  EnemyStateComponent,
-  EnemyStatsComponent,
-} from '../components';
+import type { EnemyIdentityComponent, EnemyStateComponent } from '../components';
 import type { EnemyDefinition, EnemyInstance, EnemySpawnConfig, EnemyType } from '../types';
 import { EnemyState } from '../types';
 

@@ -1,5 +1,4 @@
-import type { Vector2, Vector3 } from '@babylonjs/core';
-import type { Component, Entity } from '@doom-like/game-logic';
+import type { Vector3 } from '@babylonjs/core';
 
 /**
  * Available enemy types in the game
