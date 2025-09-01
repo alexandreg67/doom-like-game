@@ -83,11 +83,9 @@ export function createEnemyAIComponent(
 
 /**
  * Utility functions for AI component management
+ * Converted from static-only class to module functions to satisfy lint rules
+ * while preserving the EnemyAIUtils API via an exported object.
  */
-// Utility helpers for AI component management
-// Converted from static-only class to module functions to satisfy lint rules
-// while preserving the EnemyAIUtils API via an exported object.
-export class EnemyAIUtils_DEPRECATED {}
 function setTarget(
   aiComponent: EnemyAIComponent,
   targetId: string | null,

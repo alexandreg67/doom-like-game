@@ -91,9 +91,8 @@ export function createEnemyMovementComponent(
 
 /**
  * Utility functions for enemy movement management
+ * Movement helpers converted from static-only class to module functions
  */
-// Movement helpers converted from static-only class to module functions
-export class EnemyMovementUtils_DEPRECATED {}
 // Internal helpers
 function decelerateToStop(movementComponent: EnemyMovementComponent, deltaTime: number): void {
   const currentSpeed = movementComponent.velocity.length();
@@ -275,7 +274,7 @@ function setMovementParams(
 function stop(movementComponent: EnemyMovementComponent): void {
   movementComponent.isMoving = false;
   movementComponent.targetPosition = null;
-  movementComponent.velocity = Vector3.Zero();
+  movementComponent.velocity = new Vector3(0, 0, 0);
   movementComponent.isStuck = false;
   movementComponent.stuckTime = 0;
   movementComponent.unstuckTime = 0;
