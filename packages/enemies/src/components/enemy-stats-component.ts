@@ -50,7 +50,9 @@ export function createEnemyStatsComponent(
   return {
     id: 'enemyStats',
     maxHealth: stats.maxHealth,
-    currentHealth: stats.currentHealth || stats.maxHealth,
+    // Use explicit currentHealth override, or default to maxHealth
+    currentHealth:
+      overrides?.currentHealth !== undefined ? overrides.currentHealth : stats.maxHealth,
     attackDamage: stats.attackDamage,
     radius: stats.radius,
     height: stats.height,

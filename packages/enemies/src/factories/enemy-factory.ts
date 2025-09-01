@@ -131,10 +131,11 @@ export class EnemyFactory {
       entity.components.set('enemyAI', aiComponent);
 
       // Add EnemyMovement component
+      // Use AI parameters from the aiComponent (which has overrides applied)
       const movementComponent = createEnemyMovementComponent(
         spawnConfig.position,
-        definition.ai.movementSpeed,
-        definition.ai.turnSpeed
+        aiComponent.params.movementSpeed,
+        aiComponent.params.turnSpeed
       );
       // Set initial facing angle if specified
       if (spawnConfig.facingAngle !== undefined) {
