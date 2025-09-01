@@ -182,7 +182,7 @@ export class EnemyMovementSystem implements System {
    * In a real game, this would integrate with the physics system
    */
   private checkCollisionAndBounce(
-    entity: Entity,
+    _entity: Entity,
     fromPosition: Vector3,
     toPosition: Vector3,
     movementComponent: EnemyMovementComponent
@@ -190,8 +190,9 @@ export class EnemyMovementSystem implements System {
     // Placeholder collision system
     // Real implementation would check against map geometry
 
-    const stats = entity.components.get('enemyStats') as { radius?: number } | undefined;
-    const radius = stats?.radius || 0.4;
+    // TODO: Use a proper collision/physics component for radius instead of hardcoded value
+    // The enemyStats component doesn't actually have a radius property
+    const radius = 0.4; // Default enemy collision radius
 
     // Simple boundary checks (example: world bounds)
     const worldSize = 50;

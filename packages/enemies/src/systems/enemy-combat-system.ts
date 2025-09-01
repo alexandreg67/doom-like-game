@@ -33,6 +33,7 @@ export interface EnemyDamageEvent {
  */
 export class EnemyCombatSystem implements System {
   private playerEntityId: string | null = null;
+  private cachedPlayerEntity: Entity | null = null;
   private damageEvents: EnemyDamageEvent[] = [];
 
   /**
@@ -40,6 +41,7 @@ export class EnemyCombatSystem implements System {
    */
   setPlayer(playerEntityId: string): void {
     this.playerEntityId = playerEntityId;
+    this.cachedPlayerEntity = null; // Invalidate cache
   }
 
   /**
@@ -51,10 +53,12 @@ export class EnemyCombatSystem implements System {
     // Clear old damage events
     this.damageEvents = [];
 
-    // Find player entity
-    const playerEntity = this.playerEntityId
-      ? entities.find((e) => e.id === this.playerEntityId)
-      : null;
+    // Find player entity (with caching for performance)
+    let playerEntity = this.cachedPlayerEntity;
+    if (!playerEntity && this.playerEntityId) {
+      playerEntity = entities.find((e) => e.id === this.playerEntityId) || null;
+      this.cachedPlayerEntity = playerEntity;
+    }
 
     // Update all enemies
     for (const entity of entities) {

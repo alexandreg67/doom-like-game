@@ -15,12 +15,14 @@ import { EnemyState } from '../types';
  */
 export class EnemyAISystem implements System {
   private playerEntityId: string | null = null;
+  private cachedPlayerEntity: Entity | null = null;
 
   /**
    * Set the player entity ID for enemy targeting
    */
   setPlayer(playerEntityId: string): void {
     this.playerEntityId = playerEntityId;
+    this.cachedPlayerEntity = null; // Invalidate cache
   }
 
   /**
@@ -29,10 +31,12 @@ export class EnemyAISystem implements System {
   update(entities: Entity[], deltaTime: number): void {
     const currentTime = performance.now();
 
-    // Find player entity
-    const playerEntity = this.playerEntityId
-      ? entities.find((e) => e.id === this.playerEntityId)
-      : null;
+    // Find player entity (with caching for performance)
+    let playerEntity = this.cachedPlayerEntity;
+    if (!playerEntity && this.playerEntityId) {
+      playerEntity = entities.find((e) => e.id === this.playerEntityId) || null;
+      this.cachedPlayerEntity = playerEntity;
+    }
 
     if (!playerEntity) return;
 
