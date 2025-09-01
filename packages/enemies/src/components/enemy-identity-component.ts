@@ -46,6 +46,6 @@ export function createEnemyIdentityComponent(
     definition,
     spawnTime: Date.now(),
     isAlive: true,
-    spawnOverrides: overrides,
+    ...(overrides !== undefined ? { spawnOverrides: overrides } : {}),
   };
 }

@@ -1,5 +1,5 @@
 import type { Component } from '@doom-like/game-logic';
-import type { EnemyState } from '../types';
+import { EnemyState } from '../types';
 
 /**
  * EnemyState component - manages FSM state for enemy AI
@@ -24,10 +24,10 @@ export interface EnemyStateComponent extends Component {
   stateChanged: boolean;
 
   /** Next scheduled state (for timed transitions) */
-  nextState?: EnemyState;
+  nextState?: EnemyState | undefined;
 
   /** Time until next state transition (if scheduled) */
-  nextStateTimer?: number;
+  nextStateTimer?: number | undefined;
 }
 
 /**

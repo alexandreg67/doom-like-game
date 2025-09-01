@@ -8,6 +8,13 @@ import {
   createEnemyStateComponent,
   createEnemyStatsComponent,
 } from '../components';
+import type {
+  EnemyAIComponent,
+  EnemyIdentityComponent,
+  EnemyMovementComponent,
+  EnemyStateComponent,
+  EnemyStatsComponent,
+} from '../components';
 import type { EnemyDefinition, EnemyInstance, EnemySpawnConfig, EnemyType } from '../types';
 import { EnemyState } from '../types';
 
@@ -88,14 +95,23 @@ export class EnemyFactory {
       entity.components.set('transform', transform);
 
       // Add EnemyIdentity component
+      const identityOverrides = {
+        ...(spawnConfig.aiOverrides !== undefined ? { aiOverrides: spawnConfig.aiOverrides } : {}),
+        ...(spawnConfig.statsOverrides !== undefined
+          ? { statsOverrides: spawnConfig.statsOverrides }
+          : {}),
+      } as
+        | {
+            aiOverrides?: Partial<EnemyDefinition['ai']>;
+            statsOverrides?: Partial<EnemyDefinition['stats']>;
+          }
+        | undefined;
+
       const identityComponent = createEnemyIdentityComponent(
         entityId,
         spawnConfig.type,
         definition,
-        {
-          aiOverrides: spawnConfig.aiOverrides,
-          statsOverrides: spawnConfig.statsOverrides,
-        }
+        Object.keys(identityOverrides).length ? identityOverrides : undefined
       );
       entity.components.set('enemyIdentity', identityComponent);
 
@@ -162,9 +178,11 @@ export class EnemyFactory {
    * Create an enemy instance data object (for serialization/networking)
    */
   public createEnemyInstance(entity: Entity): EnemyInstance | null {
-    const identityComponent = entity.components.get('enemyIdentity');
-    const stateComponent = entity.components.get('enemyState');
-    const transform = entity.components.get('transform') as Transform;
+    const identityComponent = entity.components.get('enemyIdentity') as
+      | EnemyIdentityComponent
+      | undefined;
+    const stateComponent = entity.components.get('enemyState') as EnemyStateComponent | undefined;
+    const transform = entity.components.get('transform') as Transform | undefined;
 
     if (!identityComponent || !stateComponent || !transform) {
       console.error('[ENEMY_FACTORY] Missing required components for enemy instance');
@@ -312,10 +330,12 @@ export function createEnemyOfType<T extends EnemyType>(
   const spawnConfig: EnemySpawnConfig = {
     type,
     position,
-    facingAngle: overrides?.facingAngle,
-    aiOverrides: overrides?.aiOverrides,
-    statsOverrides: overrides?.statsOverrides,
-    spawnId: overrides?.spawnId,
+    ...(overrides?.facingAngle !== undefined ? { facingAngle: overrides.facingAngle } : {}),
+    ...(overrides?.aiOverrides !== undefined ? { aiOverrides: overrides.aiOverrides } : {}),
+    ...(overrides?.statsOverrides !== undefined
+      ? { statsOverrides: overrides.statsOverrides }
+      : {}),
+    ...(overrides?.spawnId !== undefined ? { spawnId: overrides.spawnId } : {}),
   };
 
   return factory.createEnemy(createEntityFn, spawnConfig);

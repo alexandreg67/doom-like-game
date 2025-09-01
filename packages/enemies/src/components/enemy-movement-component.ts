@@ -1,4 +1,4 @@
-import type { Vector3 } from '@babylonjs/core';
+import { Vector3 } from '@babylonjs/core';
 import type { Component } from '@doom-like/game-logic';
 
 /**
