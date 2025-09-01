@@ -120,12 +120,13 @@ describe('EnemyFactory', () => {
       const enemy = factory.createEnemy(createMockEntity, spawnConfig);
 
       expect(enemy).toBeTruthy();
-      expect(enemy!.components.has('transform')).toBe(true);
-      expect(enemy!.components.has('enemyIdentity')).toBe(true);
-      expect(enemy!.components.has('enemyState')).toBe(true);
-      expect(enemy!.components.has('enemyStats')).toBe(true);
-      expect(enemy!.components.has('enemyAI')).toBe(true);
-      expect(enemy!.components.has('enemyMovement')).toBe(true);
+      if (!enemy) throw new Error('Failed to create enemy');
+      expect(enemy.components.has('transform')).toBe(true);
+      expect(enemy.components.has('enemyIdentity')).toBe(true);
+      expect(enemy.components.has('enemyState')).toBe(true);
+      expect(enemy.components.has('enemyStats')).toBe(true);
+      expect(enemy.components.has('enemyAI')).toBe(true);
+      expect(enemy.components.has('enemyMovement')).toBe(true);
     });
 
     it('should set transform position correctly', () => {
@@ -136,7 +137,8 @@ describe('EnemyFactory', () => {
       };
 
       const enemy = factory.createEnemy(createMockEntity, spawnConfig);
-      const transform = enemy!.components.get('transform');
+      if (!enemy) throw new Error('Failed to create enemy');
+      const transform = enemy.components.get('transform');
 
       expect(transform.x).toBe(15);
       expect(transform.y).toBe(2);
@@ -151,7 +153,8 @@ describe('EnemyFactory', () => {
       };
 
       const enemy = factory.createEnemy(createMockEntity, spawnConfig);
-      const movement = enemy!.components.get('enemyMovement');
+      if (!enemy) throw new Error('Failed to create enemy');
+      const movement = enemy.components.get('enemyMovement');
 
       expect(movement.facingAngle).toBe(Math.PI / 2);
       expect(movement.targetFacingAngle).toBe(Math.PI / 2);
@@ -168,8 +171,9 @@ describe('EnemyFactory', () => {
       };
 
       const enemy = factory.createEnemy(createMockEntity, spawnConfig);
-      const ai = enemy!.components.get('enemyAI');
-      const movement = enemy!.components.get('enemyMovement');
+      if (!enemy) throw new Error('Failed to create enemy');
+      const ai = enemy.components.get('enemyAI');
+      const movement = enemy.components.get('enemyMovement');
 
       expect(ai.params.movementSpeed).toBe(5);
       expect(ai.params.aggroRange).toBe(15);
@@ -187,7 +191,8 @@ describe('EnemyFactory', () => {
       };
 
       const enemy = factory.createEnemy(createMockEntity, spawnConfig);
-      const stats = enemy!.components.get('enemyStats');
+      if (!enemy) throw new Error('Failed to create enemy');
+      const stats = enemy.components.get('enemyStats');
 
       expect(stats.maxHealth).toBe(100);
       expect(stats.currentHealth).toBe(100);
@@ -202,8 +207,8 @@ describe('EnemyFactory', () => {
       };
 
       const enemy = factory.createEnemy(createMockEntity, spawnConfig);
-
-      expect(enemy!.id).toBe('boss_imp_1');
+      if (!enemy) throw new Error('Failed to create enemy');
+      expect(enemy.id).toBe('boss_imp_1');
     });
 
     it('should generate unique IDs when no spawn ID provided', () => {
@@ -214,10 +219,11 @@ describe('EnemyFactory', () => {
 
       const enemy1 = factory.createEnemy(createMockEntity, spawnConfig);
       const enemy2 = factory.createEnemy(createMockEntity, spawnConfig);
+      if (!enemy1 || !enemy2) throw new Error('Failed to create enemies');
 
-      expect(enemy1!.id).not.toBe(enemy2!.id);
-      expect(enemy1!.id).toContain('enemy_imp_');
-      expect(enemy2!.id).toContain('enemy_imp_');
+      expect(enemy1.id).not.toBe(enemy2.id);
+      expect(enemy1.id).toContain('enemy_imp_');
+      expect(enemy2.id).toContain('enemy_imp_');
     });
 
     it('should return null for unknown enemy type', () => {
@@ -238,7 +244,8 @@ describe('EnemyFactory', () => {
       };
 
       const enemy = factory.createEnemy(createMockEntity, spawnConfig);
-      const state = enemy!.components.get('enemyState');
+      if (!enemy) throw new Error('Failed to create enemy');
+      const state = enemy.components.get('enemyState');
 
       expect(state.currentState).toBe(EnemyState.IDLE);
       expect(state.previousState).toBe(EnemyState.IDLE);
@@ -285,8 +292,7 @@ describe('EnemyFactory', () => {
     });
 
     it('should reject definition missing type', () => {
-      const invalidDef = { ...mockDefinition };
-      delete (invalidDef as any).type;
+      const invalidDef = { ...mockDefinition, type: undefined } as unknown as EnemyDefinition;
 
       const isValid = factory.validateEnemyDefinition(invalidDef);
       expect(isValid).toBe(false);
@@ -313,8 +319,7 @@ describe('EnemyFactory', () => {
     });
 
     it('should reject definition missing assets', () => {
-      const invalidDef = { ...mockDefinition };
-      delete (invalidDef as any).assets;
+      const invalidDef = { ...mockDefinition, assets: undefined } as unknown as EnemyDefinition;
 
       const isValid = factory.validateEnemyDefinition(invalidDef);
       expect(isValid).toBe(false);
@@ -442,9 +447,10 @@ describe('createEnemyOfType helper', () => {
     });
 
     expect(enemy).toBeTruthy();
-    expect(enemy!.components.has('enemyIdentity')).toBe(true);
+    if (!enemy) throw new Error('Failed to create enemy');
+    expect(enemy.components.has('enemyIdentity')).toBe(true);
 
-    const movement = enemy!.components.get('enemyMovement');
+    const movement = enemy.components.get('enemyMovement');
     expect(movement.facingAngle).toBe(Math.PI);
   });
 });

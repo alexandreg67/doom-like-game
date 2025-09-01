@@ -242,5 +242,5 @@ export interface EnemyEvent {
   type: EnemyEventType;
   enemyId: string;
   timestamp: number;
-  data?: any;
+  data?: unknown;
 }

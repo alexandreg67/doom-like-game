@@ -51,92 +51,81 @@ export function createEnemyStateComponent(
 /**
  * Utility functions for state management
  */
-export class EnemyStateUtils {
-  /**
-   * Transition to a new state
-   */
-  static transitionTo(
-    stateComponent: EnemyStateComponent,
-    newState: EnemyState,
-    currentTime: number = performance.now()
-  ): void {
-    if (stateComponent.currentState === newState) {
-      return; // No change needed
+function transitionTo(
+  stateComponent: EnemyStateComponent,
+  newState: EnemyState,
+  currentTime: number = performance.now()
+): void {
+  if (stateComponent.currentState === newState) {
+    return; // No change needed
+  }
+
+  stateComponent.previousState = stateComponent.currentState;
+  stateComponent.currentState = newState;
+  stateComponent.stateStartTime = currentTime;
+  stateComponent.timeInState = 0;
+  stateComponent.stateChanged = true;
+
+  // Clear any scheduled transition
+  stateComponent.nextState = undefined;
+  stateComponent.nextStateTimer = undefined;
+}
+
+function scheduleTransition(
+  stateComponent: EnemyStateComponent,
+  nextState: EnemyState,
+  delay: number
+): void {
+  stateComponent.nextState = nextState;
+  stateComponent.nextStateTimer = delay;
+}
+
+function updateState(
+  stateComponent: EnemyStateComponent,
+  deltaTime: number,
+  currentTime: number = performance.now()
+): void {
+  // Reset state change flag
+  stateComponent.stateChanged = false;
+
+  // Update time in current state
+  stateComponent.timeInState = (currentTime - stateComponent.stateStartTime) / 1000;
+
+  // Handle scheduled transitions
+  if (stateComponent.nextState && stateComponent.nextStateTimer !== undefined) {
+    stateComponent.nextStateTimer -= deltaTime;
+
+    if (stateComponent.nextStateTimer <= 0) {
+      const next = stateComponent.nextState;
+      stateComponent.nextState = undefined;
+      stateComponent.nextStateTimer = undefined;
+
+      transitionTo(stateComponent, next, currentTime);
     }
-
-    stateComponent.previousState = stateComponent.currentState;
-    stateComponent.currentState = newState;
-    stateComponent.stateStartTime = currentTime;
-    stateComponent.timeInState = 0;
-    stateComponent.stateChanged = true;
-
-    // Clear any scheduled transition
-    stateComponent.nextState = undefined;
-    stateComponent.nextStateTimer = undefined;
-  }
-
-  /**
-   * Schedule a future state transition
-   */
-  static scheduleTransition(
-    stateComponent: EnemyStateComponent,
-    nextState: EnemyState,
-    delay: number
-  ): void {
-    stateComponent.nextState = nextState;
-    stateComponent.nextStateTimer = delay;
-  }
-
-  /**
-   * Update state timing and handle scheduled transitions
-   */
-  static updateState(
-    stateComponent: EnemyStateComponent,
-    deltaTime: number,
-    currentTime: number = performance.now()
-  ): void {
-    // Reset state change flag
-    stateComponent.stateChanged = false;
-
-    // Update time in current state
-    stateComponent.timeInState = (currentTime - stateComponent.stateStartTime) / 1000;
-
-    // Handle scheduled transitions
-    if (stateComponent.nextState && stateComponent.nextStateTimer !== undefined) {
-      stateComponent.nextStateTimer -= deltaTime;
-
-      if (stateComponent.nextStateTimer <= 0) {
-        const nextState = stateComponent.nextState;
-        stateComponent.nextState = undefined;
-        stateComponent.nextStateTimer = undefined;
-
-        this.transitionTo(stateComponent, nextState, currentTime);
-      }
-    }
-  }
-
-  /**
-   * Check if enemy is in one of the specified states
-   */
-  static isInState(stateComponent: EnemyStateComponent, ...states: EnemyState[]): boolean {
-    return states.includes(stateComponent.currentState);
-  }
-
-  /**
-   * Check if enemy just entered a state this frame
-   */
-  static justEnteredState(stateComponent: EnemyStateComponent, state: EnemyState): boolean {
-    return stateComponent.stateChanged && stateComponent.currentState === state;
-  }
-
-  /**
-   * Check if enemy has been in state for minimum time
-   */
-  static hasBeenInStateFor(
-    stateComponent: EnemyStateComponent,
-    state: EnemyState,
-    minTime: number
-  ): boolean {
-    return stateComponent.currentState === state && stateComponent.timeInState >= minTime;
   }
 }
+
+function isInState(stateComponent: EnemyStateComponent, ...states: EnemyState[]): boolean {
+  return states.includes(stateComponent.currentState);
+}
+
+function justEnteredState(stateComponent: EnemyStateComponent, state: EnemyState): boolean {
+  return stateComponent.stateChanged && stateComponent.currentState === state;
+}
+
+function hasBeenInStateFor(
+  stateComponent: EnemyStateComponent,
+  state: EnemyState,
+  minTime: number
+): boolean {
+  return stateComponent.currentState === state && stateComponent.timeInState >= minTime;
+}
+
+export const EnemyStateUtils = {
+  transitionTo,
+  scheduleTransition,
+  updateState,
+  isInState,
+  justEnteredState,
+  hasBeenInStateFor,
+} as const;

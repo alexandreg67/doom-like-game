@@ -65,136 +65,99 @@ export function createEnemyStatsComponent(
 /**
  * Utility functions for enemy stats management
  */
-export class EnemyStatsUtils {
-  /**
-   * Apply damage to enemy
-   * @param statsComponent - Enemy stats component
-   * @param damage - Damage amount
-   * @param canKill - Whether this damage can kill the enemy
-   * @returns Actual damage dealt (after invulnerability, etc.)
-   */
-  static takeDamage(statsComponent: EnemyStatsComponent, damage: number, canKill = true): number {
-    if (statsComponent.isInvulnerable || damage <= 0) {
-      return 0;
+function takeDamage(statsComponent: EnemyStatsComponent, damage: number, canKill = true): number {
+  if (statsComponent.isInvulnerable || damage <= 0) {
+    return 0;
+  }
+
+  const actualDamage = Math.max(0, damage);
+  statsComponent.currentHealth -= actualDamage;
+
+  if (!canKill && statsComponent.currentHealth <= 0) {
+    statsComponent.currentHealth = 1;
+    return statsComponent.maxHealth - 1;
+  }
+
+  statsComponent.currentHealth = Math.max(0, statsComponent.currentHealth);
+  return actualDamage;
+}
+
+function heal(statsComponent: EnemyStatsComponent, healAmount: number): number {
+  if (healAmount <= 0 || statsComponent.currentHealth >= statsComponent.maxHealth) {
+    return 0;
+  }
+
+  const oldHealth = statsComponent.currentHealth;
+  statsComponent.currentHealth = Math.min(
+    statsComponent.maxHealth,
+    statsComponent.currentHealth + healAmount
+  );
+
+  return statsComponent.currentHealth - oldHealth;
+}
+
+function setInvulnerable(statsComponent: EnemyStatsComponent, duration: number): void {
+  statsComponent.isInvulnerable = true;
+  statsComponent.invulnerabilityTime = duration;
+}
+
+function updateInvulnerability(statsComponent: EnemyStatsComponent, deltaTime: number): void {
+  if (statsComponent.isInvulnerable) {
+    statsComponent.invulnerabilityTime -= deltaTime;
+    if (statsComponent.invulnerabilityTime <= 0) {
+      statsComponent.isInvulnerable = false;
+      statsComponent.invulnerabilityTime = 0;
     }
-
-    const actualDamage = Math.max(0, damage);
-    statsComponent.currentHealth -= actualDamage;
-
-    // Ensure health doesn't go below 0 unless killing is allowed
-    if (!canKill && statsComponent.currentHealth <= 0) {
-      statsComponent.currentHealth = 1;
-      return statsComponent.maxHealth - 1; // Return damage that would leave 1 HP
-    }
-
-    statsComponent.currentHealth = Math.max(0, statsComponent.currentHealth);
-
-    return actualDamage;
-  }
-
-  /**
-   * Heal enemy
-   * @param statsComponent - Enemy stats component
-   * @param healAmount - Amount to heal
-   * @returns Actual healing done
-   */
-  static heal(statsComponent: EnemyStatsComponent, healAmount: number): number {
-    if (healAmount <= 0 || statsComponent.currentHealth >= statsComponent.maxHealth) {
-      return 0;
-    }
-
-    const oldHealth = statsComponent.currentHealth;
-    statsComponent.currentHealth = Math.min(
-      statsComponent.maxHealth,
-      statsComponent.currentHealth + healAmount
-    );
-
-    return statsComponent.currentHealth - oldHealth;
-  }
-
-  /**
-   * Set invulnerability for a duration
-   * @param statsComponent - Enemy stats component
-   * @param duration - Duration in seconds
-   */
-  static setInvulnerable(statsComponent: EnemyStatsComponent, duration: number): void {
-    statsComponent.isInvulnerable = true;
-    statsComponent.invulnerabilityTime = duration;
-  }
-
-  /**
-   * Update invulnerability timer
-   * @param statsComponent - Enemy stats component
-   * @param deltaTime - Time elapsed since last update (seconds)
-   */
-  static updateInvulnerability(statsComponent: EnemyStatsComponent, deltaTime: number): void {
-    if (statsComponent.isInvulnerable) {
-      statsComponent.invulnerabilityTime -= deltaTime;
-
-      if (statsComponent.invulnerabilityTime <= 0) {
-        statsComponent.isInvulnerable = false;
-        statsComponent.invulnerabilityTime = 0;
-      }
-    }
-  }
-
-  /**
-   * Apply health regeneration
-   * @param statsComponent - Enemy stats component
-   * @param deltaTime - Time elapsed since last update (seconds)
-   */
-  static applyRegeneration(statsComponent: EnemyStatsComponent, deltaTime: number): void {
-    if (
-      statsComponent.healthRegenRate > 0 &&
-      statsComponent.currentHealth < statsComponent.maxHealth &&
-      statsComponent.currentHealth > 0
-    ) {
-      const regenAmount = statsComponent.healthRegenRate * deltaTime;
-      this.heal(statsComponent, regenAmount);
-    }
-  }
-
-  /**
-   * Check if enemy is dead
-   */
-  static isDead(statsComponent: EnemyStatsComponent): boolean {
-    return statsComponent.currentHealth <= 0;
-  }
-
-  /**
-   * Check if enemy is at full health
-   */
-  static isAtFullHealth(statsComponent: EnemyStatsComponent): boolean {
-    return statsComponent.currentHealth >= statsComponent.maxHealth;
-  }
-
-  /**
-   * Get health percentage (0-1)
-   */
-  static getHealthPercentage(statsComponent: EnemyStatsComponent): number {
-    return statsComponent.currentHealth / statsComponent.maxHealth;
-  }
-
-  /**
-   * Calculate actual damage output (with multipliers)
-   */
-  static getActualDamage(statsComponent: EnemyStatsComponent): number {
-    return statsComponent.attackDamage * statsComponent.damageMultiplier;
-  }
-
-  /**
-   * Set damage multiplier (for difficulty scaling)
-   */
-  static setDamageMultiplier(statsComponent: EnemyStatsComponent, multiplier: number): void {
-    statsComponent.damageMultiplier = Math.max(0, multiplier);
-  }
-
-  /**
-   * Reset to full health
-   */
-  static resetHealth(statsComponent: EnemyStatsComponent): void {
-    statsComponent.currentHealth = statsComponent.maxHealth;
-    statsComponent.isInvulnerable = false;
-    statsComponent.invulnerabilityTime = 0;
   }
 }
+
+function applyRegeneration(statsComponent: EnemyStatsComponent, deltaTime: number): void {
+  if (
+    statsComponent.healthRegenRate > 0 &&
+    statsComponent.currentHealth < statsComponent.maxHealth &&
+    statsComponent.currentHealth > 0
+  ) {
+    const regenAmount = statsComponent.healthRegenRate * deltaTime;
+    heal(statsComponent, regenAmount);
+  }
+}
+
+function isDead(statsComponent: EnemyStatsComponent): boolean {
+  return statsComponent.currentHealth <= 0;
+}
+
+function isAtFullHealth(statsComponent: EnemyStatsComponent): boolean {
+  return statsComponent.currentHealth >= statsComponent.maxHealth;
+}
+
+function getHealthPercentage(statsComponent: EnemyStatsComponent): number {
+  return statsComponent.currentHealth / statsComponent.maxHealth;
+}
+
+function getActualDamage(statsComponent: EnemyStatsComponent): number {
+  return statsComponent.attackDamage * statsComponent.damageMultiplier;
+}
+
+function setDamageMultiplier(statsComponent: EnemyStatsComponent, multiplier: number): void {
+  statsComponent.damageMultiplier = Math.max(0, multiplier);
+}
+
+function resetHealth(statsComponent: EnemyStatsComponent): void {
+  statsComponent.currentHealth = statsComponent.maxHealth;
+  statsComponent.isInvulnerable = false;
+  statsComponent.invulnerabilityTime = 0;
+}
+
+export const EnemyStatsUtils = {
+  takeDamage,
+  heal,
+  setInvulnerable,
+  updateInvulnerability,
+  applyRegeneration,
+  isDead,
+  isAtFullHealth,
+  getHealthPercentage,
+  getActualDamage,
+  setDamageMultiplier,
+  resetHealth,
+} as const;
