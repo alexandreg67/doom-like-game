@@ -94,6 +94,11 @@ export function createEnemyMovementComponent(
  * Movement helpers converted from static-only class to module functions
  */
 // Internal helpers
+/**
+ * Gradually reduces enemy velocity to zero using smooth deceleration
+ * @param movementComponent - The movement component to modify
+ * @param deltaTime - Frame time in seconds
+ */
 function decelerateToStop(movementComponent: EnemyMovementComponent, deltaTime: number): void {
   const currentSpeed = movementComponent.velocity.length();
 
@@ -111,6 +116,13 @@ function decelerateToStop(movementComponent: EnemyMovementComponent, deltaTime: 
   }
 }
 
+/**
+ * Calculates the shortest angular difference between two angles in radians
+ * Ensures the result is in range [-PI, PI] for smooth rotation
+ * @param from - Starting angle in radians
+ * @param to - Target angle in radians
+ * @returns Shortest angular difference in radians
+ */
 function getShortestAngleDifference(from: number, to: number): number {
   let diff = to - from;
   while (diff > Math.PI) diff -= 2 * Math.PI;
@@ -118,6 +130,11 @@ function getShortestAngleDifference(from: number, to: number): number {
   return diff;
 }
 
+/**
+ * Normalizes an angle to the range [-PI, PI]
+ * @param angle - Input angle in radians
+ * @returns Normalized angle in range [-PI, PI]
+ */
 function normalizeAngle(angle: number): number {
   let a = angle;
   while (a > Math.PI) a -= 2 * Math.PI;
