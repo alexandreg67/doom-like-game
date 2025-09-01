@@ -6,7 +6,7 @@ import type {
   EnemyMovementComponent,
   EnemyStateComponent,
 } from '../components';
-import { EnemyMovementUtils } from '../components';
+import { EnemyAIUtils, EnemyMovementUtils } from '../components';
 import { EnemyState } from '../types';
 
 /**
@@ -276,6 +276,3 @@ export class EnemyMovementSystem implements System {
     };
   }
 }
-
-// Import AI utils (avoiding circular import)
-import { EnemyAIUtils } from '../components';

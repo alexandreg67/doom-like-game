@@ -189,8 +189,9 @@ describe('EnemyAISystem', () => {
     it('should respect attack cooldown', () => {
       const aiComponent = impEntity.components.get('enemyAI');
 
-      // Set last seen time to recent (simulating recent attack)
-      aiComponent.lastSeenTime = performance.now() - 500; // 0.5 seconds ago
+      // Set recent attack time (cooldown not passed yet)
+      aiComponent.lastAttackTime = performance.now() - 500; // 0.5 seconds ago
+      aiComponent.lastSeenTime = performance.now() - 100; // Recently seen
 
       const attackTiming = aiComponent.params;
 

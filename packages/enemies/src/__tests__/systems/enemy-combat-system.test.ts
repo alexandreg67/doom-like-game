@@ -135,7 +135,8 @@ describe('EnemyCombatSystem', () => {
       const aiComponent = impEntity.components.get('enemyAI');
 
       // Set up for immediate attack (no cooldown)
-      aiComponent.lastSeenTime = performance.now() - 2000; // 2 seconds ago (past cooldown)
+      aiComponent.lastAttackTime = performance.now() - 2000; // 2 seconds ago (past cooldown)
+      aiComponent.lastSeenTime = performance.now() - 100; // Recently seen
 
       combatSystem.update(entities, 0.016);
 
@@ -153,7 +154,8 @@ describe('EnemyCombatSystem', () => {
       const aiComponent = impEntity.components.get('enemyAI');
 
       // Set recent attack time
-      aiComponent.lastSeenTime = performance.now() - 500; // 0.5 seconds ago
+      aiComponent.lastAttackTime = performance.now() - 500; // 0.5 seconds ago (cooldown not passed)
+      aiComponent.lastSeenTime = performance.now() - 100; // Recently seen
 
       combatSystem.update(entities, 0.016);
 
@@ -167,7 +169,8 @@ describe('EnemyCombatSystem', () => {
       playerTransform.x = 5; // 5 meters away (> 1.5m attack range)
 
       const aiComponent = impEntity.components.get('enemyAI');
-      aiComponent.lastSeenTime = performance.now() - 2000; // Past cooldown
+      aiComponent.lastAttackTime = performance.now() - 2000; // Past cooldown
+      aiComponent.lastSeenTime = performance.now() - 100; // Recently seen
 
       combatSystem.update(entities, 0.016);
 
@@ -181,7 +184,8 @@ describe('EnemyCombatSystem', () => {
 
       // Set damage multiplier
       stats.damageMultiplier = 1.5;
-      aiComponent.lastSeenTime = performance.now() - 2000;
+      aiComponent.lastAttackTime = performance.now() - 2000; // Past cooldown
+      aiComponent.lastSeenTime = performance.now() - 100; // Recently seen
 
       combatSystem.update(entities, 0.016);
 
