@@ -1,4 +1,11 @@
-import { Color3, Mesh, StandardMaterial, Sprite, Texture, Vector3 } from '@babylonjs/core';
+import {
+  Color3,
+  type Mesh,
+  type Sprite,
+  type StandardMaterial,
+  type Texture,
+  Vector3,
+} from '@babylonjs/core';
 import type { Component } from '@doom-like/game-logic';
 import type { EnemyState } from '../types';
 
@@ -32,14 +39,14 @@ export enum LODLevel {
  * Sprite direction for 8-direction DOOM-style rendering
  */
 export enum SpriteDirection {
-  FRONT = 0,      // 0°   - Face au joueur
+  FRONT = 0, // 0°   - Face au joueur
   FRONT_RIGHT = 1, // 45°  - Diagonal avant-droite
-  RIGHT = 2,      // 90°  - Profil droit
+  RIGHT = 2, // 90°  - Profil droit
   BACK_RIGHT = 3, // 135° - Diagonal arrière-droite
-  BACK = 4,       // 180° - Dos au joueur
-  BACK_LEFT = 5,  // 225° - Diagonal arrière-gauche
-  LEFT = 6,       // 270° - Profil gauche
-  FRONT_LEFT = 7  // 315° - Diagonal avant-gauche
+  BACK = 4, // 180° - Dos au joueur
+  BACK_LEFT = 5, // 225° - Diagonal arrière-gauche
+  LEFT = 6, // 270° - Profil gauche
+  FRONT_LEFT = 7, // 315° - Diagonal avant-gauche
 }
 
 /**
@@ -88,43 +95,43 @@ export interface EnemyRenderComponent extends Component {
   // === Babylon.js Objects ===
   /** Main mesh for the enemy (billboard quad) */
   mesh: Mesh | null;
-  
+
   /** Material with current sprite texture */
   material: StandardMaterial | null;
-  
+
   /** Optional Babylon.js sprite (alternative to mesh) */
   sprite: Sprite | null;
 
   // === Billboard Configuration ===
   /** Billboard behavior mode */
   billboardMode: BillboardMode;
-  
+
   /** Current sprite direction (0-7) */
   currentDirection: SpriteDirection;
-  
+
   /** Last calculated direction for change detection */
   lastDirection: SpriteDirection;
 
   // === Sprite System ===
   /** Sprite sheet data for all animations */
   spriteSheet: SpriteSheet | null;
-  
+
   /** Current animation state */
   animationState: AnimationState;
-  
+
   /** Previous FSM state for animation transitions */
   lastFSMState: EnemyState | null;
 
   // === LOD System ===
   /** Current level of detail */
   lodLevel: LODLevel;
-  
+
   /** Distance to camera for LOD calculation */
   distanceToCamera: number;
-  
+
   /** Maximum render distance before culling */
   cullingDistance: number;
-  
+
   /** LOD thresholds */
   lodThresholds: {
     highDetailDistance: number;
@@ -135,35 +142,35 @@ export interface EnemyRenderComponent extends Component {
   // === Visual Properties ===
   /** Base scale of the enemy sprite */
   scale: Vector3;
-  
+
   /** Tint color for damage/special effects */
   tintColor: Color3;
-  
+
   /** Alpha transparency (0-1) */
   alpha: number;
-  
+
   /** Whether mesh should cast shadows */
   castShadows: boolean;
-  
+
   /** Whether mesh should receive shadows */
   receiveShadows: boolean;
 
   // === Performance & Debug ===
   /** Whether this enemy is currently visible */
   isVisible: boolean;
-  
+
   /** Whether to show debug information */
   showDebug: boolean;
-  
+
   /** Debug wireframe mode */
   wireframe: boolean;
-  
+
   /** Collision bounds visualization */
   showBounds: boolean;
-  
+
   /** Last frame update timestamp */
   lastUpdateTime: number;
-  
+
   /** Render statistics */
   renderStats: {
     frameUpdates: number;
@@ -174,181 +181,184 @@ export interface EnemyRenderComponent extends Component {
 }
 
 /**
- * Utility functions for EnemyRenderComponent
+ * Creates a default EnemyRenderComponent
  */
-export class EnemyRenderUtils {
-  /**
-   * Creates a default EnemyRenderComponent
-   */
-  static createDefault(): EnemyRenderComponent {
-    return {
-      id: 'enemyRender',
-      
-      // Babylon.js objects
-      mesh: null,
-      material: null,
-      sprite: null,
-      
-      // Billboard configuration
-      billboardMode: BillboardMode.Y_AXIS, // DOOM-style cylindrical billboard
-      currentDirection: SpriteDirection.FRONT,
-      lastDirection: SpriteDirection.FRONT,
-      
-      // Sprite system
-      spriteSheet: null,
-      animationState: {
-        currentFrame: 0,
-        totalFrames: 1,
-        animationSpeed: 8, // 8 FPS for DOOM-like animation
-        frameTimer: 0,
-        loop: true,
-        isPlaying: false,
-        sequenceName: 'idle',
-      },
-      lastFSMState: null,
-      
-      // LOD system
-      lodLevel: LODLevel.HIGH,
-      distanceToCamera: 0,
-      cullingDistance: 100, // 100 units max render distance
-      lodThresholds: {
-        highDetailDistance: 20,   // < 20 units: full detail
-        mediumDetailDistance: 50, // 20-50 units: medium detail
-        lowDetailDistance: 100,   // 50-100 units: low detail
-      },
-      
-      // Visual properties
-      scale: new Vector3(1, 1, 1),
-      tintColor: new Color3(1, 1, 1), // White (no tint)
-      alpha: 1.0,
-      castShadows: true,
-      receiveShadows: true,
-      
-      // Performance & debug
-      isVisible: true,
-      showDebug: false,
-      wireframe: false,
-      showBounds: false,
-      lastUpdateTime: 0,
-      renderStats: {
-        frameUpdates: 0,
-        directionChanges: 0,
-        animationFrameChanges: 0,
-        lodChanges: 0,
-      },
-    };
+export function createDefaultEnemyRenderComponent(): EnemyRenderComponent {
+  return {
+    id: 'enemyRender',
+
+    // Babylon.js objects
+    mesh: null,
+    material: null,
+    sprite: null,
+
+    // Billboard configuration
+    billboardMode: BillboardMode.Y_AXIS, // DOOM-style cylindrical billboard
+    currentDirection: SpriteDirection.FRONT,
+    lastDirection: SpriteDirection.FRONT,
+
+    // Sprite system
+    spriteSheet: null,
+    animationState: {
+      currentFrame: 0,
+      totalFrames: 1,
+      animationSpeed: 8, // 8 FPS for DOOM-like animation
+      frameTimer: 0,
+      loop: true,
+      isPlaying: false,
+      sequenceName: 'idle',
+    },
+    lastFSMState: null,
+
+    // LOD system
+    lodLevel: LODLevel.HIGH,
+    distanceToCamera: 0,
+    cullingDistance: 100, // 100 units max render distance
+    lodThresholds: {
+      highDetailDistance: 20, // < 20 units: full detail
+      mediumDetailDistance: 50, // 20-50 units: medium detail
+      lowDetailDistance: 100, // 50-100 units: low detail
+    },
+
+    // Visual properties
+    scale: new Vector3(1, 1, 1),
+    tintColor: new Color3(1, 1, 1), // White (no tint)
+    alpha: 1.0,
+    castShadows: true,
+    receiveShadows: true,
+
+    // Performance & debug
+    isVisible: true,
+    showDebug: false,
+    wireframe: false,
+    showBounds: false,
+    lastUpdateTime: 0,
+    renderStats: {
+      frameUpdates: 0,
+      directionChanges: 0,
+      animationFrameChanges: 0,
+      lodChanges: 0,
+    },
+  };
+}
+
+/**
+ * Calculates sprite direction based on enemy-to-camera angle
+ */
+export function calculateSpriteDirection(
+  enemyPosition: Vector3,
+  enemyForward: Vector3,
+  cameraPosition: Vector3
+): SpriteDirection {
+  // Calculate vector from enemy to camera
+  const toCamera = cameraPosition.subtract(enemyPosition).normalize();
+
+  // Calculate angle between enemy forward direction and camera direction
+  const dot = Vector3.Dot(enemyForward, toCamera);
+  const cross = Vector3.Cross(enemyForward, toCamera);
+  const angle = Math.atan2(cross.y, dot);
+
+  // Convert to positive angle (0 to 2π)
+  const positiveAngle = angle < 0 ? angle + Math.PI * 2 : angle;
+
+  // Convert to sprite direction (8 directions)
+  const directionIndex = Math.round((positiveAngle / (Math.PI * 2)) * 8) % 8;
+
+  return directionIndex as SpriteDirection;
+}
+
+/**
+ * Calculates LOD level based on distance to camera
+ */
+export function calculateLODLevel(
+  distanceToCamera: number,
+  lodThresholds: {
+    highDetailDistance: number;
+    mediumDetailDistance: number;
+    lowDetailDistance: number;
+  }
+): LODLevel {
+  if (distanceToCamera <= lodThresholds.highDetailDistance) {
+    return LODLevel.HIGH;
+  }
+  if (distanceToCamera <= lodThresholds.mediumDetailDistance) {
+    return LODLevel.MEDIUM;
+  }
+  if (distanceToCamera <= lodThresholds.lowDetailDistance) {
+    return LODLevel.LOW;
+  }
+  return LODLevel.CULLED;
+}
+
+/**
+ * Generates sprite frame key for lookup
+ */
+export function getSpriteFrameKey(state: EnemyState, direction: SpriteDirection): string {
+  return `${state}_${direction}`;
+}
+
+/**
+ * Updates animation state based on time delta
+ */
+export function updateAnimation(animationState: AnimationState, deltaTime: number): boolean {
+  if (!animationState.isPlaying || animationState.totalFrames <= 1) {
+    return false; // No animation change
   }
 
-  /**
-   * Calculates sprite direction based on enemy-to-camera angle
-   */
-  static calculateSpriteDirection(
-    enemyPosition: Vector3,
-    enemyForward: Vector3,
-    cameraPosition: Vector3
-  ): SpriteDirection {
-    // Calculate vector from enemy to camera
-    const toCamera = cameraPosition.subtract(enemyPosition).normalize();
-    
-    // Calculate angle between enemy forward direction and camera direction
-    const dot = Vector3.Dot(enemyForward, toCamera);
-    const cross = Vector3.Cross(enemyForward, toCamera);
-    const angle = Math.atan2(cross.y, dot);
-    
-    // Convert to positive angle (0 to 2π)
-    const positiveAngle = angle < 0 ? angle + Math.PI * 2 : angle;
-    
-    // Convert to sprite direction (8 directions)
-    const directionIndex = Math.round((positiveAngle / (Math.PI * 2)) * 8) % 8;
-    
-    return directionIndex as SpriteDirection;
-  }
+  animationState.frameTimer += deltaTime;
+  const frameDuration = 1.0 / animationState.animationSpeed;
 
-  /**
-   * Calculates LOD level based on distance to camera
-   */
-  static calculateLODLevel(
-    distanceToCamera: number,
-    lodThresholds: { highDetailDistance: number; mediumDetailDistance: number; lowDetailDistance: number }
-  ): LODLevel {
-    if (distanceToCamera <= lodThresholds.highDetailDistance) {
-      return LODLevel.HIGH;
-    }
-    if (distanceToCamera <= lodThresholds.mediumDetailDistance) {
-      return LODLevel.MEDIUM;
-    }
-    if (distanceToCamera <= lodThresholds.lowDetailDistance) {
-      return LODLevel.LOW;
-    }
-    return LODLevel.CULLED;
-  }
+  if (animationState.frameTimer >= frameDuration) {
+    animationState.frameTimer = 0;
+    animationState.currentFrame++;
 
-  /**
-   * Generates sprite frame key for lookup
-   */
-  static getSpriteFrameKey(state: EnemyState, direction: SpriteDirection): string {
-    return `${state}_${direction}`;
-  }
-
-  /**
-   * Updates animation state based on time delta
-   */
-  static updateAnimation(animationState: AnimationState, deltaTime: number): boolean {
-    if (!animationState.isPlaying || animationState.totalFrames <= 1) {
-      return false; // No animation change
-    }
-
-    animationState.frameTimer += deltaTime;
-    const frameDuration = 1.0 / animationState.animationSpeed;
-
-    if (animationState.frameTimer >= frameDuration) {
-      animationState.frameTimer = 0;
-      animationState.currentFrame++;
-
-      if (animationState.currentFrame >= animationState.totalFrames) {
-        if (animationState.loop) {
-          animationState.currentFrame = 0;
-        } else {
-          animationState.currentFrame = animationState.totalFrames - 1;
-          animationState.isPlaying = false;
-        }
+    if (animationState.currentFrame >= animationState.totalFrames) {
+      if (animationState.loop) {
+        animationState.currentFrame = 0;
+      } else {
+        animationState.currentFrame = animationState.totalFrames - 1;
+        animationState.isPlaying = false;
       }
-
-      return true; // Animation frame changed
     }
 
-    return false; // No frame change
+    return true; // Animation frame changed
   }
 
-  /**
-   * Validates EnemyRenderComponent data
-   */
-  static validate(component: EnemyRenderComponent): string[] {
-    const errors: string[] = [];
+  return false; // No frame change
+}
 
-    // Check required fields
-    if (component.id !== 'enemyRender') {
-      errors.push('Invalid component id, expected "enemyRender"');
-    }
+/**
+ * Validates EnemyRenderComponent data
+ */
+export function validateEnemyRenderComponent(component: EnemyRenderComponent): string[] {
+  const errors: string[] = [];
 
-    // Validate LOD thresholds
-    if (
-      component.lodThresholds.highDetailDistance >= component.lodThresholds.mediumDetailDistance ||
-      component.lodThresholds.mediumDetailDistance >= component.lodThresholds.lowDetailDistance
-    ) {
-      errors.push('Invalid LOD thresholds: must be in ascending order');
-    }
-
-    // Validate animation state
-    if (component.animationState.currentFrame < 0 || component.animationState.totalFrames < 1) {
-      errors.push('Invalid animation state: invalid frame values');
-    }
-
-    // Validate visual properties
-    if (component.alpha < 0 || component.alpha > 1) {
-      errors.push('Invalid alpha value: must be between 0 and 1');
-    }
-
-    return errors;
+  // Check required fields
+  if (component.id !== 'enemyRender') {
+    errors.push('Invalid component id, expected "enemyRender"');
   }
+
+  // Validate LOD thresholds
+  if (
+    component.lodThresholds.highDetailDistance >= component.lodThresholds.mediumDetailDistance ||
+    component.lodThresholds.mediumDetailDistance >= component.lodThresholds.lowDetailDistance
+  ) {
+    errors.push('Invalid LOD thresholds: must be in ascending order');
+  }
+
+  // Validate animation state
+  if (
+    component.animationState.currentFrame < 0 ||
+    component.animationState.totalFrames < 1 ||
+    component.animationState.currentFrame >= component.animationState.totalFrames
+  ) {
+    errors.push('Invalid animation state: invalid frame values');
+  }
+
+  // Validate visual properties
+  if (component.alpha < 0 || component.alpha > 1) {
+    errors.push('Invalid alpha value: must be between 0 and 1');
+  }
+
+  return errors;
 }

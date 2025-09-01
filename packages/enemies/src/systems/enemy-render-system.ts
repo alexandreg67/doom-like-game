@@ -1,9 +1,9 @@
 import {
-  Camera,
+  type Camera,
   Color3,
   Mesh,
   MeshBuilder,
-  Scene,
+  type Scene,
   StandardMaterial,
   Vector3,
 } from '@babylonjs/core';
@@ -11,13 +11,16 @@ import type { Entity, System, Transform } from '@doom-like/game-logic';
 // Logger will be imported from the engine package when available
 // For now, we'll use console logging
 
-import {
-  type EnemyRenderComponent,
-  BillboardMode,
-  LODLevel,
-} from '../components/enemy-render-component';
-import { EnemyRenderUtils } from '../components/enemy-render-component';
 import type { EnemyIdentityComponent, EnemyStateComponent } from '../components';
+import {
+  BillboardMode,
+  type EnemyRenderComponent,
+  LODLevel,
+  calculateLODLevel,
+  calculateSpriteDirection,
+  createDefaultEnemyRenderComponent,
+  updateAnimation,
+} from '../components/enemy-render-component';
 import { EnemySpriteManager } from '../rendering/enemy-sprite-manager';
 import { EnemyState } from '../types';
 
@@ -52,7 +55,7 @@ export interface EnemyRenderSystemConfig {
 
 /**
  * EnemyRenderSystem - Manages 3D rendering of all enemies
- * 
+ *
  * Responsibilities:
  * - Billboard sprite rendering with 8-direction support
  * - Animation state management synced with FSM
@@ -65,24 +68,20 @@ export class EnemyRenderSystem implements System {
   private camera: Camera | null = null;
   private spriteManager: EnemySpriteManager;
   private config: EnemyRenderSystemConfig;
-  
+
   // Performance tracking
   private metrics: EnemyRenderMetrics;
-  
+
   // Component caches for performance
   private renderComponentsCache: Map<string, EnemyRenderComponent> = new Map();
-  private lastCacheUpdate: number = 0;
+  private lastCacheUpdate = 0;
   private readonly cacheUpdateInterval = 100; // ms
 
-  constructor(
-    scene: Scene, 
-    camera: Camera,
-    config: Partial<EnemyRenderSystemConfig> = {}
-  ) {
+  constructor(scene: Scene, camera: Camera, config: Partial<EnemyRenderSystemConfig> = {}) {
     this.scene = scene;
     this.camera = camera;
     this.spriteManager = new EnemySpriteManager(scene);
-    
+
     // Apply default configuration
     this.config = {
       maxRenderedEnemies: 50,
@@ -101,9 +100,9 @@ export class EnemyRenderSystem implements System {
   /**
    * Main update loop - called every frame by SceneManager
    */
-  update(entities: Entity[], deltaTime: number): void {
+  async update(entities: Entity[], deltaTime: number): Promise<void> {
     const startTime = performance.now();
-    
+
     // Update cache periodically
     if (startTime - this.lastCacheUpdate > this.cacheUpdateInterval) {
       this.updateComponentCache(entities);
@@ -112,21 +111,25 @@ export class EnemyRenderSystem implements System {
 
     // Reset metrics
     this.metrics = this.createEmptyMetrics();
-    
+
     // Get camera position for distance calculations
     const cameraPosition = this.camera?.position || Vector3.Zero();
-    
-    // Process all enemy entities
+
+    // Process all enemy entities - await each to prevent resource leaks
+    const enemyPromises: Promise<void>[] = [];
     for (const entity of entities) {
       if (this.isEnemyEntity(entity)) {
-        this.updateEnemyRendering(entity, deltaTime, cameraPosition);
+        enemyPromises.push(this.updateEnemyRendering(entity, deltaTime, cameraPosition));
         this.metrics.totalEnemies++;
       }
     }
 
+    // Wait for all enemy updates to complete
+    await Promise.allSettled(enemyPromises);
+
     // Performance cleanup
     this.spriteManager.cleanupCache();
-    
+
     // Calculate final metrics
     this.metrics.frameTime = performance.now() - startTime;
     this.metrics.averageDistance = this.calculateAverageDistance();
@@ -163,18 +166,18 @@ export class EnemyRenderSystem implements System {
 
       // Initialize or update mesh
       await this.ensureEnemyMesh(renderComp, identityComp, transform);
-      
+
       // Update sprite direction
       this.updateSpriteDirection(renderComp, transform, cameraPosition);
-      
+
       // Update animation
       if (this.config.enableAnimations) {
-        this.updateEnemyAnimation(renderComp, stateComp, deltaTime);
+        this.updateEnemyAnimation(renderComp, stateComp, identityComp, deltaTime);
       }
-      
+
       // Update visual properties
       this.updateVisualProperties(renderComp, stateComp, transform);
-      
+
       // Update mesh transform
       this.updateMeshTransform(renderComp, transform);
 
@@ -182,10 +185,9 @@ export class EnemyRenderSystem implements System {
       if (renderComp.animationState.isPlaying) {
         this.metrics.animatedEnemies++;
       }
-      
+
       // Update LOD breakdown
       this.metrics.lodBreakdown[renderComp.lodLevel]++;
-
     } catch (error) {
       console.error(`[ENEMY_RENDER] Error updating enemy ${entity.id}:`, error);
     }
@@ -218,10 +220,7 @@ export class EnemyRenderSystem implements System {
       this.setupBillboard(mesh, renderComp.billboardMode);
 
       // Create material
-      const material = new StandardMaterial(
-        `enemy_mat_${identityComp.instanceId}`,
-        this.scene
-      );
+      const material = new StandardMaterial(`enemy_mat_${identityComp.instanceId}`, this.scene);
 
       // Configure material for sprite rendering
       material.diffuseColor = Color3.White();
@@ -260,9 +259,11 @@ export class EnemyRenderSystem implements System {
       mesh.scaling = renderComp.scale.clone();
 
       console.log(`[ENEMY_RENDER] Created mesh for enemy ${identityComp.instanceId}`);
-
     } catch (error) {
-      console.error(`[ENEMY_RENDER] Failed to create mesh for enemy ${identityComp.instanceId}:`, error);
+      console.error(
+        `[ENEMY_RENDER] Failed to create mesh for enemy ${identityComp.instanceId}:`,
+        error
+      );
     }
   }
 
@@ -278,7 +279,6 @@ export class EnemyRenderSystem implements System {
         mesh.billboardMode = Mesh.BILLBOARDMODE_Y;
         break;
       case BillboardMode.NONE:
-      default:
         mesh.billboardMode = Mesh.BILLBOARDMODE_NONE;
         break;
     }
@@ -303,12 +303,12 @@ export class EnemyRenderSystem implements System {
     renderComp.distanceToCamera = distance;
 
     // Update LOD
-    const newLOD = EnemyRenderUtils.calculateLODLevel(distance, renderComp.lodThresholds);
-    
+    const newLOD = calculateLODLevel(distance, renderComp.lodThresholds);
+
     if (newLOD !== renderComp.lodLevel) {
       renderComp.lodLevel = newLOD;
       renderComp.renderStats.lodChanges++;
-      
+
       // Apply LOD-specific optimizations
       this.applyLODOptimizations(renderComp);
     }
@@ -326,19 +326,19 @@ export class EnemyRenderSystem implements System {
         renderComp.mesh.isVisible = true;
         renderComp.animationState.animationSpeed = 8; // Full animation speed
         break;
-        
+
       case LODLevel.MEDIUM:
         // Reduced quality
         renderComp.mesh.isVisible = true;
         renderComp.animationState.animationSpeed = 4; // Half animation speed
         break;
-        
+
       case LODLevel.LOW:
         // Minimal quality
         renderComp.mesh.isVisible = true;
         renderComp.animationState.isPlaying = false; // No animation
         break;
-        
+
       case LODLevel.CULLED:
         // Not visible
         renderComp.mesh.isVisible = false;
@@ -363,12 +363,8 @@ export class EnemyRenderSystem implements System {
     // Calculate enemy forward direction (simplified - could use rotation)
     const enemyForward = new Vector3(0, 0, 1); // Default forward
     const enemyPosition = new Vector3(transform.x, transform.y, transform.z);
-    
-    const newDirection = EnemyRenderUtils.calculateSpriteDirection(
-      enemyPosition,
-      enemyForward,
-      cameraPosition
-    );
+
+    const newDirection = calculateSpriteDirection(enemyPosition, enemyForward, cameraPosition);
 
     if (newDirection !== renderComp.currentDirection) {
       renderComp.lastDirection = renderComp.currentDirection;
@@ -386,16 +382,17 @@ export class EnemyRenderSystem implements System {
   private updateEnemyAnimation(
     renderComp: EnemyRenderComponent,
     stateComp: EnemyStateComponent,
+    identityComp: EnemyIdentityComponent,
     deltaTime: number
   ): void {
     // Check if FSM state changed
     if (stateComp.currentState !== renderComp.lastFSMState) {
-      this.transitionToNewState(renderComp, stateComp.currentState);
+      this.transitionToNewState(renderComp, stateComp.currentState, identityComp);
       renderComp.lastFSMState = stateComp.currentState;
     }
 
     // Update animation timing
-    if (EnemyRenderUtils.updateAnimation(renderComp.animationState, deltaTime)) {
+    if (updateAnimation(renderComp.animationState, deltaTime)) {
       renderComp.renderStats.animationFrameChanges++;
       this.updateSpriteTexture(renderComp);
     }
@@ -404,13 +401,14 @@ export class EnemyRenderSystem implements System {
   /**
    * Transitions animation to new FSM state
    */
-  private transitionToNewState(renderComp: EnemyRenderComponent, newState: EnemyState): void {
+  private transitionToNewState(
+    renderComp: EnemyRenderComponent,
+    newState: EnemyState,
+    identityComp: EnemyIdentityComponent
+  ): void {
     if (!renderComp.spriteSheet) return;
 
     // Get animation config for new state
-    const identityComp = this.getIdentityComponentByRenderComp(renderComp);
-    if (!identityComp) return;
-
     const animConfig = this.spriteManager.getAnimationConfig(identityComp.type, newState);
     if (!animConfig) return;
 
@@ -502,28 +500,14 @@ export class EnemyRenderSystem implements System {
    */
   private getEnemyRenderComponent(entity: Entity): EnemyRenderComponent {
     let renderComp = entity.components.get('enemyRender') as EnemyRenderComponent;
-    
+
     if (!renderComp) {
       // Create default render component
-      renderComp = EnemyRenderUtils.createDefault();
+      renderComp = createDefaultEnemyRenderComponent();
       entity.components.set('enemyRender', renderComp);
     }
 
     return renderComp;
-  }
-
-  /**
-   * Helper to find identity component by render component (reverse lookup)
-   */
-  private getIdentityComponentByRenderComp(_renderComp: EnemyRenderComponent): EnemyIdentityComponent | null {
-    // This is a simplified approach - in production you'd maintain proper entity references
-    // Extract instance ID from mesh name
-    // const meshName = renderComp.mesh?.name;
-    // const instanceId = meshName?.replace('enemy_', '');
-    
-    // Find entity with this instance ID (this could be optimized with a lookup map)
-    // For now, return null - this would need proper entity management
-    return null;
   }
 
   /**
@@ -538,7 +522,7 @@ export class EnemyRenderSystem implements System {
    */
   private updateComponentCache(entities: Entity[]): void {
     this.renderComponentsCache.clear();
-    
+
     for (const entity of entities) {
       if (this.isEnemyEntity(entity)) {
         const renderComp = entity.components.get('enemyRender') as EnemyRenderComponent;
@@ -575,14 +559,14 @@ export class EnemyRenderSystem implements System {
   private calculateAverageDistance(): number {
     let totalDistance = 0;
     let count = 0;
-    
+
     for (const renderComp of this.renderComponentsCache.values()) {
       if (renderComp.lodLevel !== LODLevel.CULLED) {
         totalDistance += renderComp.distanceToCamera;
         count++;
       }
     }
-    
+
     return count > 0 ? totalDistance / count : 0;
   }
 
@@ -613,7 +597,7 @@ export class EnemyRenderSystem implements System {
    */
   setDebugMode(enabled: boolean): void {
     this.config.enableDebug = enabled;
-    
+
     // Update all render components
     for (const renderComp of this.renderComponentsCache.values()) {
       renderComp.showDebug = enabled;

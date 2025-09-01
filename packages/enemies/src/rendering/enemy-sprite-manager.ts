@@ -1,12 +1,12 @@
-import { Scene, Texture } from '@babylonjs/core';
+import { type Scene, Texture } from '@babylonjs/core';
 // Logger will be imported from the engine package when available
 // For now, we'll use console logging
-import type { 
-  SpriteSheet, 
-  SpriteDirection, 
-  AnimationState 
+import type {
+  AnimationState,
+  SpriteDirection,
+  SpriteSheet,
 } from '../components/enemy-render-component';
-import { EnemyState, EnemyType } from '../types';
+import { EnemyState, type EnemyType } from '../types';
 
 /**
  * Sprite configuration for different enemy types and states
@@ -155,7 +155,7 @@ export class EnemySpriteManager {
       const spriteSheet = await this.buildSpriteSheet(enemyType, config);
       this.cache.spriteSheets.set(enemyType, spriteSheet);
       this.updateCacheTimestamp(`spritesheet_${enemyType}`);
-      
+
       console.log(`[SPRITE_MANAGER] Successfully loaded sprite sheet for ${enemyType}`);
       return spriteSheet;
     } catch (error) {
@@ -169,15 +169,10 @@ export class EnemySpriteManager {
    */
   private async buildSpriteSheet(enemyType: EnemyType, config: SpriteConfig): Promise<SpriteSheet> {
     const frames = new Map<string, Texture[]>();
-    
+
     // Load all sprite frames for each sequence
     for (const [_sequenceName, sequenceConfig] of Object.entries(config.sequences)) {
-      await this.loadSequenceFrames(
-        config.basePath,
-        sequenceConfig,
-        config.hasDirections,
-        frames
-      );
+      await this.loadSequenceFrames(config.basePath, sequenceConfig, config.hasDirections, frames);
     }
 
     // Create a placeholder texture for the main sprite sheet
@@ -190,7 +185,7 @@ export class EnemySpriteManager {
     return {
       texture: mainTexture,
       frames,
-      frameWidth: 64,  // Standard DOOM sprite size
+      frameWidth: 64, // Standard DOOM sprite size
       frameHeight: 64,
       atlasWidth: 512, // Atlas dimensions
       atlasHeight: 512,
@@ -210,18 +205,18 @@ export class EnemySpriteManager {
 
     for (let dir = 0; dir < directions; dir++) {
       const frames: Texture[] = [];
-      
+
       for (let frame = 0; frame < sequence.frameCount; frame++) {
         const filename = this.generateSpriteFilename(sequence.pattern, dir, frame);
         const texturePath = basePath + filename;
-        
+
         try {
           const texture = await this.loadTexture(texturePath, `${sequence.name}_${dir}_${frame}`);
           frames.push(texture);
-        } catch (error) {
+        } catch (_error) {
           console.warn(`[SPRITE_MANAGER] Failed to load frame ${filename}, using placeholder`);
           // Use first frame or create placeholder
-          const placeholder = frames[0] || await this.createPlaceholderTexture();
+          const placeholder = frames[0] || (await this.createPlaceholderTexture());
           frames.push(placeholder);
         }
       }
@@ -258,23 +253,40 @@ export class EnemySpriteManager {
         samplingMode: Texture.NEAREST_SAMPLINGMODE, // Pixel-perfect DOOM style
       });
 
-      // Wait for texture to load
+      // Wait for texture to load with proper error handling
       await new Promise<void>((resolve, reject) => {
-        texture.onLoadObservable.addOnce(() => resolve());
-        // Note: texture.onErrorObservable might not be available in all Babylon.js versions
-        // We'll use a timeout as fallback
-        setTimeout(() => {
-          if (!texture.isReady()) {
-            reject(new Error(`Failed to load texture: ${path}`));
+        let isResolved = false;
+
+        texture.onLoadObservable.addOnce(() => {
+          if (!isResolved) {
+            isResolved = true;
+            resolve();
           }
-        }, 5000);
+        });
+
+        // Use onErrorObservable if available (Babylon.js 5.0+)
+        if ('onErrorObservable' in texture && texture.onErrorObservable) {
+          texture.onErrorObservable.addOnce(() => {
+            if (!isResolved) {
+              isResolved = true;
+              reject(new Error(`Texture failed to load: ${path}`));
+            }
+          });
+        }
+
+        // Fallback timeout for older Babylon.js versions or network issues
+        setTimeout(() => {
+          if (!isResolved && !texture.isReady()) {
+            isResolved = true;
+            reject(new Error(`Texture load timeout: ${path}`));
+          }
+        }, 10000); // Increased to 10s for slower networks
       });
 
       this.cache.textures.set(cacheKey, texture);
       this.updateCacheTimestamp(cacheKey);
       return texture;
-
-    } catch (error) {
+    } catch (_error) {
       console.warn(`[SPRITE_MANAGER] Failed to load texture ${path}, creating placeholder`);
       return this.createPlaceholderTexture();
     }
@@ -285,7 +297,7 @@ export class EnemySpriteManager {
    */
   private async createPlaceholderTexture(): Promise<Texture> {
     const cacheKey = 'placeholder_texture';
-    
+
     // Check if already created
     const cached = this.cache.textures.get(cacheKey);
     if (cached) {
@@ -315,11 +327,11 @@ export class EnemySpriteManager {
     spriteSheet: SpriteSheet,
     state: EnemyState,
     direction: SpriteDirection,
-    frameIndex: number = 0
+    frameIndex = 0
   ): Texture | null {
     const sequenceName = this.mapStateToSequence(state);
     const frameKey = `${sequenceName}_${direction}`;
-    
+
     const frames = spriteSheet.frames.get(frameKey);
     if (!frames || frames.length === 0) {
       console.warn(`[SPRITE_MANAGER] No frames found for ${frameKey}`);
@@ -369,7 +381,7 @@ export class EnemySpriteManager {
    */
   createAnimationState(enemyType: EnemyType, state: EnemyState): AnimationState {
     const config = this.getAnimationConfig(enemyType, state);
-    
+
     return {
       currentFrame: 0,
       totalFrames: config?.frameCount || 1,
