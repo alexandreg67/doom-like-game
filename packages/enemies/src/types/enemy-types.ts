@@ -1,5 +1,4 @@
-import type { Vector2, Vector3 } from '@babylonjs/core';
-import type { Component, Entity } from '@doom-like/game-logic';
+import type { Vector3 } from '@babylonjs/core';
 
 /**
  * Available enemy types in the game
@@ -7,6 +6,9 @@ import type { Component, Entity } from '@doom-like/game-logic';
  */
 export enum EnemyType {
   IMP = 'imp',
+  WEAK_IMP = 'weak_imp',
+  TOUGH_IMP = 'tough_imp',
+  ALPHA_IMP = 'alpha_imp',
   // Future types:
   // DEMON = 'demon',
   // CACODEMON = 'cacodemon',
@@ -53,6 +55,8 @@ export interface EnemyAIParams {
   movementSpeed: number;
   /** Turn speed (radians per second) */
   turnSpeed: number;
+  /** Collision radius for physics (world units) */
+  collisionRadius: number;
 }
 
 /**

@@ -8,13 +8,7 @@ import {
   createEnemyStateComponent,
   createEnemyStatsComponent,
 } from '../components';
-import type {
-  EnemyAIComponent,
-  EnemyIdentityComponent,
-  EnemyMovementComponent,
-  EnemyStateComponent,
-  EnemyStatsComponent,
-} from '../components';
+import type { EnemyIdentityComponent, EnemyStateComponent } from '../components';
 import type { EnemyDefinition, EnemyInstance, EnemySpawnConfig, EnemyType } from '../types';
 import { EnemyState } from '../types';
 
@@ -133,7 +127,8 @@ export class EnemyFactory {
       const movementComponent = createEnemyMovementComponent(
         spawnConfig.position,
         aiComponent.params.movementSpeed,
-        aiComponent.params.turnSpeed
+        aiComponent.params.turnSpeed,
+        aiComponent.params.collisionRadius
       );
       // Set initial facing angle if specified
       if (spawnConfig.facingAngle !== undefined) {

@@ -25,6 +25,9 @@ export interface EnemyMovementComponent extends Component {
   /** Movement speed (units per second) */
   movementSpeed: number;
 
+  /** Collision radius for physics calculations (in world units) */
+  radius: number;
+
   /** Turn/rotation speed (radians per second) */
   turnSpeed: number;
 
@@ -65,7 +68,8 @@ export interface EnemyMovementComponent extends Component {
 export function createEnemyMovementComponent(
   initialPosition: Vector3,
   movementSpeed: number,
-  turnSpeed: number
+  turnSpeed: number,
+  radius = 0.4
 ): EnemyMovementComponent {
   return {
     id: 'enemyMovement',
@@ -75,6 +79,7 @@ export function createEnemyMovementComponent(
     targetFacingAngle: 0,
     isMoving: false,
     movementSpeed,
+    radius,
     turnSpeed,
     acceleration: movementSpeed * 3, // Quick acceleration
     deceleration: movementSpeed * 4, // Quick stopping
