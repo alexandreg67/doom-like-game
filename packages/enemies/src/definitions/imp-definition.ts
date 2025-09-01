@@ -32,6 +32,7 @@ export const IMP_DEFINITION: EnemyDefinition = {
     // Movement Characteristics
     movementSpeed: 3.5, // 3.5 m/s - slower than typical player (4-5 m/s)
     turnSpeed: 4.0, // 4 rad/s - quick rotation for responsiveness
+    collisionRadius: 0.4, // 0.4m collision radius - standard humanoid size
   },
 
   // Physical and Combat Stats

@@ -127,7 +127,8 @@ export class EnemyFactory {
       const movementComponent = createEnemyMovementComponent(
         spawnConfig.position,
         aiComponent.params.movementSpeed,
-        aiComponent.params.turnSpeed
+        aiComponent.params.turnSpeed,
+        aiComponent.params.collisionRadius
       );
       // Set initial facing angle if specified
       if (spawnConfig.facingAngle !== undefined) {

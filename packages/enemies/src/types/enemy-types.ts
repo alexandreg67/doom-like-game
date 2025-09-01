@@ -6,6 +6,9 @@ import type { Vector3 } from '@babylonjs/core';
  */
 export enum EnemyType {
   IMP = 'imp',
+  WEAK_IMP = 'weak_imp',
+  TOUGH_IMP = 'tough_imp',
+  ALPHA_IMP = 'alpha_imp',
   // Future types:
   // DEMON = 'demon',
   // CACODEMON = 'cacodemon',
@@ -52,6 +55,8 @@ export interface EnemyAIParams {
   movementSpeed: number;
   /** Turn speed (radians per second) */
   turnSpeed: number;
+  /** Collision radius for physics (world units) */
+  collisionRadius: number;
 }
 
 /**

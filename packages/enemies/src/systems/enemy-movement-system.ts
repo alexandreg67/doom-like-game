@@ -190,9 +190,8 @@ export class EnemyMovementSystem implements System {
     // Placeholder collision system
     // Real implementation would check against map geometry
 
-    // TODO: Use a proper collision/physics component for radius instead of hardcoded value
-    // The enemyStats component doesn't actually have a radius property
-    const radius = 0.4; // Default enemy collision radius
+    // Use configurable radius from movementComponent, fallback to default if not set
+    const radius = movementComponent.radius ?? 0.4;
 
     // Simple boundary checks (example: world bounds)
     const worldSize = 50;

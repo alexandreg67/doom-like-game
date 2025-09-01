@@ -263,15 +263,26 @@ export class EnemyAISystem implements System {
   }
 
   /**
-   * Simple line of sight check (placeholder implementation)
-   * In real game, this would do raycasting
+   * INTENTIONAL LIMITATION: Simplified line of sight check
+   *
+   * Current implementation only checks distance for MVP functionality.
+   * This is acceptable for initial gameplay but will lead to enemies
+   * seeing through walls.
+   *
+   * TODO for production:
+   * - Implement proper raycasting against map geometry
+   * - Add support for partial occlusion (smoke, darkness)
+   * - Consider performance optimizations (spatial partitioning, caching)
+   *
+   * @param enemyPos Enemy world position
+   * @param playerPos Player world position
+   * @returns true if enemy has line of sight to player
    */
   private checkLineOfSight(enemyPos: Vector3, playerPos: Vector3): boolean {
     const distance = Vector3.Distance(enemyPos, playerPos);
 
-    // For now, always true if in range (simplified)
-    // Real implementation would raycast for obstacles
-    return distance <= 50; // Maximum sight range
+    // MVP implementation: distance-only check
+    return distance <= 50; // Maximum sight range (world units)
   }
 
   /**

@@ -186,8 +186,10 @@ export class EnemyCombatSystem implements System {
       const targetEntity = entities.find((e) => e.id === event.targetEntityId);
       if (!targetEntity) continue;
 
-      // For now, just log player damage events
-      // Real implementation would apply damage to player health system
+      // INTENTIONAL LIMITATION: Player damage is logged but not applied
+      // This is a placeholder for integration with external health/UI systems
+      // External systems should listen to getDamageEvents() to handle player damage
+      // TODO: Add proper damage application system or event bus integration
       if (event.targetEntityId === this.playerEntityId) {
         console.log(
           `[COMBAT] Player took ${event.damage} ${event.damageType} damage from ${event.sourceEntityId}`

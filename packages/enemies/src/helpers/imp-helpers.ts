@@ -52,14 +52,14 @@ export function createWeakImp(
   const factory = getEnemyFactory();
 
   // Temporarily register weak variant if not already registered
-  if (!factory.getEnemyDefinition('weak_imp' as EnemyType)) {
+  if (!factory.getEnemyDefinition(EnemyType.WEAK_IMP)) {
     factory.registerEnemyDefinition({
       ...IMP_VARIANTS.WEAK_IMP,
-      type: 'weak_imp' as EnemyType,
+      type: EnemyType.WEAK_IMP,
     });
   }
 
-  return createEnemyOfType(createEntityFn, 'weak_imp' as EnemyType, position, options);
+  return createEnemyOfType(createEntityFn, EnemyType.WEAK_IMP, position, options);
 }
 
 /**
@@ -257,9 +257,9 @@ export function isImp(entity: Entity): boolean {
   const identity = entity.components.get('enemyIdentity') as { type: string } | undefined;
   return (
     identity?.type === EnemyType.IMP ||
-    identity?.type === 'weak_imp' ||
-    identity?.type === 'tough_imp' ||
-    identity?.type === 'alpha_imp'
+    identity?.type === EnemyType.WEAK_IMP ||
+    identity?.type === EnemyType.TOUGH_IMP ||
+    identity?.type === EnemyType.ALPHA_IMP
   );
 }
 
