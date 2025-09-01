@@ -32,7 +32,7 @@ import {
 } from '../physics';
 import { Logger } from '../utils/logger';
 
-// Enemy system imports for Phase 3 integration  
+// Enemy system imports for Phase 3 integration
 // TODO: Re-enable once @doom-like/enemies package is properly built
 // import type { Entity } from '@doom-like/game-logic';
 // import { EnemyRenderSystem, type EnemyRenderSystemConfig, type EnemyRenderMetrics } from '@doom-like/enemies';
@@ -49,7 +49,7 @@ export interface RenderMetrics {
   totalLines: number;
   lightingTime?: number;
   activeLights?: number;
-  
+
   // Enemy rendering metrics (Phase 3)
   enemyMetrics?: {
     totalEnemies: number;
@@ -76,7 +76,7 @@ export class SceneManager {
   private sectorLightingManager: SectorLightingManager | null = null;
   private fogManager: FogManager | null = null;
   private lightingDebugUI: LightingDebugUI | null = null;
-  
+
   // Enemy rendering system (Phase 3)
   // TODO: Re-enable once @doom-like/enemies package is properly built
   // private enemyRenderSystem: EnemyRenderSystem | null = null;
@@ -157,7 +157,7 @@ export class SceneManager {
 
     // Initialize new lighting system
     this.initializeLightingSystem(scene);
-    
+
     // Initialize enemy rendering system (Phase 3)
     // TODO: Re-enable once @doom-like/enemies package is properly built
     // this.initializeEnemyRenderingSystem(scene);
@@ -812,13 +812,18 @@ export class SceneManager {
     }
 
     // Log enemy metrics if available
+    // TODO: Re-enable once @doom-like/enemies package is properly built
+    /*
     if (metrics.enemyMetrics) {
       console.log('  Enemy Rendering:');
-      console.log(`    Enemies: ${metrics.enemyMetrics.renderedEnemies} / ${metrics.enemyMetrics.totalEnemies} rendered`);
+      console.log(
+        `    Enemies: ${metrics.enemyMetrics.renderedEnemies} / ${metrics.enemyMetrics.totalEnemies} rendered`
+      );
       console.log(`    Culled enemies: ${metrics.enemyMetrics.culledEnemies}`);
       console.log(`    Animated enemies: ${metrics.enemyMetrics.animatedEnemies}`);
       console.log(`    Enemy render time: ${metrics.enemyMetrics.enemyRenderTime.toFixed(3)}ms`);
     }
+    */
   }
 
   public render(): void {
