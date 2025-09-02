@@ -10,6 +10,9 @@ export * from './factories/enemy-factory';
 // Export systems
 export * from './systems';
 
+// Export audio management
+export * from './audio';
+
 // Export definitions
 export * from './definitions';
 

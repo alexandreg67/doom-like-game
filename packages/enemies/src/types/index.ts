@@ -9,7 +9,8 @@ export type EnemyComponentType =
   | 'enemyAI'
   | 'enemyMovement'
   | 'enemyAttack'
-  | 'enemyRenderer';
+  | 'enemyRenderer'
+  | 'enemyAudio';
 
 /**
  * Type guard to check if a component is an enemy component
@@ -23,6 +24,7 @@ export function isEnemyComponent(componentId: string): componentId is EnemyCompo
     'enemyMovement',
     'enemyAttack',
     'enemyRenderer',
+    'enemyAudio',
   ];
   return enemyComponents.includes(componentId as EnemyComponentType);
 }

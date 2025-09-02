@@ -1,4 +1,9 @@
 import { type Scene, Texture } from '@babylonjs/core';
+
+// Interface for Babylon.js observables with addOnce method
+interface BabylonObservable<T = void> {
+  addOnce(callback: (eventData: T) => void): void;
+}
 // Logger will be imported from the engine package when available
 // For now, we'll use console logging
 import type {
@@ -268,7 +273,7 @@ export class EnemySpriteManager {
 
         // Use onErrorObservable if available (Babylon.js 5.0+)
         if ('onErrorObservable' in texture && texture.onErrorObservable) {
-          texture.onErrorObservable.addOnce(() => {
+          (texture.onErrorObservable as BabylonObservable).addOnce(() => {
             if (!isResolved) {
               isResolved = true;
               reject(new Error(`Texture failed to load: ${path}`));
