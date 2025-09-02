@@ -456,7 +456,7 @@ export class EnemyAudioManager {
 
     // Convert to 16-bit PCM
     for (let i = 0; i < length; i++) {
-      const sample = Math.max(-1, Math.min(1, audioData[i]));
+      const sample = Math.max(-1, Math.min(1, audioData[i] || 0));
       view.setInt16(44 + i * 2, sample * 0x7fff, true);
     }
 
