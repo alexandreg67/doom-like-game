@@ -41,6 +41,8 @@ export class EnemyAudioSystem implements System {
   private enabled = true;
   private debug = false;
   private stats: EnemyAudioStats;
+  private eventCallback?: (event: EnemyEvent) => void;
+  private currentEntities: Entity[] = [];
 
   // Performance tracking
   private lastUpdateTime = 0;
@@ -73,6 +75,9 @@ export class EnemyAudioSystem implements System {
     const startTime = performance.now();
 
     if (!this.enabled) return;
+
+    // Store current entities for event processing
+    this.currentEntities = entities;
 
     // Process event queue first
     this.processEventQueue();
@@ -141,6 +146,13 @@ export class EnemyAudioSystem implements System {
   }
 
   /**
+   * Set event callback for debugging/testing
+   */
+  setEventCallback(callback: (event: EnemyEvent) => void): void {
+    this.eventCallback = callback;
+  }
+
+  /**
    * Stop all audio and cleanup resources
    */
   dispose(): void {
@@ -203,6 +215,11 @@ export class EnemyAudioSystem implements System {
    * Process individual audio event
    */
   private processEvent(event: EnemyEvent): void {
+    // Call event callback if set (for testing/debugging)
+    if (this.eventCallback) {
+      this.eventCallback(event);
+    }
+
     if (event.type === 'state_changed' || event.type === 'audio_state_changed') {
       this.handleStateChangeEvent(event);
     } else if (event.type === 'audio_triggered') {
@@ -443,10 +460,8 @@ export class EnemyAudioSystem implements System {
   /**
    * Find entity by ID (helper function)
    */
-  private findEntityById(_entityId: string): Entity | null {
-    // This is a simplified implementation
-    // In a real system, you'd have a proper entity lookup
-    return null;
+  private findEntityById(entityId: string): Entity | null {
+    return this.currentEntities.find((entity) => entity.id === entityId) || null;
   }
 
   /**
