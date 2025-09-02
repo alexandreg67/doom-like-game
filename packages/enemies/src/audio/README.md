@@ -1,190 +1,190 @@
 # Enemy Audio System - 3D Spatial Audio
 
-Ce module implémente un système audio 3D spatialisé pour les ennemis, intégré au système FSM (Finite State Machine) existant.
+This module implements a 3D spatialized audio system for enemies, integrated with the existing FSM (Finite State Machine) system.
 
 ## Architecture
 
-### Composants principaux
+### Main Components
 
-- **EnemyAudioComponent** : Composant ECS pour l'audio spatial d'un ennemi
-- **EnemyAudioSystem** : Système qui gère l'audio 3D et écoute les événements FSM
-- **EnemyAudioManager** : Gestionnaire d'assets audio avec fallbacks et placeholders
+- **EnemyAudioComponent**: ECS component for an enemy's spatial audio
+- **EnemyAudioSystem**: System that manages 3D audio and listens to FSM events
+- **EnemyAudioManager**: Audio asset manager with fallbacks and placeholders
 
-### Intégration FSM
+### FSM Integration
 
-Le système audio écoute les transitions d'état FSM via des événements :
+The audio system listens to FSM state transitions via events:
 
 ```typescript
-// Événements audio ajoutés
+// Added audio events
 enum EnemyEventType {
   AUDIO_STATE_CHANGED = 'audio_state_changed',
   AUDIO_TRIGGERED = 'audio_triggered',
 }
 
-// Configuration audio par état FSM
+// Audio configuration per FSM state
 interface AudioStateConfig {
-  samples: string[];      // Fichiers audio pour cet état
+  samples: string[];      // Audio files for this state
   volume: number;         // Volume (0-1)
-  pitch: number;          // Pitch de base
-  pitchVariation: number; // Variation aléatoire du pitch
-  maxDistance: number;    // Distance maximale audible
-  rolloffFactor: number;  // Facteur d'atténuation
-  loop: boolean;          // Audio en boucle
-  triggerChance: number;  // Probabilité de déclencher (0-1)
-  cooldown: number;       // Temps minimum entre déclenchements
+  pitch: number;          // Base pitch
+  pitchVariation: number; // Random pitch variation
+  maxDistance: number;    // Maximum audible distance
+  rolloffFactor: number;  // Attenuation factor
+  loop: boolean;          // Looped audio
+  triggerChance: number;  // Trigger probability (0-1)
+  cooldown: number;       // Minimum time between triggers
 }
 ```
 
-## Utilisation
+## Usage
 
-### Initialisation
+### Initialization
 
 ```typescript
-import { EnemyAudioSystem, EnemyAudioManager, EnemyAudioUtils } from '@doom-like/enemies';
+import { EnemyAudioSystem, EnemyAudioManager, createAudioComponent } from '@doom-like/enemies';
 
-// Créer le gestionnaire d'assets
+// Create asset manager
 const audioManager = new EnemyAudioManager(scene, {
   debug: true,
   basePath: './assets/audio/enemies/',
 });
 
-// Créer le système audio
+// Create audio system
 const audioSystem = new EnemyAudioSystem(scene, {
   debug: true,
   masterVolume: 0.8,
 });
 
-// Connecter avec le système AI pour les événements
+// Connect with AI system for events
 enemyAISystem.setEventCallback((event) => {
   audioSystem.queueEvent(event);
 });
 
-// Précharger les assets audio
+// Preload audio assets
 await audioManager.preloadAllEnemyAudio();
 ```
 
-### Ajout du composant à une entité
+### Adding Component to Entity
 
 ```typescript
-import { EnemyAudioUtils, EnemyType } from '@doom-like/enemies';
+import { createAudioComponent, EnemyType } from '@doom-like/enemies';
 
-// Créer le composant audio
-const audioComponent = EnemyAudioUtils.createComponent(EnemyType.IMP, scene);
+// Create audio component
+const audioComponent = createAudioComponent(EnemyType.IMP, scene);
 
-// Ajouter à l'entité
+// Add to entity
 entity.components.set('enemyAudio', audioComponent);
 ```
 
-### Mise à jour du système
+### System Update
 
 ```typescript
-// Dans la boucle de jeu
+// In game loop
 audioSystem.updateListenerPosition(playerPosition);
 audioSystem.update(entities, deltaTime);
 ```
 
-## Configuration audio par type d'ennemi
+## Audio Configuration by Enemy Type
 
-### Types d'ennemis et leurs caractéristiques audio
+### Enemy Types and Audio Characteristics
 
 ```typescript
 // IMP standard (baseline)
 EnemyType.IMP: {
-  volume: 1.0,        // Volume de référence
-  pitch: 1.0,         // Pitch de référence
-  maxDistance: 50,    // Distance de référence
+  volume: 1.0,        // Reference volume
+  pitch: 1.0,         // Reference pitch
+  maxDistance: 50,    // Reference distance
 }
 
-// IMP faible (plus discret)
+// Weak IMP (more discreet)
 EnemyType.WEAK_IMP: {
-  volume: 0.7,        // 30% plus silencieux
-  pitch: 1.1,         // Voix plus aiguë
-  maxDistance: 40,    // Portée réduite
+  volume: 0.7,        // 30% quieter
+  pitch: 1.1,         // Higher voice
+  maxDistance: 40,    // Reduced range
 }
 
-// IMP résistant (plus imposant)
+// Tough IMP (more imposing)
 EnemyType.TOUGH_IMP: {
-  volume: 1.3,        // 30% plus fort
-  pitch: 0.9,         // Voix plus grave
-  maxDistance: 60,    // Portée augmentée
+  volume: 1.3,        // 30% louder
+  pitch: 0.9,         // Lower voice
+  maxDistance: 60,    // Increased range
 }
 
-// IMP alpha (boss-like)
+// Alpha IMP (boss-like)
 EnemyType.ALPHA_IMP: {
-  volume: 1.5,        // 50% plus fort
-  pitch: 0.8,         // Voix très grave
-  maxDistance: 75,    // Très longue portée
-  rolloffFactor: 0.7, // Atténuation réduite
+  volume: 1.5,        // 50% louder
+  pitch: 0.8,         // Very low voice
+  maxDistance: 75,    // Very long range
+  rolloffFactor: 0.7, // Reduced attenuation
 }
 ```
 
-### États FSM et audio associé
+### FSM States and Associated Audio
 
-| État FSM | Type d'audio | Caractéristiques |
-|----------|--------------|------------------|
-| `IDLE` | Respiration, ambiance | Volume faible, loop, cooldown long |
-| `SEEKING` | Pas, recherche | Volume moyen, pas de loop, cooldown moyen |
-| `CHASE` | Grognements agressifs | Volume fort, pas de loop, cooldown court |
-| `ATTACK` | Cris d'attaque | Volume maximum, déclenchement garanti |
-| `HURT` | Cris de douleur | Volume fort, pitch élevé, déclenchement garanti |
-| `DEATH` | Cri final, chute | Volume maximum, longue portée, pas de cooldown |
+| FSM State | Audio Type | Characteristics |
+|-----------|------------|-----------------|
+| `IDLE` | Breathing, ambiance | Low volume, loop, long cooldown |
+| `SEEKING` | Footsteps, searching | Medium volume, no loop, medium cooldown |
+| `CHASE` | Aggressive growls | High volume, no loop, short cooldown |
+| `ATTACK` | Attack cries | Maximum volume, guaranteed trigger |
+| `HURT` | Pain cries | High volume, elevated pitch, guaranteed trigger |
+| `DEATH` | Final cry, fall | Maximum volume, long range, no cooldown |
 
-## Assets audio
+## Audio Assets
 
-### Structure des fichiers
+### File Structure
 
 ```
 assets/audio/enemies/
-├── manifest.json              # Mapping nom → fichier
-├── imp_idle_breathing_01.ogg  # Sons d'état inactif
+├── manifest.json              # Name → file mapping
+├── imp_idle_breathing_01.ogg  # Idle state sounds
 ├── imp_idle_ambient_01.ogg
-├── imp_seeking_footstep_01.ogg # Sons de recherche
-├── imp_chase_roar_01.ogg      # Sons de poursuite
-├── imp_attack_grunt_01.ogg    # Sons d'attaque
-├── imp_hurt_scream_01.ogg     # Sons de douleur
-├── imp_death_scream_01.ogg    # Sons de mort
+├── imp_seeking_footstep_01.ogg # Seeking sounds
+├── imp_chase_roar_01.ogg      # Chase sounds
+├── imp_attack_grunt_01.ogg    # Attack sounds
+├── imp_hurt_scream_01.ogg     # Hurt sounds
+├── imp_death_scream_01.ogg    # Death sounds
 └── ...
 ```
 
-### Formats supportés
+### Supported Formats
 
-1. **OGG Vorbis** (recommandé) - Meilleure compression, support Web
-2. **MP3** - Compatibilité universelle
-3. **WAV** - Qualité maximale, mais plus lourd
+1. **OGG Vorbis** (recommended) - Better compression, Web support
+2. **MP3** - Universal compatibility
+3. **WAV** - Maximum quality, but heavier
 
-### Naming convention
+### Naming Convention
 
 ```
 {enemyType}_{state}_{variation}_{index}.{format}
 
-Exemples :
+Examples:
 - imp_idle_breathing_01.ogg
 - tough_imp_attack_roar_02.mp3
 - alpha_imp_death_final_01.wav
 ```
 
-## Optimisations de performance
+## Performance Optimizations
 
 ### System Level of Detail (LOD)
 
 ```typescript
 // Distance-based LOD
 const LOD_CONFIG = {
-  close: 0-30,     // Audio complet, effets avancés
-  medium: 30-80,   // Audio standard, effets réduits
-  far: 80-120,     // Audio basique uniquement
-  silent: 120+,    // Aucun audio
+  close: 0-30,     // Full audio, advanced effects
+  medium: 30-80,   // Standard audio, reduced effects
+  far: 80-120,     // Basic audio only
+  silent: 120+,    // No audio
 };
 ```
 
-### Pool d'objets audio
+### Audio Object Pooling
 
-- **Pool size** : 10 sons maximum par type d'ennemi
-- **Réutilisation** : Sons recyclés après lecture
-- **Cleanup** : Nettoyage automatique toutes les 5 secondes
-- **Memory limit** : 50MB de cache audio maximum
+- **Pool size**: 10 sounds maximum per enemy type
+- **Reuse**: Sounds recycled after playback
+- **Cleanup**: Automatic cleanup every 5 seconds
+- **Memory limit**: 50MB audio cache maximum
 
-### Métriques de performance
+### Performance Metrics
 
 ```typescript
 const stats = audioSystem.getStats();
@@ -195,115 +195,115 @@ Memory usage: ${stats.audioPoolMemoryUsage / 1024 / 1024}MB
 `);
 ```
 
-## Fallbacks et placeholders
+## Fallbacks and Placeholders
 
-### Génération procédurale
+### Procedural Generation
 
-En l'absence de fichiers audio réels, le système génère automatiquement des sons placeholders :
+In the absence of real audio files, the system automatically generates placeholder sounds:
 
 ```typescript
-// Sons générés selon le type
-'roar' → Grognement grave avec bruit
-'grunt' → Son percussif court
-'footstep' → Bruit sourd rythmé
-'breathing' → Son ambiant doux
-'scream' → Cri aigu avec decay
+// Generated sounds by type
+'roar' → Low growl with noise
+'grunt' → Short percussive sound
+'footstep' → Rhythmic dull noise
+'breathing' → Soft ambient sound
+'scream' → High-pitched cry with decay
 ```
 
-### Durées par défaut
+### Default Durations
 
-- **Respiration/Ambiance** : 4-5 secondes
-- **Pas/Actions courtes** : 0.3 secondes
-- **Grognements/Douleur** : 1-2 secondes
-- **Cris/Mort** : 2-3 secondes
+- **Breathing/Ambiance**: 4-5 seconds
+- **Footsteps/Short actions**: 0.3 seconds
+- **Growls/Pain**: 1-2 seconds
+- **Cries/Death**: 2-3 seconds
 
-## Debug et monitoring
+## Debug and Monitoring
 
-### Mode debug
+### Debug Mode
 
 ```typescript
 const audioSystem = new EnemyAudioSystem(scene, { debug: true });
 const audioManager = new EnemyAudioManager(scene, { debug: true });
 
-// Logs console :
+// Console logs:
 // [ENEMY_AUDIO] Triggered imp_attack_01 for state ATTACK at intensity 1.0
 // [ENEMY_AUDIO_MANAGER] Loaded 15 sounds for imp
 ```
 
-### Métriques en temps réel
+### Real-time Metrics
 
 ```typescript
-// Statistiques système
+// System statistics
 const systemStats = audioSystem.getStats();
 
-// Statistiques cache
+// Cache statistics
 const cacheStats = audioManager.getCacheStats();
 
-// Statistiques composant
-const componentStats = EnemyAudioUtils.getComponentStats(audioComponent);
+// Component statistics
+const componentStats = getAudioComponentStats(audioComponent);
 ```
 
 ## Tests
 
-### Tests unitaires
+### Unit Tests
 
 ```bash
-# Tests composant audio
+# Audio component tests
 pnpm test enemy-audio-component.test.ts
 
-# Tests système audio
+# Audio system tests
 pnpm test enemy-audio-system.test.ts
 
-# Tests gestionnaire d'assets
+# Asset manager tests
 pnpm test enemy-audio-manager.test.ts
 ```
 
-### Tests d'intégration
+### Integration Tests
 
 ```bash
-# Test intégration FSM → Audio
+# FSM → Audio integration test
 pnpm test integration/fsm-audio.test.ts
 
-# Test performance (50+ ennemis)
+# Performance test (50+ enemies)
 pnpm test performance/audio-system.test.ts
 ```
 
 ## Troubleshooting
 
-### Problèmes courants
+### Common Issues
 
-1. **Audio ne se déclenche pas**
-   - Vérifier que `audioComponent.isEnabled = true`
-   - Vérifier la distance avec `audioComponent.distanceToListener`
-   - Contrôler le cooldown avec `audioComponent.lastTriggerTime`
+1. **Audio not triggering**
+   - Check that `audioComponent.isEnabled = true`
+   - Check distance with `audioComponent.distanceToListener`
+   - Control cooldown with `audioComponent.lastTriggerTime`
 
-2. **Performance dégradée**
-   - Réduire le nombre d'ennemis actifs
-   - Augmenter la distance de culling audio
-   - Vérifier les métriques avec `getStats()`
+2. **Performance degraded**
+   - Reduce number of active enemies
+   - Increase audio culling distance
+   - Check metrics with `getStats()`
 
-3. **Sons absents/placeholders**
-   - Vérifier la structure des assets dans `/assets/audio/enemies/`
-   - Contrôler le `manifest.json`
-   - Activer le debug pour voir les tentatives de chargement
+3. **Missing/placeholder sounds**
+   - Check asset structure in `/assets/audio/enemies/`
+   - Control `manifest.json`
+   - Enable debug to see loading attempts
 
-### Configuration recommandée
+### Recommended Configuration
 
 ```typescript
-// Configuration production optimisée
+// Optimized production configuration
 const PRODUCTION_CONFIG = {
-  maxActiveEnemies: 20,      // Limite d'ennemis avec audio
-  audioLODDistance: 100,     // Distance LOD audio
-  masterVolume: 0.7,         // Volume maître
-  spatialAudioEnabled: true, // Audio 3D activé
-  debug: false,              // Debug désactivé
+  maxActiveEnemies: 20,      // Limit of enemies with audio
+  audioLODDistance: 100,     // Audio LOD distance
+  masterVolume: 0.7,         // Master volume
+  spatialAudioEnabled: true, // 3D audio enabled
+  debug: false,              // Debug disabled
 };
 ```
 
-## Extensions futures
+## Future Extensions
 
-- Support VR/AR avec audio binauralm
-- Occlusion audio (obstacles bloquent le son)
-- Réverbération dynamique selon l'environnement
-- Audio adaptatif selon la difficulté
-- Mixing audio intelligent (ducking automatique)
+- VR/AR support with binaural audio
+- Audio occlusion (obstacles block sound)
+- Dynamic reverb based on environment
+- Adaptive audio based on difficulty
+- Intelligent audio mixing (automatic ducking)
