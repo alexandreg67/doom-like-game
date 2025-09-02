@@ -237,6 +237,9 @@ export enum EnemyEventType {
   ATTACK_HIT = 'attack_hit',
   TOOK_DAMAGE = 'took_damage',
   STATE_CHANGED = 'state_changed',
+  // Audio-related events
+  AUDIO_STATE_CHANGED = 'audio_state_changed',
+  AUDIO_TRIGGERED = 'audio_triggered',
 }
 
 /**
@@ -247,4 +250,60 @@ export interface EnemyEvent {
   enemyId: string;
   timestamp: number;
   data?: unknown;
+}
+
+/**
+ * Audio state configuration for each FSM state
+ */
+export interface AudioStateConfig {
+  /** Audio samples for this state */
+  samples: string[];
+  /** Volume level (0-1) */
+  volume: number;
+  /** Base pitch (0.5-2.0) */
+  pitch: number;
+  /** Pitch variation range */
+  pitchVariation: number;
+  /** Maximum audible distance */
+  maxDistance: number;
+  /** Volume rolloff factor */
+  rolloffFactor: number;
+  /** Whether to loop the audio */
+  loop: boolean;
+  /** Probability of triggering audio (0-1) */
+  triggerChance: number;
+  /** Minimum time between audio triggers (seconds) */
+  cooldown: number;
+}
+
+/**
+ * Audio event data for enemy audio system
+ */
+export interface EnemyAudioEventData {
+  /** Previous state (for transitions) */
+  previousState?: EnemyState;
+  /** New state */
+  currentState: EnemyState;
+  /** Audio intensity (0-1) */
+  intensity?: number;
+  /** Custom audio ID to trigger */
+  audioId?: string;
+  /** Enemy position for 3D audio */
+  position: Vector3;
+}
+
+/**
+ * Enemy audio statistics
+ */
+export interface EnemyAudioStats {
+  /** Total active audio sources */
+  activeAudioSources: number;
+  /** Audio sources by enemy type */
+  audioSourcesByType: Record<EnemyType, number>;
+  /** Audio sources by state */
+  audioSourcesByState: Record<EnemyState, number>;
+  /** Average audio update time (ms) */
+  avgAudioUpdateTime: number;
+  /** Memory usage by audio pool (approximate bytes) */
+  audioPoolMemoryUsage: number;
 }

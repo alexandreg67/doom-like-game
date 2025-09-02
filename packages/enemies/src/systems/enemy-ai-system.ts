@@ -2,7 +2,7 @@ import { Vector3 } from '@babylonjs/core';
 import type { Entity, System, Transform } from '@doom-like/game-logic';
 import type { EnemyAIComponent, EnemyIdentityComponent, EnemyStateComponent } from '../components';
 import { EnemyAIUtils, EnemyStateUtils } from '../components';
-import { EnemyState } from '../types';
+import { EnemyState, EnemyEventType, type EnemyEvent, type EnemyAudioEventData } from '../types/enemy-types';
 
 /**
  * EnemyAISystem - Manages enemy AI behavior and FSM transitions
@@ -12,10 +12,12 @@ import { EnemyState } from '../types';
  * - FSM state transitions based on game context
  * - AI decision making for each enemy type
  * - Timer management (seek duration, attack cooldowns)
+ * - Event emission for audio system integration
  */
 export class EnemyAISystem implements System {
   private playerEntityId: string | null = null;
   private cachedPlayerEntity: Entity | null = null;
+  private eventCallback: ((event: EnemyEvent) => void) | null = null;
 
   /**
    * Set the player entity ID for enemy targeting
@@ -23,6 +25,13 @@ export class EnemyAISystem implements System {
   setPlayer(playerEntityId: string): void {
     this.playerEntityId = playerEntityId;
     this.cachedPlayerEntity = null; // Invalidate cache
+  }
+
+  /**
+   * Set callback for audio events (typically from EnemyAudioSystem)
+   */
+  setEventCallback(callback: (event: EnemyEvent) => void): void {
+    this.eventCallback = callback;
   }
 
   /**
@@ -109,15 +118,15 @@ export class EnemyAISystem implements System {
 
     switch (currentState) {
       case EnemyState.IDLE:
-        this.handleIdleState(aiComponent, stateComponent, currentTime);
+        this.handleIdleState(entity, aiComponent, stateComponent, currentTime);
         break;
 
       case EnemyState.SEEKING:
-        this.handleSeekingState(aiComponent, stateComponent, currentTime);
+        this.handleSeekingState(entity, aiComponent, stateComponent, currentTime);
         break;
 
       case EnemyState.CHASE:
-        this.handleChaseState(aiComponent, stateComponent, currentTime);
+        this.handleChaseState(entity, aiComponent, stateComponent, currentTime);
         break;
 
       case EnemyState.ATTACK:
@@ -125,7 +134,7 @@ export class EnemyAISystem implements System {
         break;
 
       case EnemyState.HURT:
-        this.handleHurtState(aiComponent, stateComponent, currentTime);
+        this.handleHurtState(entity, aiComponent, stateComponent, currentTime);
         break;
 
       case EnemyState.DEATH:
@@ -138,6 +147,7 @@ export class EnemyAISystem implements System {
    * Handle IDLE state behavior
    */
   private handleIdleState(
+    entity: Entity,
     aiComponent: EnemyAIComponent,
     stateComponent: EnemyStateComponent,
     currentTime: number
@@ -151,8 +161,21 @@ export class EnemyAISystem implements System {
         aiComponent.lastKnownTargetPosition || undefined
       );
 
+      const transform = entity.components.get('transform') as Transform;
+      const enemyPosition = transform ? new Vector3(transform.x, transform.y, transform.z) : new Vector3(0, 0, 0);
+
       // Transition to SEEKING
       EnemyStateUtils.transitionTo(stateComponent, EnemyState.SEEKING, currentTime);
+
+      // Emit audio event for state change
+      this.emitAudioEvent(
+        entity,
+        EnemyEventType.AUDIO_STATE_CHANGED,
+        EnemyState.IDLE,
+        EnemyState.SEEKING,
+        enemyPosition,
+        0.8 // intensity for seeking
+      );
     }
   }
 
@@ -160,19 +183,43 @@ export class EnemyAISystem implements System {
    * Handle SEEKING state behavior
    */
   private handleSeekingState(
+    entity: Entity,
     aiComponent: EnemyAIComponent,
     stateComponent: EnemyStateComponent,
     currentTime: number
   ): void {
+    const transform = entity.components.get('transform') as Transform;
+    const enemyPosition = transform ? new Vector3(transform.x, transform.y, transform.z) : new Vector3(0, 0, 0);
+
     if (!aiComponent.isPursuing) {
       // Lost target, return to idle
       EnemyStateUtils.transitionTo(stateComponent, EnemyState.IDLE, currentTime);
+      
+      // Emit audio event for state change
+      this.emitAudioEvent(
+        entity,
+        EnemyEventType.AUDIO_STATE_CHANGED,
+        EnemyState.SEEKING,
+        EnemyState.IDLE,
+        enemyPosition,
+        0.3 // low intensity for returning to idle
+      );
       return;
     }
 
     // If we can see target, go to chase
     if (aiComponent.hasLineOfSight) {
       EnemyStateUtils.transitionTo(stateComponent, EnemyState.CHASE, currentTime);
+      
+      // Emit audio event for state change
+      this.emitAudioEvent(
+        entity,
+        EnemyEventType.AUDIO_STATE_CHANGED,
+        EnemyState.SEEKING,
+        EnemyState.CHASE,
+        enemyPosition,
+        0.9 // high intensity for aggressive chase
+      );
       return;
     }
 
@@ -184,19 +231,43 @@ export class EnemyAISystem implements System {
    * Handle CHASE state behavior
    */
   private handleChaseState(
+    entity: Entity,
     aiComponent: EnemyAIComponent,
     stateComponent: EnemyStateComponent,
     currentTime: number
   ): void {
+    const transform = entity.components.get('transform') as Transform;
+    const enemyPosition = transform ? new Vector3(transform.x, transform.y, transform.z) : new Vector3(0, 0, 0);
+
     if (!aiComponent.isPursuing || !aiComponent.isTargetInAggroRange) {
       // Lost target or out of range
       EnemyStateUtils.transitionTo(stateComponent, EnemyState.SEEKING, currentTime);
+      
+      // Emit audio event for state change
+      this.emitAudioEvent(
+        entity,
+        EnemyEventType.AUDIO_STATE_CHANGED,
+        EnemyState.CHASE,
+        EnemyState.SEEKING,
+        enemyPosition,
+        0.6 // moderate intensity for losing target
+      );
       return;
     }
 
     // Check if in attack range
     if (EnemyAIUtils.canAttack(aiComponent)) {
       EnemyStateUtils.transitionTo(stateComponent, EnemyState.ATTACK, currentTime);
+      
+      // Emit audio event for state change
+      this.emitAudioEvent(
+        entity,
+        EnemyEventType.AUDIO_STATE_CHANGED,
+        EnemyState.CHASE,
+        EnemyState.ATTACK,
+        enemyPosition,
+        1.0 // maximum intensity for attack
+      );
       return;
     }
 
@@ -232,19 +303,50 @@ export class EnemyAISystem implements System {
    * Handle HURT state behavior
    */
   private handleHurtState(
+    entity: Entity,
     aiComponent: EnemyAIComponent,
     stateComponent: EnemyStateComponent,
     currentTime: number
   ): void {
     // Hurt state has fixed duration, wait for transition timer
     if (!stateComponent.nextState && stateComponent.timeInState > aiComponent.params.hurtDuration) {
+      const transform = entity.components.get('transform') as Transform;
+      const enemyPosition = transform ? new Vector3(transform.x, transform.y, transform.z) : new Vector3(0, 0, 0);
+
       // Return to appropriate state based on target status
       if (EnemyAIUtils.canAttack(aiComponent)) {
         EnemyStateUtils.transitionTo(stateComponent, EnemyState.ATTACK, currentTime);
+        
+        this.emitAudioEvent(
+          entity,
+          EnemyEventType.AUDIO_STATE_CHANGED,
+          EnemyState.HURT,
+          EnemyState.ATTACK,
+          enemyPosition,
+          1.0 // high intensity for angry attack after hurt
+        );
       } else if (aiComponent.isTargetInAggroRange) {
         EnemyStateUtils.transitionTo(stateComponent, EnemyState.CHASE, currentTime);
+        
+        this.emitAudioEvent(
+          entity,
+          EnemyEventType.AUDIO_STATE_CHANGED,
+          EnemyState.HURT,
+          EnemyState.CHASE,
+          enemyPosition,
+          0.8 // moderate-high intensity for resumed chase
+        );
       } else {
         EnemyStateUtils.transitionTo(stateComponent, EnemyState.IDLE, currentTime);
+        
+        this.emitAudioEvent(
+          entity,
+          EnemyEventType.AUDIO_STATE_CHANGED,
+          EnemyState.HURT,
+          EnemyState.IDLE,
+          enemyPosition,
+          0.4 // low intensity for returning to idle
+        );
       }
     }
   }
@@ -304,5 +406,38 @@ export class EnemyAISystem implements System {
         [EnemyState.DEATH]: 0,
       },
     };
+  }
+
+  /**
+   * Emit audio event for state transitions
+   */
+  private emitAudioEvent(
+    entity: Entity,
+    eventType: EnemyEventType,
+    previousState: EnemyState | undefined,
+    currentState: EnemyState,
+    position: Vector3,
+    intensity = 1.0
+  ): void {
+    if (!this.eventCallback) return;
+
+    const identity = entity.components.get('enemyIdentity') as EnemyIdentityComponent;
+    if (!identity) return;
+
+    const eventData: EnemyAudioEventData = {
+      previousState,
+      currentState,
+      position: position.clone(),
+      intensity,
+    };
+
+    const event: EnemyEvent = {
+      type: eventType,
+      enemyId: entity.id,
+      timestamp: performance.now(),
+      data: eventData,
+    };
+
+    this.eventCallback(event);
   }
 }
