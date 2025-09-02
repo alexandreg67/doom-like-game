@@ -1,7 +1,8 @@
 import { NullEngine, Scene, Vector3 } from '@babylonjs/core';
 import type { Entity } from '@doom-like/game-logic';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EnemyAudioUtils } from '../../components/enemy-audio-component';
+import type { EnemyIdentityComponent, EnemyStateComponent } from '../../components';
+import { type EnemyAudioComponent, EnemyAudioUtils } from '../../components/enemy-audio-component';
 import { EnemyAudioSystem } from '../../systems/enemy-audio-system';
 import {
   type EnemyAudioEventData,
@@ -111,7 +112,7 @@ describe('EnemyAudioSystem', () => {
 
     it('should skip dead entities', () => {
       const deadEntity = createMockEnemyEntity('dead', EnemyType.IMP, new Vector3(0, 0, 0));
-      const identity = deadEntity.components.get('enemyIdentity') as any;
+      const identity = deadEntity.components.get('enemyIdentity') as EnemyIdentityComponent;
       identity.isAlive = false;
 
       const updateSpy = vi.spyOn(EnemyAudioUtils, 'updateComponent');
@@ -275,7 +276,7 @@ describe('EnemyAudioSystem', () => {
   describe('sound creation and management', () => {
     it('should handle failed sound creation gracefully', () => {
       // Mock Sound constructor to throw error
-      const _originalSound = (global as any).Sound;
+      const _originalSound = (global as typeof global & { Sound?: unknown }).Sound;
       vi.mocked(mockScene).createBufferSource = vi.fn().mockImplementation(() => {
         throw new Error('Audio creation failed');
       });
@@ -299,16 +300,16 @@ describe('EnemyAudioSystem', () => {
         EnemyState.DEATH,
       ];
 
-      states.forEach((state) => {
+      for (const state of states) {
         const entity = mockEntities[0];
-        const stateComponent = entity.components.get('enemyState') as any;
+        const stateComponent = entity.components.get('enemyState') as EnemyStateComponent;
         stateComponent.currentState = state;
 
         audioSystem.update([entity], 0.016);
 
         // Each state should be processed without error
         expect(true).toBe(true);
-      });
+      }
     });
   });
 

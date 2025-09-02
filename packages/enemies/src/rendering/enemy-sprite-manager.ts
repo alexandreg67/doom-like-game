@@ -268,7 +268,7 @@ export class EnemySpriteManager {
 
         // Use onErrorObservable if available (Babylon.js 5.0+)
         if ('onErrorObservable' in texture && texture.onErrorObservable) {
-          texture.onErrorObservable.addOnce(() => {
+          (texture.onErrorObservable as any).addOnce(() => {
             if (!isResolved) {
               isResolved = true;
               reject(new Error(`Texture failed to load: ${path}`));

@@ -281,7 +281,7 @@ export interface AudioStateConfig {
  */
 export interface EnemyAudioEventData {
   /** Previous state (for transitions) */
-  previousState?: EnemyState;
+  previousState: EnemyState | undefined;
   /** New state */
   currentState: EnemyState;
   /** Audio intensity (0-1) */

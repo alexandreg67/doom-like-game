@@ -3,6 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type EnemyAudioComponent, EnemyAudioUtils } from '../../components/enemy-audio-component';
 import { EnemyState, EnemyType } from '../../types/enemy-types';
 
+// Mock Sound interface for testing
+interface MockSound {
+  stop: ReturnType<typeof vi.fn>;
+  dispose: ReturnType<typeof vi.fn>;
+  isPlaying: boolean;
+}
+
 // Mock Babylon.js Scene for testing
 vi.mock('@babylonjs/core', async () => {
   const actual = await vi.importActual('@babylonjs/core');
@@ -41,18 +48,18 @@ describe('EnemyAudioComponent', () => {
 
     it('should have audio config for all enemy states', () => {
       const states = Object.values(EnemyState);
-      states.forEach((state) => {
+      for (const state of states) {
         expect(component.audioConfig[state]).toBeDefined();
         expect(component.audioConfig[state].samples).toBeDefined();
         expect(component.audioConfig[state].volume).toBeGreaterThan(0);
-      });
+      }
     });
 
     it('should initialize last trigger times for all states', () => {
       const states = Object.values(EnemyState);
-      states.forEach((state) => {
+      for (const state of states) {
         expect(component.lastTriggerTime[state]).toBe(0);
-      });
+      }
     });
   });
 
@@ -186,11 +193,11 @@ describe('EnemyAudioComponent', () => {
 
   describe('sound management', () => {
     it('should track active sounds correctly', () => {
-      const mockSound = {
+      const mockSound: MockSound = {
         stop: vi.fn(),
         dispose: vi.fn(),
         isPlaying: true,
-      } as any;
+      };
 
       EnemyAudioUtils.addActiveSound(component, 'test_sound_1', mockSound);
       expect(component.activeSounds.size).toBe(1);
@@ -198,11 +205,11 @@ describe('EnemyAudioComponent', () => {
     });
 
     it('should remove and dispose sounds correctly', () => {
-      const mockSound = {
+      const mockSound: MockSound = {
         stop: vi.fn(),
         dispose: vi.fn(),
         isPlaying: false,
-      } as any;
+      };
 
       EnemyAudioUtils.addActiveSound(component, 'test_sound_1', mockSound);
       EnemyAudioUtils.removeActiveSound(component, 'test_sound_1');
@@ -213,8 +220,8 @@ describe('EnemyAudioComponent', () => {
     });
 
     it('should stop all sounds when requested', () => {
-      const mockSound1 = { stop: vi.fn(), dispose: vi.fn() } as any;
-      const mockSound2 = { stop: vi.fn(), dispose: vi.fn() } as any;
+      const mockSound1: MockSound = { stop: vi.fn(), dispose: vi.fn(), isPlaying: false };
+      const mockSound2: MockSound = { stop: vi.fn(), dispose: vi.fn(), isPlaying: false };
 
       EnemyAudioUtils.addActiveSound(component, 'sound1', mockSound1);
       EnemyAudioUtils.addActiveSound(component, 'sound2', mockSound2);
@@ -229,7 +236,7 @@ describe('EnemyAudioComponent', () => {
 
   describe('getComponentStats', () => {
     it('should return accurate statistics', () => {
-      const mockSound = { stop: vi.fn(), dispose: vi.fn() } as any;
+      const mockSound: MockSound = { stop: vi.fn(), dispose: vi.fn(), isPlaying: false };
       EnemyAudioUtils.addActiveSound(component, 'test_sound', mockSound);
 
       const stats = EnemyAudioUtils.getComponentStats(component);
@@ -265,12 +272,12 @@ describe('EnemyAudioComponent', () => {
     });
 
     it('should have appropriate sample names for enemy types', () => {
-      Object.values(EnemyState).forEach((state) => {
+      for (const state of Object.values(EnemyState)) {
         const config = component.audioConfig[state];
-        config.samples.forEach((sample) => {
+        for (const sample of config.samples) {
           expect(sample).toContain('imp'); // Should contain enemy type
-        });
-      });
+        }
+      }
     });
   });
 

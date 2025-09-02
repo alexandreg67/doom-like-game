@@ -1,4 +1,5 @@
-import type { Scene, Sound, Vector3 } from '@babylonjs/core';
+import { Vector3 } from '@babylonjs/core';
+import type { Scene, Sound } from '@babylonjs/core';
 import type { Component } from '@doom-like/game-logic';
 import {
   type AudioStateConfig,
@@ -27,7 +28,7 @@ export interface EnemyAudioComponent extends Component {
   currentAudioState: EnemyState;
 
   /** Previous audio state (for transition logic) */
-  previousAudioState?: EnemyState;
+  previousAudioState: EnemyState | undefined;
 
   /** Active audio sources managed by this component */
   activeSounds: Map<string, Sound>;
@@ -270,28 +271,28 @@ export class EnemyAudioUtils {
         break;
       case EnemyType.WEAK_IMP:
         // Weaker sounds for weak imp
-        Object.values(baseConfig).forEach((config) => {
+        for (const config of Object.values(baseConfig)) {
           config.volume *= 0.7;
           config.pitch *= 0.9;
           config.maxDistance *= 0.8;
-        });
+        }
         break;
       case EnemyType.TOUGH_IMP:
         // Stronger sounds for tough imp
-        Object.values(baseConfig).forEach((config) => {
+        for (const config of Object.values(baseConfig)) {
           config.volume *= 1.2;
           config.pitch *= 0.95;
           config.maxDistance *= 1.2;
-        });
+        }
         break;
       case EnemyType.ALPHA_IMP:
         // Boss-like sounds for alpha imp
-        Object.values(baseConfig).forEach((config) => {
+        for (const config of Object.values(baseConfig)) {
           config.volume *= 1.5;
           config.pitch *= 0.8;
           config.maxDistance *= 1.5;
           config.rolloffFactor *= 0.8;
-        });
+        }
         break;
     }
 

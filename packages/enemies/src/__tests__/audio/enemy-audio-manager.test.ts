@@ -3,6 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EnemyAudioManager } from '../../audio/enemy-audio-manager';
 import { EnemyState, EnemyType } from '../../types/enemy-types';
 
+// Mock AudioContext interface for testing
+interface MockAudioContext {
+  sampleRate: number;
+  createBuffer: ReturnType<typeof vi.fn>;
+  decodeAudioData: ReturnType<typeof vi.fn>;
+}
+
 // Mock fetch for testing
 global.fetch = vi.fn();
 
@@ -91,7 +98,7 @@ describe('EnemyAudioManager', () => {
       const config = audioManager.getDefaultAudioConfig(EnemyType.IMP);
 
       const states = Object.values(EnemyState);
-      states.forEach((state) => {
+      for (const state of states) {
         expect(config[state]).toBeDefined();
         expect(config[state].samples).toBeInstanceOf(Array);
         expect(config[state].samples.length).toBeGreaterThan(0);
@@ -103,7 +110,7 @@ describe('EnemyAudioManager', () => {
         expect(config[state].triggerChance).toBeGreaterThanOrEqual(0);
         expect(config[state].triggerChance).toBeLessThanOrEqual(1);
         expect(config[state].cooldown).toBeGreaterThanOrEqual(0);
-      });
+      }
     });
 
     it('should have different configs for different enemy types', () => {
@@ -131,15 +138,15 @@ describe('EnemyAudioManager', () => {
     it('should have appropriate sample names for enemy types', () => {
       const config = audioManager.getDefaultAudioConfig(EnemyType.IMP);
 
-      config[EnemyState.IDLE].samples.forEach((sample) => {
+      for (const sample of config[EnemyState.IDLE].samples) {
         expect(sample).toContain('imp');
         expect(sample).toContain('idle');
-      });
+      }
 
-      config[EnemyState.ATTACK].samples.forEach((sample) => {
+      for (const sample of config[EnemyState.ATTACK].samples) {
         expect(sample).toContain('imp');
         expect(sample).toContain('attack');
-      });
+      }
     });
 
     it('should have state-appropriate configurations', () => {
@@ -217,7 +224,10 @@ describe('EnemyAudioManager', () => {
         arrayBuffer: () => Promise.resolve(mockArrayBuffer),
       } as Response);
 
-      const buffer = await audioManager.getAudioBuffer('test_sound', mockAudioContext as any);
+      const buffer = await audioManager.getAudioBuffer(
+        'test_sound',
+        mockAudioContext as MockAudioContext
+      );
 
       expect(buffer).toBeDefined();
     });
@@ -229,7 +239,7 @@ describe('EnemyAudioManager', () => {
 
       const buffer = await audioManager.getAudioBuffer(
         'nonexistent_sound',
-        mockAudioContext as any
+        mockAudioContext as MockAudioContext
       );
 
       expect(buffer).toBeDefined(); // Should get placeholder
@@ -249,7 +259,7 @@ describe('EnemyAudioManager', () => {
 
       const buffer = await audioManager.getAudioBuffer(
         'corrupt_sound',
-        mockAudioContextWithError as any
+        mockAudioContextWithError as MockAudioContext
       );
 
       expect(buffer).toBeDefined(); // Should get placeholder
@@ -316,7 +326,7 @@ describe('EnemyAudioManager', () => {
       } as Response);
 
       const initialStats = audioManager.getCacheStats();
-      await audioManager.getAudioBuffer('test_sound', mockAudioContext as any);
+      await audioManager.getAudioBuffer('test_sound', mockAudioContext as MockAudioContext);
       const afterLoadStats = audioManager.getCacheStats();
 
       expect(afterLoadStats.cachedAssets).toBeGreaterThan(initialStats.cachedAssets);
@@ -326,10 +336,13 @@ describe('EnemyAudioManager', () => {
 
   describe('placeholder generation', () => {
     it('should generate different sounds for different types', async () => {
-      const roarBuffer = await audioManager.getAudioBuffer('imp_roar_01', mockAudioContext as any);
+      const roarBuffer = await audioManager.getAudioBuffer(
+        'imp_roar_01',
+        mockAudioContext as MockAudioContext
+      );
       const footstepBuffer = await audioManager.getAudioBuffer(
         'imp_footstep_01',
-        mockAudioContext as any
+        mockAudioContext as MockAudioContext
       );
 
       expect(roarBuffer).toBeDefined();
@@ -421,7 +434,7 @@ describe('EnemyAudioManager', () => {
 
         // Should not throw
         await expect(
-          audioManager.getAudioBuffer('error_sound', mockAudioContext as any)
+          audioManager.getAudioBuffer('error_sound', mockAudioContext as MockAudioContext)
         ).resolves.toBeDefined();
       }
     });

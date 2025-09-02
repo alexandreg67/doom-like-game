@@ -34,7 +34,12 @@ export class EnemyAudioManager {
     }
 
     if (this.debug) {
-      console.log('[ENEMY_AUDIO_MANAGER] Initialized with base path:', this.basePath);
+      console.log(
+        '[ENEMY_AUDIO_MANAGER] Initialized with base path:',
+        this.basePath,
+        'for scene:',
+        this.scene.uid || 'no-uid'
+      );
     }
   }
 
@@ -374,7 +379,16 @@ export class EnemyAudioManager {
   /**
    * Create placeholder Babylon.js Sound
    */
-  private createPlaceholderSound(soundId: string, scene: Scene, options: any): Sound | null {
+  private createPlaceholderSound(
+    soundId: string,
+    scene: Scene,
+    options: {
+      spatialSound?: boolean;
+      maxDistance?: number;
+      rolloffFactor?: number;
+      volume?: number;
+    }
+  ): Sound | null {
     try {
       // Create a data URL with generated audio
       const audioData = this.generatePlaceholderAudioData(soundId);
@@ -443,7 +457,7 @@ export class EnemyAudioManager {
 
     // Convert to 16-bit PCM
     for (let i = 0; i < length; i++) {
-      const sample = Math.max(-1, Math.min(1, audioData[i]));
+      const sample = Math.max(-1, Math.min(1, audioData[i] ?? 0));
       view.setInt16(44 + i * 2, sample * 0x7fff, true);
     }
 
@@ -526,30 +540,30 @@ export class EnemyAudioManager {
     switch (enemyType) {
       case EnemyType.WEAK_IMP:
         // Weaker, quieter sounds
-        Object.values(config).forEach((stateConfig) => {
+        for (const stateConfig of Object.values(config) as AudioStateConfig[]) {
           stateConfig.volume *= 0.7;
           stateConfig.pitch *= 1.1;
           stateConfig.maxDistance *= 0.8;
-        });
+        }
         break;
 
       case EnemyType.TOUGH_IMP:
         // Stronger, deeper sounds
-        Object.values(config).forEach((stateConfig) => {
+        for (const stateConfig of Object.values(config) as AudioStateConfig[]) {
           stateConfig.volume *= 1.3;
           stateConfig.pitch *= 0.9;
           stateConfig.maxDistance *= 1.2;
-        });
+        }
         break;
 
       case EnemyType.ALPHA_IMP:
         // Boss-like, powerful sounds
-        Object.values(config).forEach((stateConfig) => {
+        for (const stateConfig of Object.values(config) as AudioStateConfig[]) {
           stateConfig.volume *= 1.5;
           stateConfig.pitch *= 0.8;
           stateConfig.maxDistance *= 1.5;
           stateConfig.rolloffFactor *= 0.7;
-        });
+        }
         break;
       default:
         // Standard imp - no modifications needed
@@ -613,7 +627,10 @@ export class EnemyAudioManager {
       const toRemove = Math.floor(entries.length * 0.3); // Remove 30%
 
       for (let i = 0; i < toRemove; i++) {
-        this.audioCache.delete(entries[i][0]);
+        const entry = entries[i];
+        if (entry) {
+          this.audioCache.delete(entry[0]);
+        }
       }
 
       if (this.debug) {

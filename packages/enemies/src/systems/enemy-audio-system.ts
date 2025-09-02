@@ -6,13 +6,13 @@ import type {
   EnemyStateComponent,
 } from '../components';
 import { EnemyAudioUtils } from '../components/enemy-audio-component';
-import {
-  type AudioStateConfig,
-  type EnemyAudioEventData,
-  type EnemyAudioStats,
-  type EnemyEvent,
-  EnemyEventType,
-  type EnemyState,
+import type {
+  AudioStateConfig,
+  EnemyAudioEventData,
+  EnemyAudioStats,
+  EnemyEvent,
+  EnemyState,
+  EnemyType,
 } from '../types/enemy-types';
 
 /**
@@ -48,8 +48,8 @@ export class EnemyAudioSystem implements System {
 
     this.stats = {
       activeAudioSources: 0,
-      audioSourcesByType: {} as any,
-      audioSourcesByState: {} as any,
+      audioSourcesByType: {} as Record<EnemyType, number>,
+      audioSourcesByState: {} as Record<EnemyState, number>,
       avgAudioUpdateTime: 0,
       audioPoolMemoryUsage: 0,
     };
@@ -298,7 +298,7 @@ export class EnemyAudioSystem implements System {
    */
   private selectRandomSample(samples: string[]): string | null {
     if (samples.length === 0) return null;
-    return samples[Math.floor(Math.random() * samples.length)];
+    return samples[Math.floor(Math.random() * samples.length)] ?? null;
   }
 
   /**
@@ -398,11 +398,11 @@ export class EnemyAudioSystem implements System {
       this.audioPool.set(poolKey, []);
     }
 
-    const pool = this.audioPool.get(poolKey)!;
-    if (pool.length < this.maxPoolSize) {
+    const pool = this.audioPool.get(poolKey);
+    if (pool && pool.length < this.maxPoolSize) {
       pool.push(sound);
     } else {
-      // Pool full, dispose sound
+      // Pool full or doesn't exist, dispose sound
       sound.dispose();
     }
   }
