@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Vector3, Scene, NullEngine } from '@babylonjs/core';
-import { EnemyAudioUtils, type EnemyAudioComponent } from '../../components/enemy-audio-component';
-import { EnemyType, EnemyState } from '../../types/enemy-types';
+import { NullEngine, Scene, Vector3 } from '@babylonjs/core';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { type EnemyAudioComponent, EnemyAudioUtils } from '../../components/enemy-audio-component';
+import { EnemyState, EnemyType } from '../../types/enemy-types';
 
 // Mock Babylon.js Scene for testing
 vi.mock('@babylonjs/core', async () => {
@@ -22,7 +22,7 @@ describe('EnemyAudioComponent', () => {
     // Create mock scene
     const engine = new NullEngine();
     mockScene = new Scene(engine);
-    
+
     // Create test component
     component = EnemyAudioUtils.createComponent(EnemyType.IMP, mockScene);
   });
@@ -41,7 +41,7 @@ describe('EnemyAudioComponent', () => {
 
     it('should have audio config for all enemy states', () => {
       const states = Object.values(EnemyState);
-      states.forEach(state => {
+      states.forEach((state) => {
         expect(component.audioConfig[state]).toBeDefined();
         expect(component.audioConfig[state].samples).toBeDefined();
         expect(component.audioConfig[state].volume).toBeGreaterThan(0);
@@ -50,7 +50,7 @@ describe('EnemyAudioComponent', () => {
 
     it('should initialize last trigger times for all states', () => {
       const states = Object.values(EnemyState);
-      states.forEach(state => {
+      states.forEach((state) => {
         expect(component.lastTriggerTime[state]).toBe(0);
       });
     });
@@ -62,13 +62,7 @@ describe('EnemyAudioComponent', () => {
       const newState = EnemyState.CHASE;
       const distance = 25.5;
 
-      EnemyAudioUtils.updateComponent(
-        component,
-        newState,
-        newPosition,
-        distance,
-        0.016
-      );
+      EnemyAudioUtils.updateComponent(component, newState, newPosition, distance, 0.016);
 
       expect(component.currentAudioState).toBe(newState);
       expect(component.previousAudioState).toBe(EnemyState.IDLE);
@@ -111,7 +105,7 @@ describe('EnemyAudioComponent', () => {
     it('should allow triggering when enabled and not muted', () => {
       component.isEnabled = true;
       component.isDistanceMuted = false;
-      
+
       const canTrigger = EnemyAudioUtils.canTriggerAudio(
         component,
         EnemyState.ATTACK,
@@ -123,7 +117,7 @@ describe('EnemyAudioComponent', () => {
 
     it('should prevent triggering when disabled', () => {
       component.isEnabled = false;
-      
+
       const canTrigger = EnemyAudioUtils.canTriggerAudio(
         component,
         EnemyState.ATTACK,
@@ -136,7 +130,7 @@ describe('EnemyAudioComponent', () => {
     it('should prevent triggering when distance muted', () => {
       component.isEnabled = true;
       component.isDistanceMuted = true;
-      
+
       const canTrigger = EnemyAudioUtils.canTriggerAudio(
         component,
         EnemyState.ATTACK,
@@ -149,10 +143,10 @@ describe('EnemyAudioComponent', () => {
     it('should respect cooldown periods', () => {
       const currentTime = performance.now();
       const state = EnemyState.ATTACK;
-      
+
       // Mark as recently triggered
       EnemyAudioUtils.markAudioTriggered(component, state, currentTime - 100); // 100ms ago
-      
+
       // Should be blocked by cooldown (attack cooldown is 300ms)
       const canTrigger = EnemyAudioUtils.canTriggerAudio(component, state, currentTime);
       expect(canTrigger).toBe(false);
@@ -161,10 +155,10 @@ describe('EnemyAudioComponent', () => {
     it('should allow triggering after cooldown expires', () => {
       const currentTime = performance.now();
       const state = EnemyState.ATTACK;
-      
+
       // Mark as triggered longer ago than cooldown
       EnemyAudioUtils.markAudioTriggered(component, state, currentTime - 1000); // 1000ms ago
-      
+
       const canTrigger = EnemyAudioUtils.canTriggerAudio(component, state, currentTime);
       expect(canTrigger).toBe(true);
     });
@@ -184,7 +178,7 @@ describe('EnemyAudioComponent', () => {
     it('should have different configs for different states', () => {
       const idleConfig = EnemyAudioUtils.getAudioConfig(component, EnemyState.IDLE);
       const attackConfig = EnemyAudioUtils.getAudioConfig(component, EnemyState.ATTACK);
-      
+
       expect(idleConfig.volume).not.toBe(attackConfig.volume);
       expect(idleConfig.triggerChance).not.toBe(attackConfig.triggerChance);
     });
@@ -271,9 +265,9 @@ describe('EnemyAudioComponent', () => {
     });
 
     it('should have appropriate sample names for enemy types', () => {
-      Object.values(EnemyState).forEach(state => {
+      Object.values(EnemyState).forEach((state) => {
         const config = component.audioConfig[state];
-        config.samples.forEach(sample => {
+        config.samples.forEach((sample) => {
           expect(sample).toContain('imp'); // Should contain enemy type
         });
       });

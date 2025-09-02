@@ -1,4 +1,4 @@
-import { Sound, Vector3, type Scene } from '@babylonjs/core';
+import { type Scene, Sound, Vector3 } from '@babylonjs/core';
 import type { Entity, System, Transform } from '@doom-like/game-logic';
 import type {
   EnemyAudioComponent,
@@ -7,12 +7,12 @@ import type {
 } from '../components';
 import { EnemyAudioUtils } from '../components/enemy-audio-component';
 import {
-  EnemyEventType,
-  EnemyState,
-  type EnemyEvent,
+  type AudioStateConfig,
   type EnemyAudioEventData,
   type EnemyAudioStats,
-  type AudioStateConfig,
+  type EnemyEvent,
+  EnemyEventType,
+  type EnemyState,
 } from '../types/enemy-types';
 
 /**
@@ -45,7 +45,7 @@ export class EnemyAudioSystem implements System {
     this.scene = scene;
     this.debug = options?.debug ?? false;
     this.masterVolume = options?.masterVolume ?? 1.0;
-    
+
     this.stats = {
       activeAudioSources: 0,
       audioSourcesByType: {} as any,
@@ -82,7 +82,8 @@ export class EnemyAudioSystem implements System {
     this.updatePerformanceStats(updateTime);
 
     // Cleanup old sounds periodically
-    if (performance.now() - this.lastUpdateTime > 5000) { // Every 5 seconds
+    if (performance.now() - this.lastUpdateTime > 5000) {
+      // Every 5 seconds
       this.cleanupAudioPool();
       this.lastUpdateTime = performance.now();
     }
@@ -93,7 +94,7 @@ export class EnemyAudioSystem implements System {
    */
   queueEvent(event: EnemyEvent): void {
     this.eventQueue.push(event);
-    
+
     if (this.debug) {
       console.log(`[ENEMY_AUDIO] Queued event: ${event.type} for enemy ${event.enemyId}`);
     }
@@ -118,7 +119,7 @@ export class EnemyAudioSystem implements System {
    */
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
-    
+
     if (!enabled) {
       // Stop all active sounds when disabled
       this.stopAllAudio();
@@ -139,7 +140,7 @@ export class EnemyAudioSystem implements System {
     this.stopAllAudio();
     this.cleanupAudioPool();
     this.eventQueue.length = 0;
-    
+
     if (this.debug) {
       console.log('[ENEMY_AUDIO] System disposed');
     }
@@ -262,7 +263,7 @@ export class EnemyAudioSystem implements System {
   ): void {
     const config = EnemyAudioUtils.getAudioConfig(audioComponent, state);
     const sampleName = this.selectRandomSample(config.samples);
-    
+
     if (!sampleName) return;
 
     // Create or reuse sound from pool
@@ -286,7 +287,9 @@ export class EnemyAudioSystem implements System {
     });
 
     if (this.debug) {
-      console.log(`[ENEMY_AUDIO] Triggered ${sampleName} for state ${state} at intensity ${intensity}`);
+      console.log(
+        `[ENEMY_AUDIO] Triggered ${sampleName} for state ${state} at intensity ${intensity}`
+      );
     }
   }
 
@@ -303,7 +306,7 @@ export class EnemyAudioSystem implements System {
    */
   private createOrReuseSound(sampleName: string, enemyType: string): Sound | null {
     const poolKey = `${enemyType}_${sampleName}`;
-    
+
     // Try to get from pool first
     const pool = this.audioPool.get(poolKey);
     if (pool && pool.length > 0) {
@@ -358,7 +361,7 @@ export class EnemyAudioSystem implements System {
     try {
       sound.maxDistance = config.maxDistance;
       sound.rolloffFactor = config.rolloffFactor;
-    } catch (error) {
+    } catch (_error) {
       // Spatial properties might not be available in all cases
     }
 
@@ -384,7 +387,7 @@ export class EnemyAudioSystem implements System {
    */
   private returnSoundToPool(sampleName: string, enemyType: string, sound: Sound): void {
     const poolKey = `${enemyType}_${sampleName}`;
-    
+
     // Reset sound state
     sound.stop();
     sound.setVolume(0);
@@ -409,12 +412,12 @@ export class EnemyAudioSystem implements System {
    */
   private cleanupAudioPool(): void {
     let disposed = 0;
-    
-    for (const [poolKey, pool] of this.audioPool.entries()) {
+
+    for (const [_poolKey, pool] of this.audioPool.entries()) {
       // Keep only half the sounds in each pool to manage memory
       const keepCount = Math.floor(pool.length / 2);
       const toDispose = pool.splice(keepCount);
-      
+
       for (const sound of toDispose) {
         sound.dispose();
         disposed++;
@@ -439,7 +442,7 @@ export class EnemyAudioSystem implements System {
   /**
    * Find entity by ID (helper function)
    */
-  private findEntityById(entityId: string): Entity | null {
+  private findEntityById(_entityId: string): Entity | null {
     // This is a simplified implementation
     // In a real system, you'd have a proper entity lookup
     return null;
@@ -457,7 +460,7 @@ export class EnemyAudioSystem implements System {
    */
   private updatePerformanceStats(updateTime: number): void {
     this.updateTimes.push(updateTime);
-    
+
     // Keep only last 60 updates for moving average
     if (this.updateTimes.length > 60) {
       this.updateTimes.shift();
@@ -479,7 +482,7 @@ export class EnemyAudioSystem implements System {
     for (const pool of this.audioPool.values()) {
       totalSounds += pool.length;
     }
-    
+
     // Rough estimate: 50KB per sound buffer
     return totalSounds * 50 * 1024;
   }

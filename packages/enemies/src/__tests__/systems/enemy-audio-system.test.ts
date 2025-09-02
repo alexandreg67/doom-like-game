@@ -1,9 +1,15 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Vector3, Scene, NullEngine } from '@babylonjs/core';
-import { EnemyAudioSystem } from '../../systems/enemy-audio-system';
-import { EnemyAudioUtils } from '../../components/enemy-audio-component';
-import { EnemyEventType, EnemyState, EnemyType, type EnemyEvent, type EnemyAudioEventData } from '../../types/enemy-types';
+import { NullEngine, Scene, Vector3 } from '@babylonjs/core';
 import type { Entity } from '@doom-like/game-logic';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { EnemyAudioUtils } from '../../components/enemy-audio-component';
+import { EnemyAudioSystem } from '../../systems/enemy-audio-system';
+import {
+  type EnemyAudioEventData,
+  type EnemyEvent,
+  EnemyEventType,
+  EnemyState,
+  EnemyType,
+} from '../../types/enemy-types';
 
 // Mock Babylon.js
 vi.mock('@babylonjs/core', async () => {
@@ -48,7 +54,7 @@ describe('EnemyAudioSystem', () => {
 
   function createMockEnemyEntity(id: string, enemyType: EnemyType, position: Vector3): Entity {
     const audioComponent = EnemyAudioUtils.createComponent(enemyType, mockScene);
-    
+
     return {
       id,
       components: new Map([
@@ -63,7 +69,7 @@ describe('EnemyAudioSystem', () => {
   describe('constructor', () => {
     it('should initialize with default settings', () => {
       expect(audioSystem).toBeDefined();
-      
+
       const stats = audioSystem.getStats();
       expect(stats.activeAudioSources).toBe(0);
     });
@@ -73,7 +79,7 @@ describe('EnemyAudioSystem', () => {
         debug: true,
         masterVolume: 0.5,
       });
-      
+
       expect(customSystem).toBeDefined();
     });
   });
@@ -81,9 +87,9 @@ describe('EnemyAudioSystem', () => {
   describe('update', () => {
     it('should process entities with audio components', () => {
       const updateSpy = vi.spyOn(EnemyAudioUtils, 'updateComponent');
-      
+
       audioSystem.update(mockEntities, 0.016);
-      
+
       expect(updateSpy).toHaveBeenCalledTimes(2); // One for each entity
     });
 
@@ -97,9 +103,9 @@ describe('EnemyAudioSystem', () => {
       } as Entity;
 
       const updateSpy = vi.spyOn(EnemyAudioUtils, 'updateComponent');
-      
+
       audioSystem.update([incompleteEntity], 0.016);
-      
+
       expect(updateSpy).not.toHaveBeenCalled();
     });
 
@@ -109,18 +115,18 @@ describe('EnemyAudioSystem', () => {
       identity.isAlive = false;
 
       const updateSpy = vi.spyOn(EnemyAudioUtils, 'updateComponent');
-      
+
       audioSystem.update([deadEntity], 0.016);
-      
+
       expect(updateSpy).not.toHaveBeenCalled();
     });
 
     it('should not process when disabled', () => {
       audioSystem.setEnabled(false);
-      
+
       const updateSpy = vi.spyOn(EnemyAudioUtils, 'updateComponent');
       audioSystem.update(mockEntities, 0.016);
-      
+
       expect(updateSpy).not.toHaveBeenCalled();
     });
   });
@@ -149,10 +155,10 @@ describe('EnemyAudioSystem', () => {
       };
 
       audioSystem.queueEvent(event);
-      
+
       // Process events during update
       audioSystem.update(mockEntities, 0.016);
-      
+
       // Verify event was processed (would trigger audio in real scenario)
       expect(true).toBe(true); // Event processing is internal
     });
@@ -173,7 +179,7 @@ describe('EnemyAudioSystem', () => {
 
       audioSystem.queueEvent(event);
       audioSystem.update(mockEntities, 0.016);
-      
+
       // Verify event was queued and processed
       expect(true).toBe(true);
     });
@@ -182,12 +188,12 @@ describe('EnemyAudioSystem', () => {
   describe('listener position', () => {
     it('should update listener position', () => {
       const listenerPos = new Vector3(20, 5, -10);
-      
+
       audioSystem.updateListenerPosition(listenerPos);
-      
+
       // Position is stored internally, verify via update behavior
       audioSystem.update(mockEntities, 0.016);
-      
+
       expect(true).toBe(true); // Internal state verification
     });
   });
@@ -195,7 +201,7 @@ describe('EnemyAudioSystem', () => {
   describe('master volume control', () => {
     it('should set master volume within valid range', () => {
       audioSystem.setMasterVolume(0.7);
-      
+
       // Volume is applied during audio creation, hard to test directly
       expect(true).toBe(true);
     });
@@ -203,7 +209,7 @@ describe('EnemyAudioSystem', () => {
     it('should clamp master volume to valid range', () => {
       audioSystem.setMasterVolume(1.5); // Above max
       audioSystem.setMasterVolume(-0.2); // Below min
-      
+
       // Should clamp to 0.0 - 1.0 range
       expect(true).toBe(true);
     });
@@ -213,10 +219,10 @@ describe('EnemyAudioSystem', () => {
     it('should enable and disable system', () => {
       audioSystem.setEnabled(false);
       audioSystem.update(mockEntities, 0.016);
-      
+
       audioSystem.setEnabled(true);
       audioSystem.update(mockEntities, 0.016);
-      
+
       expect(true).toBe(true);
     });
   });
@@ -224,7 +230,7 @@ describe('EnemyAudioSystem', () => {
   describe('statistics', () => {
     it('should provide system statistics', () => {
       const stats = audioSystem.getStats();
-      
+
       expect(stats).toBeDefined();
       expect(stats.activeAudioSources).toBeDefined();
       expect(stats.audioSourcesByType).toBeDefined();
@@ -238,7 +244,7 @@ describe('EnemyAudioSystem', () => {
       for (let i = 0; i < 10; i++) {
         audioSystem.update(mockEntities, 0.016);
       }
-      
+
       const stats = audioSystem.getStats();
       expect(stats.avgAudioUpdateTime).toBeGreaterThanOrEqual(0);
     });
@@ -256,10 +262,10 @@ describe('EnemyAudioSystem', () => {
           position: new Vector3(0, 0, 0),
         },
       };
-      
+
       audioSystem.queueEvent(event);
       audioSystem.dispose();
-      
+
       // Verify cleanup - system should handle gracefully
       const stats = audioSystem.getStats();
       expect(stats).toBeDefined();
@@ -269,7 +275,7 @@ describe('EnemyAudioSystem', () => {
   describe('sound creation and management', () => {
     it('should handle failed sound creation gracefully', () => {
       // Mock Sound constructor to throw error
-      const originalSound = (global as any).Sound;
+      const _originalSound = (global as any).Sound;
       vi.mocked(mockScene).createBufferSource = vi.fn().mockImplementation(() => {
         throw new Error('Audio creation failed');
       });
@@ -293,13 +299,13 @@ describe('EnemyAudioSystem', () => {
         EnemyState.DEATH,
       ];
 
-      states.forEach(state => {
+      states.forEach((state) => {
         const entity = mockEntities[0];
         const stateComponent = entity.components.get('enemyState') as any;
         stateComponent.currentState = state;
-        
+
         audioSystem.update([entity], 0.016);
-        
+
         // Each state should be processed without error
         expect(true).toBe(true);
       });
@@ -315,11 +321,7 @@ describe('EnemyAudioSystem', () => {
           createMockEnemyEntity(
             `enemy_${i}`,
             i % 2 === 0 ? EnemyType.IMP : EnemyType.WEAK_IMP,
-            new Vector3(
-              Math.random() * 100 - 50,
-              0,
-              Math.random() * 100 - 50
-            )
+            new Vector3(Math.random() * 100 - 50, 0, Math.random() * 100 - 50)
           )
         );
       }
@@ -327,7 +329,7 @@ describe('EnemyAudioSystem', () => {
       const startTime = performance.now();
       audioSystem.update(manyEntities, 0.016);
       const endTime = performance.now();
-      
+
       const updateTime = endTime - startTime;
       expect(updateTime).toBeLessThan(50); // Should complete in < 50ms
     });
@@ -337,7 +339,7 @@ describe('EnemyAudioSystem', () => {
       for (let i = 0; i < 20; i++) {
         audioSystem.update(mockEntities, 0.016);
       }
-      
+
       const stats = audioSystem.getStats();
       expect(stats.audioPoolMemoryUsage).toBeDefined();
       expect(stats.audioPoolMemoryUsage).toBeGreaterThanOrEqual(0);

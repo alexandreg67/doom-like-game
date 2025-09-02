@@ -2,7 +2,12 @@ import { Vector3 } from '@babylonjs/core';
 import type { Entity, System, Transform } from '@doom-like/game-logic';
 import type { EnemyAIComponent, EnemyIdentityComponent, EnemyStateComponent } from '../components';
 import { EnemyAIUtils, EnemyStateUtils } from '../components';
-import { EnemyState, EnemyEventType, type EnemyEvent, type EnemyAudioEventData } from '../types/enemy-types';
+import {
+  type EnemyAudioEventData,
+  type EnemyEvent,
+  EnemyEventType,
+  EnemyState,
+} from '../types/enemy-types';
 
 /**
  * EnemyAISystem - Manages enemy AI behavior and FSM transitions
@@ -162,7 +167,9 @@ export class EnemyAISystem implements System {
       );
 
       const transform = entity.components.get('transform') as Transform;
-      const enemyPosition = transform ? new Vector3(transform.x, transform.y, transform.z) : new Vector3(0, 0, 0);
+      const enemyPosition = transform
+        ? new Vector3(transform.x, transform.y, transform.z)
+        : new Vector3(0, 0, 0);
 
       // Transition to SEEKING
       EnemyStateUtils.transitionTo(stateComponent, EnemyState.SEEKING, currentTime);
@@ -189,12 +196,14 @@ export class EnemyAISystem implements System {
     currentTime: number
   ): void {
     const transform = entity.components.get('transform') as Transform;
-    const enemyPosition = transform ? new Vector3(transform.x, transform.y, transform.z) : new Vector3(0, 0, 0);
+    const enemyPosition = transform
+      ? new Vector3(transform.x, transform.y, transform.z)
+      : new Vector3(0, 0, 0);
 
     if (!aiComponent.isPursuing) {
       // Lost target, return to idle
       EnemyStateUtils.transitionTo(stateComponent, EnemyState.IDLE, currentTime);
-      
+
       // Emit audio event for state change
       this.emitAudioEvent(
         entity,
@@ -210,7 +219,7 @@ export class EnemyAISystem implements System {
     // If we can see target, go to chase
     if (aiComponent.hasLineOfSight) {
       EnemyStateUtils.transitionTo(stateComponent, EnemyState.CHASE, currentTime);
-      
+
       // Emit audio event for state change
       this.emitAudioEvent(
         entity,
@@ -237,12 +246,14 @@ export class EnemyAISystem implements System {
     currentTime: number
   ): void {
     const transform = entity.components.get('transform') as Transform;
-    const enemyPosition = transform ? new Vector3(transform.x, transform.y, transform.z) : new Vector3(0, 0, 0);
+    const enemyPosition = transform
+      ? new Vector3(transform.x, transform.y, transform.z)
+      : new Vector3(0, 0, 0);
 
     if (!aiComponent.isPursuing || !aiComponent.isTargetInAggroRange) {
       // Lost target or out of range
       EnemyStateUtils.transitionTo(stateComponent, EnemyState.SEEKING, currentTime);
-      
+
       // Emit audio event for state change
       this.emitAudioEvent(
         entity,
@@ -258,7 +269,7 @@ export class EnemyAISystem implements System {
     // Check if in attack range
     if (EnemyAIUtils.canAttack(aiComponent)) {
       EnemyStateUtils.transitionTo(stateComponent, EnemyState.ATTACK, currentTime);
-      
+
       // Emit audio event for state change
       this.emitAudioEvent(
         entity,
@@ -311,12 +322,14 @@ export class EnemyAISystem implements System {
     // Hurt state has fixed duration, wait for transition timer
     if (!stateComponent.nextState && stateComponent.timeInState > aiComponent.params.hurtDuration) {
       const transform = entity.components.get('transform') as Transform;
-      const enemyPosition = transform ? new Vector3(transform.x, transform.y, transform.z) : new Vector3(0, 0, 0);
+      const enemyPosition = transform
+        ? new Vector3(transform.x, transform.y, transform.z)
+        : new Vector3(0, 0, 0);
 
       // Return to appropriate state based on target status
       if (EnemyAIUtils.canAttack(aiComponent)) {
         EnemyStateUtils.transitionTo(stateComponent, EnemyState.ATTACK, currentTime);
-        
+
         this.emitAudioEvent(
           entity,
           EnemyEventType.AUDIO_STATE_CHANGED,
@@ -327,7 +340,7 @@ export class EnemyAISystem implements System {
         );
       } else if (aiComponent.isTargetInAggroRange) {
         EnemyStateUtils.transitionTo(stateComponent, EnemyState.CHASE, currentTime);
-        
+
         this.emitAudioEvent(
           entity,
           EnemyEventType.AUDIO_STATE_CHANGED,
@@ -338,7 +351,7 @@ export class EnemyAISystem implements System {
         );
       } else {
         EnemyStateUtils.transitionTo(stateComponent, EnemyState.IDLE, currentTime);
-        
+
         this.emitAudioEvent(
           entity,
           EnemyEventType.AUDIO_STATE_CHANGED,

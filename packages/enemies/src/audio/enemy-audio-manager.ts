@@ -1,5 +1,5 @@
-import { Sound, type Scene } from '@babylonjs/core';
-import { EnemyType, EnemyState, type AudioStateConfig } from '../types/enemy-types';
+import { type Scene, Sound } from '@babylonjs/core';
+import { type AudioStateConfig, EnemyState, EnemyType } from '../types/enemy-types';
 
 /**
  * EnemyAudioManager - Manages audio assets and placeholder sounds for enemies
@@ -23,11 +23,11 @@ export class EnemyAudioManager {
   private readonly supportedFormats = ['ogg', 'mp3', 'wav'];
   private readonly maxCacheSize = 50 * 1024 * 1024; // 50MB cache limit
   private readonly basePath = './assets/audio/enemies/';
-  
+
   constructor(scene: Scene, options?: { debug?: boolean; basePath?: string }) {
     this.scene = scene;
     this.debug = options?.debug ?? false;
-    
+
     if (options?.basePath) {
       // @ts-ignore - Allow custom base path override
       this.basePath = options.basePath;
@@ -51,9 +51,9 @@ export class EnemyAudioManager {
 
     // Get all sound IDs for this enemy type
     const soundIds = this.getEnemySoundIds(enemyType);
-    
+
     // Load all sounds in parallel
-    const loadPromises = soundIds.map(soundId => this.loadAudioAsset(soundId));
+    const loadPromises = soundIds.map((soundId) => this.loadAudioAsset(soundId));
     await Promise.all(loadPromises);
 
     if (this.debug) {
@@ -70,7 +70,7 @@ export class EnemyAudioManager {
     }
 
     const enemyTypes = Object.values(EnemyType);
-    const loadPromises = enemyTypes.map(type => this.preloadEnemyAudio(type));
+    const loadPromises = enemyTypes.map((type) => this.preloadEnemyAudio(type));
     await Promise.all(loadPromises);
 
     if (this.debug) {
@@ -113,20 +113,14 @@ export class EnemyAudioManager {
       // Try to create sound with real asset first
       const audioUrl = await this.resolveAudioUrl(soundId);
       if (audioUrl) {
-        return new Sound(
-          `enemy_${soundId}_${Date.now()}`,
-          audioUrl,
-          scene,
-          null,
-          {
-            loop: false,
-            autoplay: false,
-            spatialSound: options.spatialSound ?? true,
-            maxDistance: options.maxDistance ?? 100,
-            rolloffFactor: options.rolloffFactor ?? 1.0,
-            volume: options.volume ?? 1.0,
-          }
-        );
+        return new Sound(`enemy_${soundId}_${Date.now()}`, audioUrl, scene, null, {
+          loop: false,
+          autoplay: false,
+          spatialSound: options.spatialSound ?? true,
+          maxDistance: options.maxDistance ?? 100,
+          rolloffFactor: options.rolloffFactor ?? 1.0,
+          volume: options.volume ?? 1.0,
+        });
       }
 
       // Fallback: create sound with placeholder
@@ -147,7 +141,7 @@ export class EnemyAudioManager {
         samples: [
           `${enemyType}_idle_breathing_01`,
           `${enemyType}_idle_ambient_01`,
-          `${enemyType}_idle_sniff_01`
+          `${enemyType}_idle_sniff_01`,
         ],
         volume: 0.3,
         pitch: 1.0,
@@ -162,7 +156,7 @@ export class EnemyAudioManager {
         samples: [
           `${enemyType}_seeking_footstep_01`,
           `${enemyType}_seeking_search_01`,
-          `${enemyType}_seeking_grunt_01`
+          `${enemyType}_seeking_grunt_01`,
         ],
         volume: 0.5,
         pitch: 1.0,
@@ -177,7 +171,7 @@ export class EnemyAudioManager {
         samples: [
           `${enemyType}_chase_roar_01`,
           `${enemyType}_chase_aggressive_01`,
-          `${enemyType}_chase_footstep_fast_01`
+          `${enemyType}_chase_footstep_fast_01`,
         ],
         volume: 0.7,
         pitch: 1.1,
@@ -192,7 +186,7 @@ export class EnemyAudioManager {
         samples: [
           `${enemyType}_attack_roar_01`,
           `${enemyType}_attack_grunt_01`,
-          `${enemyType}_attack_swoosh_01`
+          `${enemyType}_attack_swoosh_01`,
         ],
         volume: 0.9,
         pitch: 1.2,
@@ -207,7 +201,7 @@ export class EnemyAudioManager {
         samples: [
           `${enemyType}_hurt_scream_01`,
           `${enemyType}_hurt_pain_01`,
-          `${enemyType}_hurt_whimper_01`
+          `${enemyType}_hurt_whimper_01`,
         ],
         volume: 0.8,
         pitch: 1.4,
@@ -222,7 +216,7 @@ export class EnemyAudioManager {
         samples: [
           `${enemyType}_death_scream_01`,
           `${enemyType}_death_final_01`,
-          `${enemyType}_death_body_fall_01`
+          `${enemyType}_death_body_fall_01`,
         ],
         volume: 1.0,
         pitch: 0.8,
@@ -246,7 +240,7 @@ export class EnemyAudioManager {
     this.audioCache.clear();
     this.placeholderCache.clear();
     this.loadingPromises.clear();
-    
+
     if (this.debug) {
       console.log('[ENEMY_AUDIO_MANAGER] Disposed resources');
     }
@@ -261,8 +255,10 @@ export class EnemyAudioManager {
     placeholderCount: number;
     loadingCount: number;
   } {
-    const cacheSize = Array.from(this.audioCache.values())
-      .reduce((total, buffer) => total + buffer.byteLength, 0);
+    const cacheSize = Array.from(this.audioCache.values()).reduce(
+      (total, buffer) => total + buffer.byteLength,
+      0
+    );
 
     return {
       cachedAssets: this.audioCache.size,
@@ -283,7 +279,7 @@ export class EnemyAudioManager {
 
     // Check if already loading
     if (this.loadingPromises.has(soundId)) {
-      return await this.loadingPromises.get(soundId) || null;
+      return (await this.loadingPromises.get(soundId)) || null;
     }
 
     // Start loading
@@ -295,11 +291,11 @@ export class EnemyAudioManager {
       if (audioData) {
         // Add to cache
         this.audioCache.set(soundId, audioData);
-        
+
         // Check cache size and cleanup if needed
         await this.cleanupCacheIfNeeded();
       }
-      
+
       return audioData;
     } finally {
       this.loadingPromises.delete(soundId);
@@ -311,7 +307,7 @@ export class EnemyAudioManager {
    */
   private async fetchAudioData(soundId: string): Promise<ArrayBuffer | null> {
     // Try manifest first
-    if (this.manifest && this.manifest[soundId]) {
+    if (this.manifest?.[soundId]) {
       const url = `${this.basePath}${this.manifest[soundId]}`;
       const data = await this.tryFetchUrl(url);
       if (data) return data;
@@ -339,7 +335,7 @@ export class EnemyAudioManager {
       if (response.ok) {
         return await response.arrayBuffer();
       }
-    } catch (error) {
+    } catch (_error) {
       // Silently handle fetch errors
     }
     return null;
@@ -358,16 +354,16 @@ export class EnemyAudioManager {
       const duration = this.getPlaceholderDuration(soundId);
       const sampleRate = audioContext.sampleRate;
       const length = Math.floor(duration * sampleRate);
-      
+
       const buffer = audioContext.createBuffer(1, length, sampleRate);
       const channelData = buffer.getChannelData(0);
 
       // Generate sound based on sound ID
       this.generatePlaceholderAudio(channelData, soundId, sampleRate);
-      
+
       // Cache placeholder
       this.placeholderCache.set(soundId, buffer);
-      
+
       return buffer;
     } catch (error) {
       console.warn(`[ENEMY_AUDIO_MANAGER] Failed to create placeholder for ${soundId}:`, error);
@@ -378,11 +374,7 @@ export class EnemyAudioManager {
   /**
    * Create placeholder Babylon.js Sound
    */
-  private createPlaceholderSound(
-    soundId: string,
-    scene: Scene,
-    options: any
-  ): Sound | null {
+  private createPlaceholderSound(soundId: string, scene: Scene, options: any): Sound | null {
     try {
       // Create a data URL with generated audio
       const audioData = this.generatePlaceholderAudioData(soundId);
@@ -419,18 +411,18 @@ export class EnemyAudioManager {
     const sampleRate = 44100;
     const duration = this.getPlaceholderDuration(soundId);
     const length = Math.floor(duration * sampleRate);
-    
+
     // Create WAV file
     const buffer = new ArrayBuffer(44 + length * 2);
     const view = new DataView(buffer);
-    
+
     // WAV header
     const writeString = (offset: number, str: string) => {
       for (let i = 0; i < str.length; i++) {
         view.setUint8(offset + i, str.charCodeAt(i));
       }
     };
-    
+
     writeString(0, 'RIFF');
     view.setUint32(4, 36 + length * 2, true);
     writeString(8, 'WAVE');
@@ -448,11 +440,11 @@ export class EnemyAudioManager {
     // Generate audio samples
     const audioData = new Float32Array(length);
     this.generatePlaceholderAudio(audioData, soundId, sampleRate);
-    
+
     // Convert to 16-bit PCM
     for (let i = 0; i < length; i++) {
       const sample = Math.max(-1, Math.min(1, audioData[i]));
-      view.setInt16(44 + i * 2, sample * 0x7FFF, true);
+      view.setInt16(44 + i * 2, sample * 0x7fff, true);
     }
 
     return buffer;
@@ -462,12 +454,12 @@ export class EnemyAudioManager {
    * Generate placeholder audio samples
    */
   private generatePlaceholderAudio(
-    channelData: Float32Array, 
-    soundId: string, 
+    channelData: Float32Array,
+    soundId: string,
     sampleRate: number
   ): void {
     const length = channelData.length;
-    
+
     for (let i = 0; i < length; i++) {
       const t = i / sampleRate;
       let sample = 0;
@@ -514,11 +506,11 @@ export class EnemyAudioManager {
   private getEnemySoundIds(enemyType: EnemyType): string[] {
     const config = this.getDefaultAudioConfig(enemyType);
     const soundIds: string[] = [];
-    
+
     for (const stateConfig of Object.values(config)) {
       soundIds.push(...stateConfig.samples);
     }
-    
+
     return [...new Set(soundIds)]; // Remove duplicates
   }
 
@@ -534,7 +526,7 @@ export class EnemyAudioManager {
     switch (enemyType) {
       case EnemyType.WEAK_IMP:
         // Weaker, quieter sounds
-        Object.values(config).forEach(stateConfig => {
+        Object.values(config).forEach((stateConfig) => {
           stateConfig.volume *= 0.7;
           stateConfig.pitch *= 1.1;
           stateConfig.maxDistance *= 0.8;
@@ -543,7 +535,7 @@ export class EnemyAudioManager {
 
       case EnemyType.TOUGH_IMP:
         // Stronger, deeper sounds
-        Object.values(config).forEach(stateConfig => {
+        Object.values(config).forEach((stateConfig) => {
           stateConfig.volume *= 1.3;
           stateConfig.pitch *= 0.9;
           stateConfig.maxDistance *= 1.2;
@@ -552,15 +544,13 @@ export class EnemyAudioManager {
 
       case EnemyType.ALPHA_IMP:
         // Boss-like, powerful sounds
-        Object.values(config).forEach(stateConfig => {
+        Object.values(config).forEach((stateConfig) => {
           stateConfig.volume *= 1.5;
           stateConfig.pitch *= 0.8;
           stateConfig.maxDistance *= 1.5;
           stateConfig.rolloffFactor *= 0.7;
         });
         break;
-
-      case EnemyType.IMP:
       default:
         // Standard imp - no modifications needed
         break;
@@ -574,7 +564,7 @@ export class EnemyAudioManager {
    */
   private async resolveAudioUrl(soundId: string): Promise<string | null> {
     // Check manifest first
-    if (this.manifest && this.manifest[soundId]) {
+    if (this.manifest?.[soundId]) {
       return `${this.basePath}${this.manifest[soundId]}`;
     }
 
@@ -604,7 +594,7 @@ export class EnemyAudioManager {
       } else {
         this.manifest = {};
       }
-    } catch (error) {
+    } catch (_error) {
       this.manifest = {};
       if (this.debug) {
         console.log('[ENEMY_AUDIO_MANAGER] No manifest found, using fallback strategy');
@@ -621,7 +611,7 @@ export class EnemyAudioManager {
       // Remove oldest entries (simple LRU-like strategy)
       const entries = Array.from(this.audioCache.entries());
       const toRemove = Math.floor(entries.length * 0.3); // Remove 30%
-      
+
       for (let i = 0; i < toRemove; i++) {
         this.audioCache.delete(entries[i][0]);
       }

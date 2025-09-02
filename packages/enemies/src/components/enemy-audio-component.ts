@@ -1,10 +1,10 @@
-import { Sound, type Vector3, type Scene } from '@babylonjs/core';
+import type { Scene, Sound, Vector3 } from '@babylonjs/core';
 import type { Component } from '@doom-like/game-logic';
 import {
-  EnemyType,
-  EnemyState,
   type AudioStateConfig,
   type EnemyAudioStats,
+  EnemyState,
+  EnemyType,
 } from '../types/enemy-types';
 
 /**
@@ -61,17 +61,17 @@ export class EnemyAudioUtils {
   /**
    * Create a new EnemyAudioComponent with default configuration
    */
-  static createComponent(enemyType: EnemyType, scene: Scene): EnemyAudioComponent {
+  static createComponent(enemyType: EnemyType, _scene: Scene): EnemyAudioComponent {
     const component: EnemyAudioComponent = {
       id: 'enemyAudio',
       enemyType,
       currentAudioState: EnemyState.IDLE,
       previousAudioState: undefined,
       activeSounds: new Map(),
-      audioConfig: this.createDefaultAudioConfig(enemyType),
+      audioConfig: EnemyAudioUtils.createDefaultAudioConfig(enemyType),
       isEnabled: true,
       masterVolume: 1.0,
-      lastTriggerTime: this.initializeLastTriggerTime(),
+      lastTriggerTime: EnemyAudioUtils.initializeLastTriggerTime(),
       cachedPosition: new Vector3(0, 0, 0),
       distanceToListener: 0,
       isDistanceMuted: false,
@@ -88,7 +88,7 @@ export class EnemyAudioUtils {
     newState: EnemyState,
     position: Vector3,
     distanceToListener: number,
-    deltaTime: number
+    _deltaTime: number
   ): void {
     // Update cached values
     component.cachedPosition.copyFrom(position);
@@ -97,10 +97,10 @@ export class EnemyAudioUtils {
     component.currentAudioState = newState;
 
     // Update distance-based LOD
-    this.updateDistanceLOD(component);
+    EnemyAudioUtils.updateDistanceLOD(component);
 
     // Clean up finished sounds
-    this.cleanupFinishedSounds(component);
+    EnemyAudioUtils.cleanupFinishedSounds(component);
   }
 
   /**
@@ -117,7 +117,7 @@ export class EnemyAudioUtils {
 
     const config = component.audioConfig[state];
     const lastTrigger = component.lastTriggerTime[state] || 0;
-    const cooldownPassed = (currentTime - lastTrigger) >= (config.cooldown * 1000);
+    const cooldownPassed = currentTime - lastTrigger >= config.cooldown * 1000;
 
     return cooldownPassed && Math.random() <= config.triggerChance;
   }
@@ -163,7 +163,7 @@ export class EnemyAudioUtils {
    * Stop all active sounds for this component
    */
   static stopAllSounds(component: EnemyAudioComponent): void {
-    for (const [soundId, sound] of component.activeSounds.entries()) {
+    for (const [_soundId, sound] of component.activeSounds.entries()) {
       sound.stop();
       sound.dispose();
     }
@@ -176,15 +176,23 @@ export class EnemyAudioUtils {
   static getComponentStats(component: EnemyAudioComponent): Partial<EnemyAudioStats> {
     return {
       activeAudioSources: component.activeSounds.size,
-      audioSourcesByType: { [component.enemyType]: component.activeSounds.size } as Record<EnemyType, number>,
-      audioSourcesByState: { [component.currentAudioState]: component.activeSounds.size } as Record<EnemyState, number>,
+      audioSourcesByType: { [component.enemyType]: component.activeSounds.size } as Record<
+        EnemyType,
+        number
+      >,
+      audioSourcesByState: { [component.currentAudioState]: component.activeSounds.size } as Record<
+        EnemyState,
+        number
+      >,
     };
   }
 
   /**
    * Create default audio configuration per enemy type
    */
-  private static createDefaultAudioConfig(enemyType: EnemyType): Record<EnemyState, AudioStateConfig> {
+  private static createDefaultAudioConfig(
+    enemyType: EnemyType
+  ): Record<EnemyState, AudioStateConfig> {
     // Base configuration
     const baseConfig: Record<EnemyState, AudioStateConfig> = {
       [EnemyState.IDLE]: {
@@ -262,7 +270,7 @@ export class EnemyAudioUtils {
         break;
       case EnemyType.WEAK_IMP:
         // Weaker sounds for weak imp
-        Object.values(baseConfig).forEach(config => {
+        Object.values(baseConfig).forEach((config) => {
           config.volume *= 0.7;
           config.pitch *= 0.9;
           config.maxDistance *= 0.8;
@@ -270,7 +278,7 @@ export class EnemyAudioUtils {
         break;
       case EnemyType.TOUGH_IMP:
         // Stronger sounds for tough imp
-        Object.values(baseConfig).forEach(config => {
+        Object.values(baseConfig).forEach((config) => {
           config.volume *= 1.2;
           config.pitch *= 0.95;
           config.maxDistance *= 1.2;
@@ -278,7 +286,7 @@ export class EnemyAudioUtils {
         break;
       case EnemyType.ALPHA_IMP:
         // Boss-like sounds for alpha imp
-        Object.values(baseConfig).forEach(config => {
+        Object.values(baseConfig).forEach((config) => {
           config.volume *= 1.5;
           config.pitch *= 0.8;
           config.maxDistance *= 1.5;
@@ -309,15 +317,15 @@ export class EnemyAudioUtils {
    */
   private static updateDistanceLOD(component: EnemyAudioComponent): void {
     const maxAudibleDistance = 150; // Beyond this, no audio is played
-    
+
     if (component.distanceToListener > maxAudibleDistance) {
       component.isDistanceMuted = true;
       // Stop all sounds if too far
-      this.stopAllSounds(component);
+      EnemyAudioUtils.stopAllSounds(component);
     } else {
       component.isDistanceMuted = false;
       // Adjust volume based on distance (additional to Babylon.js spatial audio)
-      const distanceFactor = Math.max(0, 1 - (component.distanceToListener / maxAudibleDistance));
+      const distanceFactor = Math.max(0, 1 - component.distanceToListener / maxAudibleDistance);
       component.masterVolume = distanceFactor;
     }
   }
@@ -335,7 +343,7 @@ export class EnemyAudioUtils {
     }
 
     for (const soundId of soundsToRemove) {
-      this.removeActiveSound(component, soundId);
+      EnemyAudioUtils.removeActiveSound(component, soundId);
     }
   }
 }

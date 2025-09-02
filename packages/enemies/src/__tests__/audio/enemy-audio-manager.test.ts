@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Scene, NullEngine } from '@babylonjs/core';
+import { NullEngine, Scene } from '@babylonjs/core';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EnemyAudioManager } from '../../audio/enemy-audio-manager';
-import { EnemyType, EnemyState } from '../../types/enemy-types';
+import { EnemyState, EnemyType } from '../../types/enemy-types';
 
 // Mock fetch for testing
 global.fetch = vi.fn();
@@ -19,7 +19,7 @@ const mockAudioContext = {
     sampleRate,
     getChannelData: vi.fn(() => new Float32Array(length)),
   })),
-  decodeAudioData: vi.fn((data: ArrayBuffer) => 
+  decodeAudioData: vi.fn((_data: ArrayBuffer) =>
     Promise.resolve({
       numberOfChannels: 1,
       length: 44100,
@@ -37,7 +37,7 @@ vi.mock('@babylonjs/core', async () => {
     Scene: vi.fn().mockImplementation(() => ({
       dispose: vi.fn(),
     })),
-    Sound: vi.fn().mockImplementation((name, url, scene, callback, options) => ({
+    Sound: vi.fn().mockImplementation((name, url, _scene, _callback, options) => ({
       name,
       url,
       play: vi.fn(),
@@ -66,7 +66,7 @@ describe('EnemyAudioManager', () => {
     const engine = new NullEngine();
     mockScene = new Scene(engine);
     audioManager = new EnemyAudioManager(mockScene, { debug: false });
-    
+
     mockFetch = vi.mocked(fetch);
     mockFetch.mockClear();
   });
@@ -81,7 +81,7 @@ describe('EnemyAudioManager', () => {
         debug: true,
         basePath: './custom/path/',
       });
-      
+
       expect(customManager).toBeDefined();
     });
   });
@@ -89,9 +89,9 @@ describe('EnemyAudioManager', () => {
   describe('getDefaultAudioConfig', () => {
     it('should return complete config for all states', () => {
       const config = audioManager.getDefaultAudioConfig(EnemyType.IMP);
-      
+
       const states = Object.values(EnemyState);
-      states.forEach(state => {
+      states.forEach((state) => {
         expect(config[state]).toBeDefined();
         expect(config[state].samples).toBeInstanceOf(Array);
         expect(config[state].samples.length).toBeGreaterThan(0);
@@ -130,13 +130,13 @@ describe('EnemyAudioManager', () => {
 
     it('should have appropriate sample names for enemy types', () => {
       const config = audioManager.getDefaultAudioConfig(EnemyType.IMP);
-      
-      config[EnemyState.IDLE].samples.forEach(sample => {
+
+      config[EnemyState.IDLE].samples.forEach((sample) => {
         expect(sample).toContain('imp');
         expect(sample).toContain('idle');
       });
 
-      config[EnemyState.ATTACK].samples.forEach(sample => {
+      config[EnemyState.ATTACK].samples.forEach((sample) => {
         expect(sample).toContain('imp');
         expect(sample).toContain('attack');
       });
@@ -227,7 +227,10 @@ describe('EnemyAudioManager', () => {
         ok: false,
       } as Response);
 
-      const buffer = await audioManager.getAudioBuffer('nonexistent_sound', mockAudioContext as any);
+      const buffer = await audioManager.getAudioBuffer(
+        'nonexistent_sound',
+        mockAudioContext as any
+      );
 
       expect(buffer).toBeDefined(); // Should get placeholder
     });
@@ -244,7 +247,10 @@ describe('EnemyAudioManager', () => {
         decodeAudioData: vi.fn().mockRejectedValue(new Error('Decode failed')),
       };
 
-      const buffer = await audioManager.getAudioBuffer('corrupt_sound', mockAudioContextWithError as any);
+      const buffer = await audioManager.getAudioBuffer(
+        'corrupt_sound',
+        mockAudioContextWithError as any
+      );
 
       expect(buffer).toBeDefined(); // Should get placeholder
     });
@@ -321,7 +327,10 @@ describe('EnemyAudioManager', () => {
   describe('placeholder generation', () => {
     it('should generate different sounds for different types', async () => {
       const roarBuffer = await audioManager.getAudioBuffer('imp_roar_01', mockAudioContext as any);
-      const footstepBuffer = await audioManager.getAudioBuffer('imp_footstep_01', mockAudioContext as any);
+      const footstepBuffer = await audioManager.getAudioBuffer(
+        'imp_footstep_01',
+        mockAudioContext as any
+      );
 
       expect(roarBuffer).toBeDefined();
       expect(footstepBuffer).toBeDefined();
@@ -338,8 +347,8 @@ describe('EnemyAudioManager', () => {
   describe('manifest handling', () => {
     it('should load manifest when available', async () => {
       const mockManifest = {
-        'imp_roar_01': 'imp_roar_01.ogg',
-        'imp_footstep_01': 'imp_footstep_01.wav',
+        imp_roar_01: 'imp_roar_01.ogg',
+        imp_footstep_01: 'imp_footstep_01.wav',
       };
 
       mockFetch.mockImplementation((url) => {
@@ -400,18 +409,20 @@ describe('EnemyAudioManager', () => {
         // Invalid response
         () => mockFetch.mockResolvedValue({ ok: false, status: 404 } as Response),
         // Corrupt data
-        () => mockFetch.mockResolvedValue({
-          ok: true,
-          arrayBuffer: () => Promise.reject(new Error('Corrupt data')),
-        } as Response),
+        () =>
+          mockFetch.mockResolvedValue({
+            ok: true,
+            arrayBuffer: () => Promise.reject(new Error('Corrupt data')),
+          } as Response),
       ];
 
       for (const setupError of errorScenarios) {
         setupError();
-        
+
         // Should not throw
-        await expect(audioManager.getAudioBuffer('error_sound', mockAudioContext as any))
-          .resolves.toBeDefined();
+        await expect(
+          audioManager.getAudioBuffer('error_sound', mockAudioContext as any)
+        ).resolves.toBeDefined();
       }
     });
   });
