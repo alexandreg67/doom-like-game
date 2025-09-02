@@ -1,6 +1,17 @@
 import { NullEngine, Scene, Vector3 } from '@babylonjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { type EnemyAudioComponent, EnemyAudioUtils } from '../../components/enemy-audio-component';
+import {
+  type EnemyAudioComponent,
+  addActiveSound,
+  canTriggerAudio,
+  createAudioComponent,
+  getAudioConfig,
+  getComponentStats,
+  markAudioTriggered,
+  removeActiveSound,
+  stopAllSounds,
+  updateAudioComponent,
+} from '../../components/enemy-audio-component';
 import { EnemyState, EnemyType } from '../../types/enemy-types';
 
 // Mock Sound interface for testing
@@ -31,7 +42,7 @@ describe('EnemyAudioComponent', () => {
     mockScene = new Scene(engine);
 
     // Create test component
-    component = EnemyAudioUtils.createComponent(EnemyType.IMP, mockScene);
+    component = createAudioComponent(EnemyType.IMP, mockScene);
   });
 
   describe('createComponent', () => {
@@ -69,7 +80,7 @@ describe('EnemyAudioComponent', () => {
       const newState = EnemyState.CHASE;
       const distance = 25.5;
 
-      EnemyAudioUtils.updateComponent(component, newState, newPosition, distance, 0.016);
+      updateAudioComponent(component, newState, newPosition, distance, 0.016);
 
       expect(component.currentAudioState).toBe(newState);
       expect(component.previousAudioState).toBe(EnemyState.IDLE);
@@ -81,13 +92,7 @@ describe('EnemyAudioComponent', () => {
       const farPosition = new Vector3(0, 0, 0);
       const veryLongDistance = 200; // Beyond max audible distance
 
-      EnemyAudioUtils.updateComponent(
-        component,
-        EnemyState.CHASE,
-        farPosition,
-        veryLongDistance,
-        0.016
-      );
+      updateAudioComponent(component, EnemyState.CHASE, farPosition, veryLongDistance, 0.016);
 
       expect(component.isDistanceMuted).toBe(true);
     });
@@ -96,13 +101,7 @@ describe('EnemyAudioComponent', () => {
       const closePosition = new Vector3(0, 0, 0);
       const reasonableDistance = 50;
 
-      EnemyAudioUtils.updateComponent(
-        component,
-        EnemyState.CHASE,
-        closePosition,
-        reasonableDistance,
-        0.016
-      );
+      updateAudioComponent(component, EnemyState.CHASE, closePosition, reasonableDistance, 0.016);
 
       expect(component.isDistanceMuted).toBe(false);
     });
@@ -113,11 +112,7 @@ describe('EnemyAudioComponent', () => {
       component.isEnabled = true;
       component.isDistanceMuted = false;
 
-      const canTrigger = EnemyAudioUtils.canTriggerAudio(
-        component,
-        EnemyState.ATTACK,
-        performance.now()
-      );
+      const canTrigger = canTriggerAudio(component, EnemyState.ATTACK, performance.now());
 
       expect(canTrigger).toBe(true);
     });
@@ -125,11 +120,7 @@ describe('EnemyAudioComponent', () => {
     it('should prevent triggering when disabled', () => {
       component.isEnabled = false;
 
-      const canTrigger = EnemyAudioUtils.canTriggerAudio(
-        component,
-        EnemyState.ATTACK,
-        performance.now()
-      );
+      const canTrigger = canTriggerAudio(component, EnemyState.ATTACK, performance.now());
 
       expect(canTrigger).toBe(false);
     });
@@ -138,11 +129,7 @@ describe('EnemyAudioComponent', () => {
       component.isEnabled = true;
       component.isDistanceMuted = true;
 
-      const canTrigger = EnemyAudioUtils.canTriggerAudio(
-        component,
-        EnemyState.ATTACK,
-        performance.now()
-      );
+      const canTrigger = canTriggerAudio(component, EnemyState.ATTACK, performance.now());
 
       expect(canTrigger).toBe(false);
     });
@@ -152,10 +139,10 @@ describe('EnemyAudioComponent', () => {
       const state = EnemyState.ATTACK;
 
       // Mark as recently triggered
-      EnemyAudioUtils.markAudioTriggered(component, state, currentTime - 100); // 100ms ago
+      markAudioTriggered(component, state, currentTime - 100); // 100ms ago
 
       // Should be blocked by cooldown (attack cooldown is 300ms)
-      const canTrigger = EnemyAudioUtils.canTriggerAudio(component, state, currentTime);
+      const canTrigger = canTriggerAudio(component, state, currentTime);
       expect(canTrigger).toBe(false);
     });
 
@@ -164,27 +151,27 @@ describe('EnemyAudioComponent', () => {
       const state = EnemyState.ATTACK;
 
       // Mark as triggered longer ago than cooldown
-      EnemyAudioUtils.markAudioTriggered(component, state, currentTime - 1000); // 1000ms ago
+      markAudioTriggered(component, state, currentTime - 1000); // 1000ms ago
 
-      const canTrigger = EnemyAudioUtils.canTriggerAudio(component, state, currentTime);
+      const canTrigger = canTriggerAudio(component, state, currentTime);
       expect(canTrigger).toBe(true);
     });
   });
 
   describe('getAudioConfig', () => {
     it('should return correct config for each state', () => {
-      const idleConfig = EnemyAudioUtils.getAudioConfig(component, EnemyState.IDLE);
+      const idleConfig = getAudioConfig(component, EnemyState.IDLE);
       expect(idleConfig.samples).toContain('imp_idle_01');
       expect(idleConfig.loop).toBe(true);
 
-      const attackConfig = EnemyAudioUtils.getAudioConfig(component, EnemyState.ATTACK);
+      const attackConfig = getAudioConfig(component, EnemyState.ATTACK);
       expect(attackConfig.samples).toContain('imp_attack_01');
       expect(attackConfig.triggerChance).toBe(1.0);
     });
 
     it('should have different configs for different states', () => {
-      const idleConfig = EnemyAudioUtils.getAudioConfig(component, EnemyState.IDLE);
-      const attackConfig = EnemyAudioUtils.getAudioConfig(component, EnemyState.ATTACK);
+      const idleConfig = getAudioConfig(component, EnemyState.IDLE);
+      const attackConfig = getAudioConfig(component, EnemyState.ATTACK);
 
       expect(idleConfig.volume).not.toBe(attackConfig.volume);
       expect(idleConfig.triggerChance).not.toBe(attackConfig.triggerChance);
@@ -199,7 +186,7 @@ describe('EnemyAudioComponent', () => {
         isPlaying: true,
       };
 
-      EnemyAudioUtils.addActiveSound(component, 'test_sound_1', mockSound);
+      addActiveSound(component, 'test_sound_1', mockSound);
       expect(component.activeSounds.size).toBe(1);
       expect(component.activeSounds.has('test_sound_1')).toBe(true);
     });
@@ -211,8 +198,8 @@ describe('EnemyAudioComponent', () => {
         isPlaying: false,
       };
 
-      EnemyAudioUtils.addActiveSound(component, 'test_sound_1', mockSound);
-      EnemyAudioUtils.removeActiveSound(component, 'test_sound_1');
+      addActiveSound(component, 'test_sound_1', mockSound);
+      removeActiveSound(component, 'test_sound_1');
 
       expect(component.activeSounds.size).toBe(0);
       expect(mockSound.stop).toHaveBeenCalled();
@@ -223,10 +210,10 @@ describe('EnemyAudioComponent', () => {
       const mockSound1: MockSound = { stop: vi.fn(), dispose: vi.fn(), isPlaying: false };
       const mockSound2: MockSound = { stop: vi.fn(), dispose: vi.fn(), isPlaying: false };
 
-      EnemyAudioUtils.addActiveSound(component, 'sound1', mockSound1);
-      EnemyAudioUtils.addActiveSound(component, 'sound2', mockSound2);
+      addActiveSound(component, 'sound1', mockSound1);
+      addActiveSound(component, 'sound2', mockSound2);
 
-      EnemyAudioUtils.stopAllSounds(component);
+      stopAllSounds(component);
 
       expect(component.activeSounds.size).toBe(0);
       expect(mockSound1.stop).toHaveBeenCalled();
@@ -237,9 +224,9 @@ describe('EnemyAudioComponent', () => {
   describe('getComponentStats', () => {
     it('should return accurate statistics', () => {
       const mockSound: MockSound = { stop: vi.fn(), dispose: vi.fn(), isPlaying: false };
-      EnemyAudioUtils.addActiveSound(component, 'test_sound', mockSound);
+      addActiveSound(component, 'test_sound', mockSound);
 
-      const stats = EnemyAudioUtils.getComponentStats(component);
+      const stats = getComponentStats(component);
 
       expect(stats.activeAudioSources).toBe(1);
       expect(stats.audioSourcesByType?.[EnemyType.IMP]).toBe(1);
@@ -247,7 +234,7 @@ describe('EnemyAudioComponent', () => {
     });
 
     it('should return zero stats for empty component', () => {
-      const stats = EnemyAudioUtils.getComponentStats(component);
+      const stats = getComponentStats(component);
 
       expect(stats.activeAudioSources).toBe(0);
     });
@@ -255,9 +242,9 @@ describe('EnemyAudioComponent', () => {
 
   describe('enemy type specific configurations', () => {
     it('should create different configs for different enemy types', () => {
-      const weakImpComponent = EnemyAudioUtils.createComponent(EnemyType.WEAK_IMP, mockScene);
-      const toughImpComponent = EnemyAudioUtils.createComponent(EnemyType.TOUGH_IMP, mockScene);
-      const alphaImpComponent = EnemyAudioUtils.createComponent(EnemyType.ALPHA_IMP, mockScene);
+      const weakImpComponent = createAudioComponent(EnemyType.WEAK_IMP, mockScene);
+      const toughImpComponent = createAudioComponent(EnemyType.TOUGH_IMP, mockScene);
+      const alphaImpComponent = createAudioComponent(EnemyType.ALPHA_IMP, mockScene);
 
       // Test that different enemy types have different volume levels
       const normalVolume = component.audioConfig[EnemyState.ATTACK].volume;
@@ -286,7 +273,7 @@ describe('EnemyAudioComponent', () => {
       const currentTime = performance.now();
       const state = EnemyState.CHASE;
 
-      EnemyAudioUtils.markAudioTriggered(component, state, currentTime);
+      markAudioTriggered(component, state, currentTime);
 
       expect(component.lastTriggerTime[state]).toBe(currentTime);
     });
@@ -295,7 +282,7 @@ describe('EnemyAudioComponent', () => {
       const currentTime = performance.now();
       const originalIdleTime = component.lastTriggerTime[EnemyState.IDLE];
 
-      EnemyAudioUtils.markAudioTriggered(component, EnemyState.CHASE, currentTime);
+      markAudioTriggered(component, EnemyState.CHASE, currentTime);
 
       expect(component.lastTriggerTime[EnemyState.IDLE]).toBe(originalIdleTime);
       expect(component.lastTriggerTime[EnemyState.CHASE]).toBe(currentTime);

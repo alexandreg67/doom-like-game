@@ -9,7 +9,8 @@
       "recommended": true,
       "complexity": {
         "noBannedTypes": "error",
-        "noUselessConstructor": "error"
+        "noUselessConstructor": "error",
+        "noStaticOnlyClass": "warn"
       },
       "correctness": {
         "noUnusedVariables": "error",

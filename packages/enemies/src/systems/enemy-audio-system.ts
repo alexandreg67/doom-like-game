@@ -5,7 +5,14 @@ import type {
   EnemyIdentityComponent,
   EnemyStateComponent,
 } from '../components';
-import { EnemyAudioUtils } from '../components/enemy-audio-component';
+import {
+  addActiveSound,
+  canTriggerAudio,
+  getAudioConfig,
+  markAudioTriggered,
+  removeActiveSound,
+  updateAudioComponent,
+} from '../components/enemy-audio-component';
 import type {
   AudioStateConfig,
   EnemyAudioEventData,
@@ -176,13 +183,7 @@ export class EnemyAudioSystem implements System {
     const currentState = stateComponent?.currentState || audioComponent.currentAudioState;
 
     // Update audio component
-    EnemyAudioUtils.updateComponent(
-      audioComponent,
-      currentState,
-      enemyPosition,
-      distance,
-      deltaTime
-    );
+    updateAudioComponent(audioComponent, currentState, enemyPosition, distance, deltaTime);
 
     // Update 3D position for all active sounds
     this.updateAudioPositions(audioComponent, enemyPosition);
@@ -227,7 +228,7 @@ export class EnemyAudioSystem implements System {
     const newState = audioEventData.currentState;
 
     // Check if we can trigger audio for this state
-    if (EnemyAudioUtils.canTriggerAudio(audioComponent, newState, currentTime)) {
+    if (canTriggerAudio(audioComponent, newState, currentTime)) {
       this.triggerStateAudio(
         audioComponent,
         newState,
@@ -235,7 +236,7 @@ export class EnemyAudioSystem implements System {
         audioEventData.intensity || 1.0
       );
 
-      EnemyAudioUtils.markAudioTriggered(audioComponent, newState, currentTime);
+      markAudioTriggered(audioComponent, newState, currentTime);
     }
   }
 
@@ -261,7 +262,7 @@ export class EnemyAudioSystem implements System {
     position: Vector3,
     intensity: number
   ): void {
-    const config = EnemyAudioUtils.getAudioConfig(audioComponent, state);
+    const config = getAudioConfig(audioComponent, state);
     const sampleName = this.selectRandomSample(config.samples);
 
     if (!sampleName) return;
@@ -275,14 +276,14 @@ export class EnemyAudioSystem implements System {
 
     // Track active sound
     const soundId = this.generateSoundId();
-    EnemyAudioUtils.addActiveSound(audioComponent, soundId, sound);
+    addActiveSound(audioComponent, soundId, sound);
 
     // Play sound
     sound.play();
 
     // Setup cleanup when sound ends
     sound.onEndedObservable.addOnce(() => {
-      EnemyAudioUtils.removeActiveSound(audioComponent, soundId);
+      removeActiveSound(audioComponent, soundId);
       this.returnSoundToPool(sampleName, audioComponent.enemyType, sound);
     });
 

@@ -2,7 +2,11 @@ import { NullEngine, Scene, Vector3 } from '@babylonjs/core';
 import type { Entity } from '@doom-like/game-logic';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EnemyIdentityComponent, EnemyStateComponent } from '../../components';
-import { type EnemyAudioComponent, EnemyAudioUtils } from '../../components/enemy-audio-component';
+import {
+  type EnemyAudioComponent,
+  createAudioComponent,
+  updateAudioComponent,
+} from '../../components/enemy-audio-component';
 import { EnemyAudioSystem } from '../../systems/enemy-audio-system';
 import {
   type EnemyAudioEventData,
@@ -54,7 +58,7 @@ describe('EnemyAudioSystem', () => {
   });
 
   function createMockEnemyEntity(id: string, enemyType: EnemyType, position: Vector3): Entity {
-    const audioComponent = EnemyAudioUtils.createComponent(enemyType, mockScene);
+    const audioComponent = createAudioComponent(enemyType, mockScene);
 
     return {
       id,
@@ -86,15 +90,18 @@ describe('EnemyAudioSystem', () => {
   });
 
   describe('update', () => {
-    it('should process entities with audio components', () => {
-      const updateSpy = vi.spyOn(EnemyAudioUtils, 'updateComponent');
+    it('should process entities with audio components', async () => {
+      const updateSpy = vi.spyOn(
+        await import('../../components/enemy-audio-component'),
+        'updateAudioComponent'
+      );
 
       audioSystem.update(mockEntities, 0.016);
 
       expect(updateSpy).toHaveBeenCalledTimes(2); // One for each entity
     });
 
-    it('should skip entities without required components', () => {
+    it('should skip entities without required components', async () => {
       const incompleteEntity: Entity = {
         id: 'incomplete',
         components: new Map([
@@ -103,29 +110,38 @@ describe('EnemyAudioSystem', () => {
         ]),
       } as Entity;
 
-      const updateSpy = vi.spyOn(EnemyAudioUtils, 'updateComponent');
+      const updateSpy = vi.spyOn(
+        await import('../../components/enemy-audio-component'),
+        'updateAudioComponent'
+      );
 
       audioSystem.update([incompleteEntity], 0.016);
 
       expect(updateSpy).not.toHaveBeenCalled();
     });
 
-    it('should skip dead entities', () => {
+    it('should skip dead entities', async () => {
       const deadEntity = createMockEnemyEntity('dead', EnemyType.IMP, new Vector3(0, 0, 0));
       const identity = deadEntity.components.get('enemyIdentity') as EnemyIdentityComponent;
       identity.isAlive = false;
 
-      const updateSpy = vi.spyOn(EnemyAudioUtils, 'updateComponent');
+      const updateSpy = vi.spyOn(
+        await import('../../components/enemy-audio-component'),
+        'updateAudioComponent'
+      );
 
       audioSystem.update([deadEntity], 0.016);
 
       expect(updateSpy).not.toHaveBeenCalled();
     });
 
-    it('should not process when disabled', () => {
+    it('should not process when disabled', async () => {
       audioSystem.setEnabled(false);
 
-      const updateSpy = vi.spyOn(EnemyAudioUtils, 'updateComponent');
+      const updateSpy = vi.spyOn(
+        await import('../../components/enemy-audio-component'),
+        'updateAudioComponent'
+      );
       audioSystem.update(mockEntities, 0.016);
 
       expect(updateSpy).not.toHaveBeenCalled();
