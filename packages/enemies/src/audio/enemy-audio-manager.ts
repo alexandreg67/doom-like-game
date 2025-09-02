@@ -22,14 +22,13 @@ export class EnemyAudioManager {
   // Configuration
   private readonly supportedFormats = ['ogg', 'mp3', 'wav'];
   private readonly maxCacheSize = 50 * 1024 * 1024; // 50MB cache limit
-  private readonly basePath = './assets/audio/enemies/';
+  private basePath = './assets/audio/enemies/';
 
   constructor(scene: Scene, options?: { debug?: boolean; basePath?: string }) {
     this.scene = scene;
     this.debug = options?.debug ?? false;
 
     if (options?.basePath) {
-      // @ts-ignore - Allow custom base path override
       this.basePath = options.basePath;
     }
 
@@ -457,7 +456,7 @@ export class EnemyAudioManager {
 
     // Convert to 16-bit PCM
     for (let i = 0; i < length; i++) {
-      const sample = Math.max(-1, Math.min(1, audioData[i] ?? 0));
+      const sample = Math.max(-1, Math.min(1, audioData[i]));
       view.setInt16(44 + i * 2, sample * 0x7fff, true);
     }
 

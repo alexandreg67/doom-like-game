@@ -1,6 +1,6 @@
 import { type Scene, Texture } from '@babylonjs/core';
 
-// Interface pour les observables Babylon.js avec méthode addOnce
+// Interface for Babylon.js observables with addOnce method
 interface BabylonObservable<T = void> {
   addOnce(callback: (eventData: T) => void): void;
 }
