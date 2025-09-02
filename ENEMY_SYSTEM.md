@@ -213,12 +213,13 @@ const isValid = factory.validateEnemyDefinition(definition);
 - [x] **Intégration 3 systèmes** avec demo interactive
 - [x] **Tests comportementaux** complets avec métriques
 
-### Phase 3: Intégration et Polish (Prochaine)
-- [ ] Intégration Babylon.js rendering
-- [ ] Audio 3D spatialisé  
-- [ ] Map collision integration
-- [ ] Production raycasting line-of-sight
-- [ ] Player health system integration
+### ~~Phase 3: Intégration et Polish~~ 🟡 **EN COURS**
+- [x] ✅ **Setup & Documentation** (2025-01-09)
+- [ ] 🔄 **Intégration Babylon.js rendering** (en développement)
+- [ ] ⏸️ **Audio 3D spatialisé** (en attente rendering)
+- [ ] ⏸️ **Map collision integration** (en attente architecture)
+- [ ] ⏸️ **Production raycasting line-of-sight** (en attente collision)
+- [ ] ⏸️ **Player health system integration** (en attente engine)
 
 ## API Reference ✅
 
@@ -308,12 +309,17 @@ const metrics = demo.getMetrics(); // Performance en temps-réel
 
 ## Next Steps & Roadmap
 
-### Phase 3: Production Integration
-1. **Babylon.js Integration** : Rendu 3D avec sprites
-2. **Map Collision** : Intégration BSP tree et geometry
-3. **Audio System** : Sons 3D spatialisés
-4. **Health System** : Intégration damage → UI
-5. **Line of Sight** : Raycasting production-ready
+### 🟡 Phase 3: Production Integration (EN COURS)
+**Tracker détaillé** : Voir `ENEMY_PHASE3_ROADMAP.md`  
+**Branche** : `feature/enemy-phase3-integration`  
+**Durée estimée** : 3-4 semaines  
+
+1. **✅ Setup & Documentation** : Roadmap et structure (2025-01-09)
+2. **🔄 Babylon.js Integration** : Rendu 3D avec sprites (en cours)
+3. **⏸️ Map Collision** : Intégration BSP tree et geometry 
+4. **⏸️ Audio System** : Sons 3D spatialisés
+5. **⏸️ Health System** : Intégration damage → UI
+6. **⏸️ Line of Sight** : Raycasting production-ready
 
 ### Phase 4: Advanced Features  
 1. **New Enemy Types** : DEMON, CACODEMON expansion
@@ -323,14 +329,17 @@ const metrics = demo.getMetrics(); // Performance en temps-réel
 
 ---
 
-## 🎯 **Status Actuel : SYSTÈME IMP COMPLET** ✅
+## 🎯 **Status Actuel : PHASE 3 DÉMARRÉE** 🟡
 
-- **Architecture** : ECS robuste avec 5 composants + 3 systèmes
-- **Performance** : Optimisé O(1) avec cache et métriques
-- **Quality** : Type-safe, testé, reviews passées  
-- **Features** : FSM complète, combat fonctionnel, demo interactif
-- **Ready for** : Integration Babylon.js et map system
+- **Phases 1-2** : ✅ **COMPLÈTES** - Architecture ECS + Système Imp fonctionnel
+- **Phase 3** : 🟡 **EN COURS** - Production Integration (3% complété)
+- **Architecture** : ECS robuste avec 5 composants + 3 systèmes (base solide)
+- **Performance** : Optimisé O(1) avec cache et métriques (validé)
+- **Quality** : Type-safe, testé, reviews passées (maintenu)
+- **Features** : FSM complète, combat fonctionnel, demo interactif (acquis)
+- **Next** : Intégration Babylon.js rendering → Audio 3D → Map collision
 
-**Dernière mise à jour** : Système Imp Complet (Janvier 2025)  
-**Prochaine étape** : Phase 3 - Production Integration  
-**Status** : ✅ **PRÊT POUR REVIEW ET MERGE**
+**Dernière mise à jour** : Phase 3 Setup (2025-01-09)  
+**Milestone actuel** : Babylon.js Integration (Sub-feature 1/5)  
+**Status** : 🔄 **EN DÉVELOPPEMENT ACTIF**  
+**Tracker détaillé** : `ENEMY_PHASE3_ROADMAP.md`
